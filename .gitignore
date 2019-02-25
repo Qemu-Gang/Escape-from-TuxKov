@@ -1,0 +1,4 @@
+*.cbp
+gdb.txt
+build/*
+.idea/*
