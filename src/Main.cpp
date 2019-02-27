@@ -1,12 +1,15 @@
 #include "vmread/hlapi/hlapi.h"
 #include "utils/Logger.h"
 #include "utils/Scanner.h"
+#include "utils/Memutils.h"
+#include "Interfaces.h"
+
 #include <unistd.h> //getpid
 #include <thread>
 #include <atomic>
 #include <csignal>
 
-//#define SWAGGIN
+#define SWAGGIN
 
 #ifdef SWAGGIN
     #define PROCNAME "EasyAntiCheat_"
@@ -63,6 +66,7 @@ void MainThread() {
         ctx.processList.Refresh();
 
         for (WinProcess& i : ctx.processList) {
+            //Logger::Log("Process name: %s[%d]\n", i.proc.name, i.proc.pid);
             if (strcasecmp(PROCNAME, i.proc.name))
                 continue;
             Logger::Log("\nFound process %s(PID:%ld)", i.proc.name, i.proc.pid);
@@ -82,9 +86,7 @@ void MainThread() {
                     Logger::Log("Base: %p\n", (void*)base);
                 }
             }
-            uintptr_t createInterfaceFunc = Scanner::FindPatternInModule( "48 89 5C 24 08 48 89 6C 24 10 48 89 74 24 18 57 48 83 EC ?? 48 8B 1D ?? ?? ?? ?? 48 8B FA 48", MODNAME, i );
-            Logger::Log("CreateInterfaceFunc: %p\n", (void*)createInterfaceFunc);
-            createInterfaceFunc += 20;
+            Interfaces::FindInterfaces( i, MODNAME );
 
             // Infinite loop
             Logger::Log("Starting Main Loop.\n");
