@@ -1,4 +1,6 @@
 #include "vmread/hlapi/hlapi.h"
+#include "utils/Logger.h"
+#include "utils/Scanner.h"
 #include <unistd.h> //getpid
 #include <thread>
 #include <atomic>
@@ -17,7 +19,6 @@
 
 FILE* out;
 uintptr_t base;
-pthread_t mainThread;
 static std::atomic<bool> running = true;
 
 struct sigaction sa;
@@ -30,14 +31,14 @@ static void SignalHandler( int sigNum, siginfo_t *si, void * uContext )
     running = false;
 }
 
-uintptr_t GetEntityById(int ent, const WinProcess *process) {
+uintptr_t GetEntityById(int ent, const WinProcess &process) {
     uintptr_t entList = base + 0x1F6CAB8;
-    uintptr_t baseEntity = process->Read<uintptr_t>(entList);
+    uintptr_t baseEntity = process.Read<uintptr_t>(entList);
     if( !baseEntity ){
         return NULL;
     }
 
-    return process->Read<uintptr_t>(entList + (ent << 5));
+    return process.Read<uintptr_t>(entList + (ent << 5));
 }
 void WriteGlow( uintptr_t entity, float r, float g, float b, WinProcess *process ) {
     process->Write<bool>(entity + 0x380, true); // Enabling the Glow
@@ -53,10 +54,8 @@ void WriteGlow( uintptr_t entity, float r, float g, float b, WinProcess *process
 }
 
 void MainThread() {
-    out = fopen("/tmp/apex.log", "w"); // create new log
-    setbuf( out, nullptr ); // Turn off buffered I/O, decreases performance but if crash occurs, no unflushed buffer.
 
-    fprintf(out, "--Start of log--\n");
+    Logger::Log("Main Loaded.\n");
     pid_t pid = getpid();
 
     try {
@@ -66,27 +65,32 @@ void MainThread() {
         for (WinProcess& i : ctx.processList) {
             if (strcasecmp(PROCNAME, i.proc.name))
                 continue;
-            fprintf(out, "\nFound process %s(PID:%ld)", i.proc.name, i.proc.pid);
+            Logger::Log("\nFound process %s(PID:%ld)", i.proc.name, i.proc.pid);
             PEB peb = i.GetPeb();
             short magic = i.Read<short>(peb.ImageBaseAddress);
             uintptr_t translatedBase = VTranslate(&i.ctx->process, i.proc.dirBase, peb.ImageBaseAddress);
-            fprintf(out, "\tWinBase:\t%p\tBase:\t%p\tQemuBase:\t%p\tMagic:\t%hx (valid: %hhx)\n", (void*)peb.ImageBaseAddress, (void*)i.proc.process, (void*)translatedBase, magic, (char)(magic == IMAGE_DOS_SIGNATURE));
+            Logger::Log("\tWinBase:\t%p\tBase:\t%p\tQemuBase:\t%p\tMagic:\t%hx (valid: %hhx)\n", (void*)peb.ImageBaseAddress, (void*)i.proc.process, (void*)translatedBase, magic, (char)(magic == IMAGE_DOS_SIGNATURE));
+
 
             for (auto& o : i.modules) {
-                //fprintf(out, "\t%.8lx\t%.8lx\t%lx\t%s\n", o.info.baseAddress, o.info.entryPoint, o.info.sizeOfModule, o.info.name);
+                //Logger::Log("\t%.8lx\t%.8lx\t%lx\t%s\n", o.info.baseAddress, o.info.entryPoint, o.info.sizeOfModule, o.info.name);
                 if (!strcasecmp(MODNAME, o.info.name)){
                     base = o.info.baseAddress;
-                    for (auto& u : o.exports)
-                        fprintf(out, "\t\t%lx\t%s\n", u.address, u.name);
+                    for (auto& u : o.exports) {
+                        Logger::Log( "\t\t%lx\t%s\n", u.address, u.name );
+                    }
+                    Logger::Log("Base: %p\n", (void*)base);
                 }
             }
+            uintptr_t createInterfaceFunc = Scanner::FindPatternInModule( "48 89 5C 24 08 48 89 6C 24 10 48 89 74 24 18 57 48 83 EC ?? 48 8B 1D ?? ?? ?? ?? 48 8B FA 48", MODNAME, i );
+            Logger::Log("CreateInterfaceFunc: %p\n", (void*)createInterfaceFunc);
+            createInterfaceFunc += 20;
 
-            fclose(out);
             // Infinite loop
+            Logger::Log("Starting Main Loop.\n");
             while( base && running ){
                 for( int ent = 1; ent < 100; ent++ ){
-                    //fprintf( out, "Entity @%p\n", (void*)GetEntityById(ent, &i) );
-                    uintptr_t entity = GetEntityById(ent, &i);
+                    uintptr_t entity = GetEntityById(ent, i);
                     if( !entity )
                         continue;
                     WriteGlow( entity, 120.0f, 0.0f, 0.0f, &i );
@@ -95,10 +99,10 @@ void MainThread() {
         }
 
     } catch (VMException& e) {
-        //fprintf(out, "Initialization error: %d\n", e.value);
-        //fclose(out);
+        Logger::Log("Initialization error: %d\n", e.value);
         return;
     }
+    Logger::Log("Main Ended.\n");
 }
 
 void __attribute__((constructor)) Startup() {
@@ -112,5 +116,7 @@ void __attribute__((constructor)) Startup() {
 }
 
 void __attribute__((destructor)) Shutdown() {
+    Logger::Log("Unloading...");
     sigaction( SIGXCPU, &oldSa, NULL );
+    Logger::Log("Done\n");
 }

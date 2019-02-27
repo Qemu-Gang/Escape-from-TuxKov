@@ -2,3 +2,4 @@
 gdb.txt
 build/*
 .idea/*
+cmake-build-debug/*=
