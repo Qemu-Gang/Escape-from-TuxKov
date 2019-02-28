@@ -43,7 +43,6 @@ uintptr_t Scanner::FindPatternInModule( const char *pattern, const char *moduleN
         }
     }
 
-    Logger::Log("StartingAddr: %p, EndingAddr: %p\n", (void*)startingAddr, (void*)endingAddr);
     if( !startingAddr || !endingAddr ) {
         Logger::Log("ERROR: No Starting/Ending Addr");
         goto end;
@@ -76,18 +75,8 @@ uintptr_t Scanner::FindPatternInModule( const char *pattern, const char *moduleN
         }
     }
 
-    Logger::Log("bMask is: (");
-    for( size_t i = 0; i < bMaskIndex; i ++ ){
-        Logger::Log("%x,", bMask[i]);
-    }
-    Logger::Log(")\n");
-    Logger::Log("szMask is %s\n", szMask);
-
-
     ret = FindPatternOffset( (uintptr_t)byteCache, (uintptr_t)&byteCache[endingAddr - startingAddr], bMask, szMask );
     ret = ret - (uintptr_t)byteCache;
-
-    Logger::Log("Offset is %p\n", (void*)ret);
 
 end:
     delete[] bMask;

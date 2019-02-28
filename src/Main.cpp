@@ -3,6 +3,7 @@
 #include "utils/Scanner.h"
 #include "utils/Memutils.h"
 #include "Interfaces.h"
+#include "sdk/CBaseEntity.h"
 
 #include <unistd.h> //getpid
 #include <thread>
@@ -19,8 +20,6 @@
     #define MODNAME "r5apex.exe"
 #endif
 
-
-FILE* out;
 uintptr_t base;
 static std::atomic<bool> running = true;
 
@@ -34,26 +33,30 @@ static void SignalHandler( int sigNum, siginfo_t *si, void * uContext )
     running = false;
 }
 
-uintptr_t GetEntityById(int ent, const WinProcess &process) {
-    uintptr_t entList = base + 0x1F6CAB8;
+uintptr_t GetEntityById(int ent, WinProcess &process) {
     uintptr_t baseEntity = process.Read<uintptr_t>(entList);
     if( !baseEntity ){
-        return NULL;
+        return (uintptr_t)NULL;
     }
 
     return process.Read<uintptr_t>(entList + (ent << 5));
 }
+
 void WriteGlow( uintptr_t entity, float r, float g, float b, WinProcess *process ) {
-    process->Write<bool>(entity + 0x380, true); // Enabling the Glow
-    process->Write<int>(entity + 0x2F0, 1); // Enabling the Glow
-    process->Write<float>(entity + 0x1B0, r); // Setting a value for the Color Red between 0 and 255
-    process->Write<float>(entity + 0x1B4, g); // Setting a value for the Color Green between 0 and 255
-    process->Write<float>(entity + 0x1B8, b); // Setting a value for the Color Blue between 0 and 255
+    process->Write<bool>(entity + OFFSET_OF(&CBaseEntity::bGlowEnable), true); // Enabling the Glow
+    process->Write<int>(entity + OFFSET_OF(&CBaseEntity::iGlowEnable), 1); // Enabling the Glow
+    process->Write<float>(entity + OFFSET_OF(&CBaseEntity::glowR), r); // Setting a value for the Color Red between 0 and 255
+    process->Write<float>(entity + OFFSET_OF(&CBaseEntity::glowG), g); // Setting a value for the Color Green between 0 and 255
+    process->Write<float>(entity + OFFSET_OF(&CBaseEntity::glowB), b); // Setting a value for the Color Blue between 0 and 255
 
-    for (int offset = 0x2B0; offset <= 0x2C8; offset += 0x4) // Setting the of the Glow at all necessary spots
-        process->Write<float>(entity + offset, __FLT_MAX__); // Setting the time of the Glow to be the Max Float value so it never runs out
+    process->Write<float>(entity + OFFSET_OF(&CBaseEntity::glowTimes1), __FLT_MAX__); // Setting the time of the Glow to be the Max Float value so it never runs out
+    process->Write<float>(entity + OFFSET_OF(&CBaseEntity::glowTimes2), __FLT_MAX__); // Setting the time of the Glow to be the Max Float value so it never runs out
+    process->Write<float>(entity + OFFSET_OF(&CBaseEntity::glowTimes3), __FLT_MAX__); // Setting the time of the Glow to be the Max Float value so it never runs out
+    process->Write<float>(entity + OFFSET_OF(&CBaseEntity::glowTimes4), __FLT_MAX__); // Setting the time of the Glow to be the Max Float value so it never runs out
+    process->Write<float>(entity + OFFSET_OF(&CBaseEntity::glowTimes5), __FLT_MAX__); // Setting the time of the Glow to be the Max Float value so it never runs out
+    process->Write<float>(entity + OFFSET_OF(&CBaseEntity::glowTimes6), __FLT_MAX__); // Setting the time of the Glow to be the Max Float value so it never runs out
 
-    process->Write<float>(entity + 0x2DC, __FLT_MAX__); //Set the Distance of the Glow to Max float value so we can see a long Distance
+    process->Write<float>(entity + OFFSET_OF(&CBaseEntity::glowDistance), __FLT_MAX__); //Set the Distance of the Glow to Max float value so we can see a long Distance
 }
 
 void MainThread() {
@@ -88,6 +91,8 @@ void MainThread() {
             }
             Interfaces::FindInterfaces( i, MODNAME );
 
+            entList = GetAbsoluteAddressVm( i, Scanner::FindPatternInModule( "48 8D 05 ?? ?? ?? ?? 48 C1 E1 05 48 03 C8 0F B7 05 ?? ?? ?? ?? 39 41 08 75 51", MODNAME, i ), 3, 7 );
+
             // Infinite loop
             Logger::Log("Starting Main Loop.\n");
             while( base && running ){
@@ -98,6 +103,7 @@ void MainThread() {
                     WriteGlow( entity, 120.0f, 0.0f, 0.0f, &i );
                 }
             }
+            Logger::Log("Main Loop Ended.\n");
         }
 
     } catch (VMException& e) {
