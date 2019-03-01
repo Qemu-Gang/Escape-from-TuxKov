@@ -3,6 +3,7 @@
 #include "utils/Scanner.h"
 #include "utils/Memutils.h"
 #include "Interfaces.h"
+#include "Netvars.h"
 #include "sdk/CBaseEntity.h"
 
 #include <unistd.h> //getpid
@@ -90,6 +91,7 @@ void MainThread() {
                 }
             }
             Interfaces::FindInterfaces( i, MODNAME );
+            Netvars::FindNetvars( i, MODNAME );
 
             entList = GetAbsoluteAddressVm( i, Scanner::FindPatternInModule( "48 8D 05 ?? ?? ?? ?? 48 C1 E1 05 48 03 C8 0F B7 05 ?? ?? ?? ?? 39 41 08 75 51", MODNAME, i ), 3, 7 );
 
