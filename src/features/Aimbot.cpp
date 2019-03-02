@@ -4,6 +4,8 @@
 void Aimbot::Aimbot() {
     if(!localPlayer)
         return;
+    QAngle viewAngle = process->Read<QAngle>(localPlayer + 0x20B8);
+    BreathCompensation(out, viewAngle);
 
     int state = inputSystem->Read<int>(inputBase + 0x8030);
     if (!state) {
@@ -11,8 +13,6 @@ void Aimbot::Aimbot() {
     }
 
     uintptr_t finalEntity = 0;
-    QAngle viewAngle = process->Read<QAngle>(localPlayer + 0x20B8);
-    BreathCompensation(viewAngle);
 
     Vector localOrigin = process->Read<Vector>(localPlayer + 0x12C);
     //Vector localOrigin = process->Read<Vector>(localPlayer + 0x50);
@@ -43,7 +43,7 @@ void Aimbot::Aimbot() {
 
         Vector origin = process->Read<Vector>(entity + 0x12C);
 
-        Vector enemyHeadPosition = GetBonePos(entity, 10, origin);
+        Vector enemyHeadPosition = GetBonePos(entity, 12, origin);
         if(enemyHeadPosition.x == 0.0f && enemyHeadPosition.y == 0.0f && enemyHeadPosition.z == 0.0f)
             continue;
 
@@ -66,14 +66,18 @@ void Aimbot::Aimbot() {
 
     Vector origin = process->Read<Vector>(finalEntity + 0x12C);
 
-    Vector enemyHeadPosition = GetBonePos(finalEntity, 10, origin);
+    Vector enemyHeadPosition = GetBonePos(finalEntity, 12, origin);
+
     float dist = pos.DistTo(enemyHeadPosition);
     dist *= 0.01905f;
-    dist *= 1.1f;
-    uintptr_t weapon = GetActiveWeapon(localPlayer);
+
+    uintptr_t weapon = GetActiveWeapon(localPlayer, out);
+  
     if (!weapon) {
         return;
     }
+
+    Nospread(weapon);
 
     float bulletVel = process->Read<float>(weapon + 0x1bac);
     if(bulletVel == 0.0f)
@@ -82,7 +86,7 @@ void Aimbot::Aimbot() {
     bulletVel *= 0.01905f;
 
     Vector targetVelocity = process->Read<Vector>(finalEntity + 0x120);
-    targetVelocity *= 0.01905f;
+    //targetVelocity *= 0.01905f;
 
     //float interval_per_tick = process->Read<float>(0x1713CA8 + 0x44);
 
@@ -93,7 +97,7 @@ void Aimbot::Aimbot() {
 
     enemyHeadPosition.x += xTime * targetVelocity.x;
     enemyHeadPosition.y += yTime * targetVelocity.y;
-    enemyHeadPosition.z += 375.0f * powf(xTime, 2.0f);
+    //enemyHeadPosition.z += 375.0f * powf(xTime, 2.0f);
 
     QAngle aimAngle = Math::CalcAngle(pos, enemyHeadPosition);
 
@@ -124,9 +128,19 @@ void Aimbot::RecoilCompensation(QAngle &angle) {
     angle -= aimpunch;
 }
 
-void Aimbot::BreathCompensation(QAngle &angle) {
-    QAngle breath = process->Read<QAngle>(localPlayer + 0x20A8) - angle;
-    Math::Clamp(breath);
-    angle -= breath;
+void Aimbot::BreathCompensation(FILE* out, QAngle &angle) {
+    static QAngle oldBreath = QAngle();
+
+    QAngle breath = angle - process->Read<QAngle>(localPlayer + 0x20A8);
+    if(breath.x != 0.0f && breath.y != 0.0f) {
+        angle = (angle + oldBreath) - breath;
+        oldBreath = breath;
+    }
+}
+
+void Aimbot::Nospread(uintptr_t weapon) {
+    process->Write<float>(weapon + 0x1330, 0.0f);
+    process->Write<float>(weapon + 0x1340, 0.0f);
+
     //fprintf(out, "Breath: (%f, %f, %f)\n", breath.x, breath.y, breath.z);
 }

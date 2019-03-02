@@ -5,19 +5,27 @@
 
 namespace Math {
     inline QAngle CalcAngle(Vector &src, Vector &dst) {
-        QAngle ret;
+        QAngle angles;
         Vector delta = src - dst;
-        double hyp = delta.Length2D();
-        if (hyp == 0.0f)
-            return QAngle();
 
-        ret[PITCH] = (asinf(delta.z / hyp)) * 180.0f / M_PI;
-        ret[YAW] = (atanf(delta.y / delta.x)) * 180.0f / M_PI;
+        if(delta.x == 0.0f && delta.y == 0.0f) {
+            angles[0] = (delta[2] > 0.0f) ? 270.0f : 90.0f; // Pitch (up/down)
+            angles[1] = 0.0f; //yaw left/right
+        } else {
+            angles[PITCH] = (atan2(-delta.z, delta.Length2D())) * -180 / M_PI;
+            //ret[PITCH] = (asinf(delta.z / hyp)) * 180.0f / M_PI;
+            //ret[YAW] = (atanf(delta.y / delta.x)) * 180.0f / M_PI;
+            angles[YAW] = (atan2(delta.y, delta.x)) * 180 / M_PI;
 
-        if (delta.x >= 0.0f)
-            ret[YAW] += 180.0f;
-
-        return ret;
+            if (angles[1] > 90)
+                angles[1] -= 180;
+            else if (angles[1] < 90)
+                angles[1] += 180;
+            else if (angles[1] == 90)
+                angles[1] = 0;
+        }
+        angles[2] = 0.0f;
+        return angles;
     }
 
 
