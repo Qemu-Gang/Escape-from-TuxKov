@@ -32,13 +32,13 @@ void Glow::Glow(float *colors) {
         }
 
         int tmp = process->Read<int>(entity + 0x3E4);
-        if (tmp == teamTeamNumber) {
-            colors[0] = 0.0f;
-            colors[1] = 125.0f;
-            colors[2] = 0.0f;
-        }
+        static float team[3] = {0.0f, 125.0f, 0.0f};
+        if (tmp == teamTeamNumber)
+            WriteGlow(entity, team);
+        else
+            WriteGlow(entity, colors);
 
-        WriteGlow(entity, colors);
+
     }
 }
 
