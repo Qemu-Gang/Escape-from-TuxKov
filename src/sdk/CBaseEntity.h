@@ -23,5 +23,3 @@ public:
     bool bGlowEnable; // 0x380
 
 };
-
-inline uintptr_t entList;
