@@ -23,12 +23,19 @@ static void WriteGlow( uintptr_t entity, float *colors )
 }
 
 void Glow::Glow(float *colors) {
+    int teamTeamNumber = process->Read<int>(localPlayer + 0x3E4);
+
     for (size_t ent = 0; ent < entities.size(); ent++) {
 
         uintptr_t entity = entities.at(ent);
         if (entity == localPlayer) {
             continue;
         }
+
+        int tmp = process->Read<int>(entity + 0x3E4);
+        if (tmp == teamTeamNumber)
+        {colors[0] = 0.0f; colors[1] = 125.0f; colors[3] = 0.0f;}
+
         WriteGlow( entity, colors );
     }
 }
