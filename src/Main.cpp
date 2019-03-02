@@ -13,7 +13,7 @@
 #include <atomic>
 #include <csignal>
 
-#define SWAGGIN
+//#define SWAGGIN
 
 #ifdef SWAGGIN
     #define PROCNAME "EasyAntiCheat_"
@@ -90,7 +90,6 @@ void MainThread() {
 
         Interfaces::FindInterfaces( *process, MODNAME );
         Netvars::FindNetvars( *process, MODNAME );
-        localPlayer = GetLocalPlayer();
 
         entList = GetAbsoluteAddressVm( *process, Scanner::FindPatternInModule( "48 8D 05 ?? ?? ?? ?? 48 C1 E1 05 48 03 C8 0F B7 05 ?? ?? ?? ?? 39 41 08 75 51", MODNAME, *process ), 3, 7 );
 
@@ -103,6 +102,8 @@ void MainThread() {
                 if( !entity ) continue;
                 entities.push_back(entity);
             }
+            localPlayer = GetLocalPlayer();
+
             Glow::Glow(col);
             Aimbot::Aimbot();
 

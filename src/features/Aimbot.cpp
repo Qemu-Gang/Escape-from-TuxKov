@@ -8,7 +8,7 @@ void Aimbot::Aimbot() {
     QAngle viewAngle = process->Read<QAngle>(localPlayer + 0x20B8);
     BreathCompensation(viewAngle);
 
-    int state = inputSystem->Read<int>(inputBase + 0x8030);
+    int state = inputSystem->Read<int>(inputBase + 0x3388);
     if (!state) {
         return;
     }
