@@ -2,7 +2,6 @@
 #include <cfloat>
 #include <cmath>
 
-#define CHECK_VALID(_v) 0
 #define Assert(_exp) ((void)0)
 #define FastSqrt(x)            (sqrt)(x)
 #define VALVE_RAND_MAX 0x7fff
@@ -48,7 +47,6 @@ public:
     inline float Length() const;
 
     inline float LengthSqr(void) const {
-        CHECK_VALID(*this);
         return (x * x + y * y + z * z);
     }
 
@@ -99,7 +97,6 @@ inline void Vector::Init(float ix, float iy, float iz) {
     x = ix;
     y = iy;
     z = iz;
-    CHECK_VALID(*this);
 }
 
 //===============================================
@@ -107,7 +104,6 @@ inline Vector::Vector(float X, float Y, float Z) {
     x = X;
     y = Y;
     z = Z;
-    CHECK_VALID(*this);
 }
 
 //===============================================
@@ -125,7 +121,6 @@ inline void VectorClear(Vector &a) {
 
 //===============================================
 inline Vector &Vector::operator=(const Vector &vOther) {
-    CHECK_VALID(vOther);
     x = vOther.x;
     y = vOther.y;
     z = vOther.z;
@@ -146,21 +141,16 @@ inline float Vector::operator[](int i) const {
 
 //===============================================
 inline bool Vector::operator==(const Vector &src) const {
-    CHECK_VALID(src);
-    CHECK_VALID(*this);
     return (src.x == x) && (src.y == y) && (src.z == z);
 }
 
 //===============================================
 inline bool Vector::operator!=(const Vector &src) const {
-    CHECK_VALID(src);
-    CHECK_VALID(*this);
     return (src.x != x) || (src.y != y) || (src.z != z);
 }
 
 //===============================================
 inline void VectorCopy(const Vector &src, Vector &dst) {
-    CHECK_VALID(src);
     dst.x = src.x;
     dst.y = src.y;
     dst.z = src.z;
@@ -168,8 +158,6 @@ inline void VectorCopy(const Vector &src, Vector &dst) {
 
 //===============================================
 inline Vector &Vector::operator+=(const Vector &v) {
-    CHECK_VALID(*this);
-    CHECK_VALID(v);
     x += v.x;
     y += v.y;
     z += v.z;
@@ -178,8 +166,6 @@ inline Vector &Vector::operator+=(const Vector &v) {
 
 //===============================================
 inline Vector &Vector::operator-=(const Vector &v) {
-    CHECK_VALID(*this);
-    CHECK_VALID(v);
     x -= v.x;
     y -= v.y;
     z -= v.z;
@@ -191,17 +177,14 @@ inline Vector &Vector::operator*=(float fl) {
     x *= fl;
     y *= fl;
     z *= fl;
-    CHECK_VALID(*this);
     return *this;
 }
 
 //===============================================
 inline Vector &Vector::operator*=(const Vector &v) {
-    CHECK_VALID(v);
     x *= v.x;
     y *= v.y;
     z *= v.z;
-    CHECK_VALID(*this);
     return *this;
 }
 
@@ -210,7 +193,6 @@ inline Vector &Vector::operator+=(float fl) {
     x += fl;
     y += fl;
     z += fl;
-    CHECK_VALID(*this);
     return *this;
 }
 
@@ -219,7 +201,6 @@ inline Vector &Vector::operator-=(float fl) {
     x -= fl;
     y -= fl;
     z -= fl;
-    CHECK_VALID(*this);
     return *this;
 }
 
@@ -230,25 +211,20 @@ inline Vector &Vector::operator/=(float fl) {
     x *= oofl;
     y *= oofl;
     z *= oofl;
-    CHECK_VALID(*this);
     return *this;
 }
 
 //===============================================
 inline Vector &Vector::operator/=(const Vector &v) {
-    CHECK_VALID(v);
     Assert(v.x != 0.0f && v.y != 0.0f && v.z != 0.0f);
     x /= v.x;
     y /= v.y;
     z /= v.z;
-    CHECK_VALID(*this);
     return *this;
 }
 
 //===============================================
 inline float Vector::Length(void) const {
-    CHECK_VALID(*this);
-
     float root = 0.0f;
 
     //float sqsr = x * x + y * y + z * z;
@@ -260,8 +236,6 @@ inline float Vector::Length(void) const {
 
 //===============================================
 inline float Vector::Length2D(void) const {
-    CHECK_VALID(*this);
-
     float root = 0.0f;
 
     float sqst = x * x + y * y;
@@ -404,14 +378,11 @@ inline float Vector::Dot(const Vector &vOther) const {
 //-----------------------------------------------------------------------------
 
 inline float VectorLength(const Vector &v) {
-    CHECK_VALID(v);
     return (float) FastSqrt(v.x * v.x + v.y * v.y + v.z * v.z);
 }
 
 //VECTOR SUBTRAC
 inline void VectorSubtract(const Vector &a, const Vector &b, Vector &c) {
-    CHECK_VALID(a);
-    CHECK_VALID(b);
     c.x = a.x - b.x;
     c.y = a.y - b.y;
     c.z = a.z - b.z;
@@ -419,8 +390,6 @@ inline void VectorSubtract(const Vector &a, const Vector &b, Vector &c) {
 
 //VECTORADD
 inline void VectorAdd(const Vector &a, const Vector &b, Vector &c) {
-    CHECK_VALID(a);
-    CHECK_VALID(b);
     c.x = a.x + b.x;
     c.y = a.y + b.y;
     c.z = a.z + b.z;

@@ -1,19 +1,18 @@
 #include "Aimbot.h"
 #include "Glow.h"
 #include "math.h"
-void Aimbot::Aimbot(FILE* out) {
+void Aimbot::Aimbot() {
     if(!localPlayer)
         return;
     QAngle viewAngle = process->Read<QAngle>(localPlayer + 0x20B8);
     BreathCompensation(out, viewAngle);
 
-    int state = inputSystem->Read<int>(inputSystemBase + 0x8030);
+    int state = inputSystem->Read<int>(inputBase + 0x8030);
     if (!state) {
         return;
     }
 
     uintptr_t finalEntity = 0;
-
 
     Vector localOrigin = process->Read<Vector>(localPlayer + 0x12C);
     //Vector localOrigin = process->Read<Vector>(localPlayer + 0x50);
@@ -25,7 +24,7 @@ void Aimbot::Aimbot(FILE* out) {
 
 
     float bestFov = __FLT_MAX__;
-    for (int ent = 0; ent < entities.size(); ent++) {
+    for (size_t ent = 0; ent < entities.size(); ent++) {
 
         uintptr_t entity = entities.at(ent);
         if (!entity || entity == localPlayer) {
@@ -73,6 +72,7 @@ void Aimbot::Aimbot(FILE* out) {
     dist *= 0.01905f;
 
     uintptr_t weapon = GetActiveWeapon(localPlayer, out);
+  
     if (!weapon) {
         return;
     }
@@ -128,7 +128,6 @@ void Aimbot::RecoilCompensation(QAngle &angle) {
     angle -= aimpunch;
 }
 
-
 void Aimbot::BreathCompensation(FILE* out, QAngle &angle) {
     static QAngle oldBreath = QAngle();
 
@@ -142,5 +141,6 @@ void Aimbot::BreathCompensation(FILE* out, QAngle &angle) {
 void Aimbot::Nospread(uintptr_t weapon) {
     process->Write<float>(weapon + 0x1330, 0.0f);
     process->Write<float>(weapon + 0x1340, 0.0f);
+
     //fprintf(out, "Breath: (%f, %f, %f)\n", breath.x, breath.y, breath.z);
 }

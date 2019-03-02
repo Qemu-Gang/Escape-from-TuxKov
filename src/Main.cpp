@@ -1,22 +1,27 @@
-#include "utils.h"
-#include "utils/Wrappers.h"
+#include "vmread/hlapi/hlapi.h"
+#include "utils/Logger.h"
+#include "Interfaces.h"
+#include "Netvars.h"
 #include "features/Aimbot.h"
 #include "features/Glow.h"
+#include "sdk/CBaseEntity.h"
+#include "utils/Scanner.h"
+#include "utils/Memutils.h"
 
+#include <unistd.h> //getpid
+#include <thread>
+#include <atomic>
+#include <csignal>
 
-//#define SWAGGIN
+#define SWAGGIN
 
 #ifdef SWAGGIN
-#define PROCNAME "EasyAntiCheat_"
-#define MODNAME "EasyAntiCheat_launcher.exe"
+    #define PROCNAME "EasyAntiCheat_"
+    #define MODNAME "EasyAntiCheat_launcher.exe"
 #else
-#define PROCNAME "r5apex.exe"
-#define MODNAME "r5apex.exe"
+    #define PROCNAME "r5apex.exe"
+    #define MODNAME "r5apex.exe"
 #endif
-
-
-FILE *out; // TODO: put in utils.h
-
 
 static std::atomic<bool> running = true;
 
@@ -32,102 +37,84 @@ static void SignalHandler(int sigNum, siginfo_t *si, void *uContext) {
 
 
 void MainThread() {
-    out = fopen("/tmp/apex.log", "w"); // create new log
-    setbuf(out, nullptr); // Turn off buffered I/O, decreases performance but if crash occurs, no unflushed buffer.
-
-    fprintf(out, "--Start of log--\n");
+    Logger::Log("Main Loaded.\n");
     pid_t pid = getpid();
 
     try {
         //input.Init(kb);
-//        input.Init(ms);
+        //input.Init(ms);
 
         WinContext ctx(pid);
         ctx.processList.Refresh();
-        fprintf(out, "started search loop with pid %i\n", pid);
         for (auto &i : ctx.processList) {
-            if (strcasecmp("inputsystem.ex", i.proc.name)) {
-                //fprintf(out, "%s\n", i.proc.name);
-                continue;
-            }
-            fprintf(out, "FOUND INPUTSYSTEM PROCESS %p\n", (void *) i.proc.process);
-            inputSystem = &i;
+            if (!strcasecmp("inputsystem.ex", i.proc.name)) {
+                inputSystem = &i;
 
-            for (auto &o : i.modules) {
-                fprintf(out, "%s\n", o.info.name);
-                //fprintf(out, "\t%.8lx\t%.8lx\t%lx\t%s\n", o.info.baseAddress, o.info.entryPoint, o.info.sizeOfModule, o.info.name);
-                if (!strcasecmp("inputsystem.exe", o.info.name)) {
-                    inputSystemBase = o.info.baseAddress;
-                    fprintf(out, "found input add\n");
-                }
-            }
-            break;
-        }
-        for (auto &i : ctx.processList) {
-            if (strcasecmp(PROCNAME, i.proc.name)) {
-
-                continue;
-            }
-            fprintf(out, "\nFound process %s(PID:%ld)", i.proc.name, i.proc.pid);
-            PEB peb = i.GetPeb();
-            short magic = i.Read<short>(peb.ImageBaseAddress);
-            uintptr_t translatedBase = VTranslate(&i.ctx->process, i.proc.dirBase, peb.ImageBaseAddress);
-            fprintf(out, "\tWinBase:\t%p\tBase:\t%p\tQemuBase:\t%p\tMagic:\t%hx (valid: %hhx)\n", (void *) peb.ImageBaseAddress, (void *) i.proc.process, (void *) translatedBase,
-                    magic, (char) (magic == IMAGE_DOS_SIGNATURE));
-            fprintf(out, "Inputsystem base: %p\n", (void *) inputSystem->proc.process);
-            fprintf(out, "Final Read Add: %p\n", (void *) (inputSystem->proc.process + 0x1D138));
-
-            for (auto &o : i.modules) {
-                //fprintf(out, "\t%.8lx\t%.8lx\t%lx\t%s\n", o.info.baseAddress, o.info.entryPoint, o.info.sizeOfModule, o.info.name);
-                if (!strcasecmp(MODNAME, o.info.name)) {
-                    apexLegendsBase = o.info.baseAddress;
-                    for (auto &u : o.exports)
-                        fprintf(out, "\t\t%lx\t%s\n", u.address, u.name);
+                for (auto &o : i.modules) {
+                    Logger::Log("%s\n", o.info.name);
+                    if (!strcasecmp("inputsystem.exe", o.info.name)) {
+                        Logger::Log("Found InputSystem Base: %p\n", (void*)o.info.baseAddress);
+                        inputBase = o.info.baseAddress;
+                    }
                 }
             }
 
-            //fclose(out);
-            // Infinite loop
-            process = &i;
-            static float col[3] = {125.0f, 0.0f, 0.0f};
-            fprintf(out, "Initialized!\n");
-            while (apexLegendsBase && running && inputSystemBase) {
-                /*if (!localPlayer) {
-                    localPlayer = GetLocalPlayer(&i);
-                    continue;
+            if (!strcasecmp(PROCNAME, i.proc.name)) {
+                Logger::Log("\nFound Apex Process %s(PID:%ld)", i.proc.name, i.proc.pid);
+                PEB peb = i.GetPeb();
+                short magic = i.Read<short>(peb.ImageBaseAddress);
+                uintptr_t translatedBase = VTranslate(&i.ctx->process, i.proc.dirBase, peb.ImageBaseAddress);
+                Logger::Log("\tWinBase:\t%p\tBase:\t%p\tQemuBase:\t%p\tMagic:\t%hx (valid: %hhx)\n", (void *) peb.ImageBaseAddress, (void *) i.proc.process, (void *) translatedBase,
+                            magic, (char) (magic == IMAGE_DOS_SIGNATURE));
+                process = &i;
+
+                for (auto &o : i.modules) {
+                    if (!strcasecmp(MODNAME, o.info.name)) {
+                        apexBase = o.info.baseAddress;
+                        for (auto &u : o.exports)
+                            Logger::Log("\t\t%lx\t%s\n", u.address, u.name);
+                    }
                 }
 
-                static bool drawn = false;
-                if (localPlayer && !drawn) {
-                    localPlayer = GetLocalPlayer(&i);
-                }
-                int health = i.Read<int>(localPlayer + 0x3D4);
-                if (health < 1) {
-                    drawn = false;
-                    continue;
-                }*/
-                entities.clear();
-                for (int ent = 1; ent < 100; ent++) {
-                    //fprintf( out, "Entity @%p\n", (void*)GetEntityById(ent, &i) );
-                    uintptr_t entity = GetEntityById(ent);
-
-                    entities.push_back(entity);
-                }
-                localPlayer = GetLocalPlayer();
-
-                Glow::Glow(col, out);
-                Aimbot::Aimbot(out);
-
-                std::this_thread::sleep_for(std::chrono::microseconds(1000));
             }
         }
-        fprintf(out, "meme error!");
 
-    } catch (VMException &e) {
-        fprintf(out, "Initialization error: %d\n", e.value);
-        fclose(out);
+        if( !process || !apexBase ){
+            Logger::Log("Could not Find Apex Process/Base. Exiting...\n");
+            return;
+        }
+        if( !inputSystem || !inputBase ){
+            Logger::Log("Could not Find Input Process/Base. Exiting...\n");
+            return;
+        }
+
+        Interfaces::FindInterfaces( *process, MODNAME );
+        Netvars::FindNetvars( *process, MODNAME );
+        localPlayer = GetLocalPlayer();
+
+        entList = GetAbsoluteAddressVm( *process, Scanner::FindPatternInModule( "48 8D 05 ?? ?? ?? ?? 48 C1 E1 05 48 03 C8 0F B7 05 ?? ?? ?? ?? 39 41 08 75 51", MODNAME, *process ), 3, 7 );
+
+        static float col[3] = {125.0f, 0.0f, 0.0f};
+        Logger::Log("Starting Main Loop.\n");
+        while ( running ) {
+            entities.clear();
+            for (int ent = 1; ent < 100; ent++) {
+                uintptr_t entity = GetEntityById(ent);
+                if( !entity ) continue;
+                entities.push_back(entity);
+            }
+            Glow::Glow(col);
+            Aimbot::Aimbot();
+
+            std::this_thread::sleep_for(std::chrono::microseconds(1000));
+        }
+        Logger::Log("Main Loop Ended.\n");
+
+    } catch (VMException& e) {
+        Logger::Log("Initialization error: %d\n", e.value);
         return;
     }
+    Logger::Log("Main Ended.\n");
 }
 
 void __attribute__((constructor)) Startup() {
@@ -141,5 +128,7 @@ void __attribute__((constructor)) Startup() {
 }
 
 void __attribute__((destructor)) Shutdown() {
-    sigaction(SIGXCPU, &oldSa, NULL);
+    Logger::Log("Unloading...");
+    sigaction( SIGXCPU, &oldSa, NULL );
+    Logger::Log("Done\n");
 }

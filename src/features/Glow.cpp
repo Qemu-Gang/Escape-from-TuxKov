@@ -1,37 +1,38 @@
 #include "Glow.h"
 
-void Glow::Glow(float *colors, FILE *out) {
-    if (entities.empty()) {
-        return;
-    }
-    for (int ent = 0; ent < entities.size(); ent++) {
+#include "../utils/Wrappers.h"
+#include "../sdk/CBaseEntity.h"
+
+static void WriteGlow( uintptr_t entity, float *colors )
+{
+    process->Write<bool>(entity + OFFSET_OF(&CBaseEntity::bGlowEnable), true); // Enabling the Glow
+    process->Write<int>(entity + OFFSET_OF(&CBaseEntity::iGlowEnable), 1); // Enabling the Glow
+
+    process->Write<float>(entity + OFFSET_OF(&CBaseEntity::glowR), colors[0]); // Setting a value for the Color Red between 0 and 255
+    process->Write<float>(entity + OFFSET_OF(&CBaseEntity::glowG), colors[1]); // Setting a value for the Color Green between 0 and 255
+    process->Write<float>(entity + OFFSET_OF(&CBaseEntity::glowB), colors[2]); // Setting a value for the Color Blue between 0 and 255
+
+    process->Write<float>(entity + OFFSET_OF(&CBaseEntity::glowTimes1), __FLT_MAX__); // Setting the time of the Glow to be the Max Float value so it never runs out
+    process->Write<float>(entity + OFFSET_OF(&CBaseEntity::glowTimes2), __FLT_MAX__); // Setting the time of the Glow to be the Max Float value so it never runs out
+    process->Write<float>(entity + OFFSET_OF(&CBaseEntity::glowTimes3), __FLT_MAX__); // Setting the time of the Glow to be the Max Float value so it never runs out
+    process->Write<float>(entity + OFFSET_OF(&CBaseEntity::glowTimes4), __FLT_MAX__); // Setting the time of the Glow to be the Max Float value so it never runs out
+    process->Write<float>(entity + OFFSET_OF(&CBaseEntity::glowTimes5), __FLT_MAX__); // Setting the time of the Glow to be the Max Float value so it never runs out
+    process->Write<float>(entity + OFFSET_OF(&CBaseEntity::glowTimes6), __FLT_MAX__); // Setting the time of the Glow to be the Max Float value so it never runs out
+
+    process->Write<float>(entity + OFFSET_OF(&CBaseEntity::glowDistance), __FLT_MAX__); //Set the Distance of the Glow to Max float value so we can see a long Distance
+}
+
+void Glow::Glow(float *colors) {
+    for (size_t ent = 0; ent < entities.size(); ent++) {
 
         uintptr_t entity = entities.at(ent);
-        if (!entity || entity == localPlayer) {
+        if (entity == localPlayer) {
             continue;
         }
-        process->Write<bool>(entity + 0x380, true); // Enabling the Glow
-        process->Write<int>(entity + 0x2F0, 1); // Enabling the Glow
-        process->Write<float>(entity + 0x1B0, colors[0]); // Setting a value for the Color Red between 0 and 255
-        process->Write<float>(entity + 0x1B4, colors[1]); // Setting a value for the Color Green between 0 and 255
-        process->Write<float>(entity + 0x1B8, colors[2]); // Setting a value for the Color Blue between 0 and 255
-
-        for (int offset = 0x2B0; offset <= 0x2C8; offset += 0x4) // Setting the of the Glow at all necessary spots
-            process->Write<float>(entity + offset, __FLT_MAX__); // Setting the time of the Glow to be the Max Float value so it never runs out
-
-        process->Write<float>(entity + 0x2DC, __FLT_MAX__); //Set the Distance of the Glow to Max float value so we can see a long Distance
+        WriteGlow( entity, colors );
     }
 }
 
 void Glow::GlowPlayer(uintptr_t entity, float *colors) {
-    process->Write<bool>(entity + 0x380, true); // Enabling the Glow
-    process->Write<int>(entity + 0x2F0, 1); // Enabling the Glow
-    process->Write<float>(entity + 0x1B0, colors[0]); // Setting a value for the Color Red between 0 and 255
-    process->Write<float>(entity + 0x1B4, colors[1]); // Setting a value for the Color Green between 0 and 255
-    process->Write<float>(entity + 0x1B8, colors[2]); // Setting a value for the Color Blue between 0 and 255
-
-    for (int offset = 0x2B0; offset <= 0x2C8; offset += 0x4) // Setting the of the Glow at all necessary spots
-        process->Write<float>(entity + offset, __FLT_MAX__); // Setting the time of the Glow to be the Max Float value so it never runs out
-
-    process->Write<float>(entity + 0x2DC, __FLT_MAX__);
+    WriteGlow( entity, colors );
 }

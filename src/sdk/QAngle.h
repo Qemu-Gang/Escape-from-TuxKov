@@ -111,7 +111,6 @@ inline QAngle::QAngle( float X, float Y, float Z ) {
     x = X;
     y = Y;
     z = Z;
-    CHECK_VALID( *this );
 }
 
 //-----------------------------------------------------------------------------
@@ -121,21 +120,18 @@ inline void QAngle::Init( float ix, float iy, float iz ) {
     x = ix;
     y = iy;
     z = iz;
-    CHECK_VALID( *this );
 }
 
 inline void QAngle::Random( float minVal, float maxVal ) {
     x = minVal + ( ( float ) rand() / RAND_MAX ) * ( maxVal - minVal );
     y = minVal + ( ( float ) rand() / RAND_MAX ) * ( maxVal - minVal );
     z = minVal + ( ( float ) rand() / RAND_MAX ) * ( maxVal - minVal );
-    CHECK_VALID( *this );
 }
 
 //-----------------------------------------------------------------------------
 // assignment
 //-----------------------------------------------------------------------------
 inline QAngle& QAngle::operator=( const QAngle& vOther ) {
-    CHECK_VALID( vOther );
     x = vOther.x;
     y = vOther.y;
     z = vOther.z;
@@ -146,14 +142,10 @@ inline QAngle& QAngle::operator=( const QAngle& vOther ) {
 // comparison
 //-----------------------------------------------------------------------------
 inline bool QAngle::operator==( const QAngle& src ) const {
-    CHECK_VALID( src );
-    CHECK_VALID( *this );
     return ( src.x == x ) && ( src.y == y ) && ( src.z == z );
 }
 
 inline bool QAngle::operator!=( const QAngle& src ) const {
-    CHECK_VALID( src );
-    CHECK_VALID( *this );
     return ( src.x != x ) || ( src.y != y ) || ( src.z != z );
 }
 
@@ -161,8 +153,6 @@ inline bool QAngle::operator!=( const QAngle& src ) const {
 // standard utils operations
 //-----------------------------------------------------------------------------
 inline QAngle& QAngle::operator+=( const QAngle& v ) {
-    CHECK_VALID( *this );
-    CHECK_VALID( v );
     x += v.x;
     y += v.y;
     z += v.z;
@@ -170,8 +160,6 @@ inline QAngle& QAngle::operator+=( const QAngle& v ) {
 }
 
 inline QAngle& QAngle::operator-=( const QAngle& v ) {
-    CHECK_VALID( *this );
-    CHECK_VALID( v );
     x -= v.x;
     y -= v.y;
     z -= v.z;
@@ -182,7 +170,6 @@ inline QAngle& QAngle::operator*=( float fl ) {
     x *= fl;
     y *= fl;
     z *= fl;
-    CHECK_VALID( *this );
     return *this;
 }
 
@@ -192,7 +179,6 @@ inline QAngle& QAngle::operator/=( float fl ) {
     x *= oofl;
     y *= oofl;
     z *= oofl;
-    CHECK_VALID( *this );
     return *this;
 }
 
@@ -224,13 +210,11 @@ inline float QAngle::operator[]( int i ) const {
 // length
 //-----------------------------------------------------------------------------
 inline float QAngle::Length() const {
-    CHECK_VALID( *this );
     return ( float ) FastSqrt( LengthSqr() );
 }
 
 
 inline float QAngle::LengthSqr() const {
-    CHECK_VALID( *this );
     return x * x + y * y + z * z;
 }
 
@@ -285,8 +269,6 @@ inline QAngle operator*( float fl, const QAngle& v ) {
 
 //QANGLE SUBTRAC
 inline void QAngleSubtract( const QAngle& a, const QAngle& b, QAngle& c ) {
-    CHECK_VALID( a );
-    CHECK_VALID( b );
     c.x = a.x - b.x;
     c.y = a.y - b.y;
     c.z = a.z - b.z;
@@ -294,8 +276,6 @@ inline void QAngleSubtract( const QAngle& a, const QAngle& b, QAngle& c ) {
 
 //QANGLEADD
 inline void QAngleAdd( const QAngle& a, const QAngle& b, QAngle& c ) {
-    CHECK_VALID( a );
-    CHECK_VALID( b );
     c.x = a.x + b.x;
     c.y = a.y + b.y;
     c.z = a.z + b.z;

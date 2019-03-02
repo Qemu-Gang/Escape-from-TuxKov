@@ -1,7 +1,6 @@
-#ifndef APE_EX_WRAPPERS_H
-#define APE_EX_WRAPPERS_H
+#pragma once
 
-#include "../utils.h"
+#include "../globals.h"
 
 #include "../sdk/Vector.h"
 #include "../sdk/QAngle.h"
@@ -16,7 +15,6 @@ struct BoneMatrix {
 };
 
 inline Vector GetBonePos(uintptr_t entity, int bone, Vector rootpos) {
-
     uintptr_t p_matrix = process->Read<uintptr_t>(entity + 0xED8);
 
     if (!p_matrix)
@@ -31,17 +29,16 @@ inline Vector GetBonePos(uintptr_t entity, int bone, Vector rootpos) {
 }
 
 inline uintptr_t GetEntityById(int ent) {
-    uintptr_t entList = apexLegendsBase + 0x1F6CAB8;
     uintptr_t baseEntity = process->Read<uintptr_t>(entList);
 
     if (!baseEntity || !ent) {
-        return NULL;
+        return (uintptr_t)NULL;
     }
 
     return process->Read<uintptr_t>(entList + (ent << 5));
 }
 
-inline uintptr_t GetActiveWeapon(uintptr_t entity, FILE* out) {
+inline uintptr_t GetActiveWeapon(uintptr_t entity) {
     uintptr_t weapon = process->Read<uintptr_t>(entity + 0x1634);
     if(!weapon)
         return 0;
@@ -54,7 +51,7 @@ inline uintptr_t GetActiveWeapon(uintptr_t entity, FILE* out) {
 }
 
 inline uintptr_t GetLocalPlayer() {
-    int add = process->Read<int>(apexLegendsBase + 0x172263C);
+    int add = process->Read<int>(apexBase + 0x172263C);
 
     for (int ent = 1; ent < 100; ent++) {
         uintptr_t entity = GetEntityById(ent);
@@ -68,4 +65,3 @@ inline uintptr_t GetLocalPlayer() {
     }
     return 0;
 }
-#endif  // APE_EX_WRAPPERS_H

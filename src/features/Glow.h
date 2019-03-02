@@ -1,13 +1,7 @@
-#ifndef APE_EX_GLOW_H
-#define APE_EX_GLOW_H
-
-#include "../utils/Wrappers.h"
-
+#pragma once
+#include <cstdint>
 
 namespace Glow {
-    void Glow(float colors[3], FILE* out);
+    void Glow(float colors[3]);
     void GlowPlayer(uintptr_t entity, float colors[3]);
 };
-
-
-#endif //APE_EX_GLOW_H
