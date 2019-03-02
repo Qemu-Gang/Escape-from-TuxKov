@@ -1,11 +1,12 @@
 #include "Aimbot.h"
 #include "Glow.h"
 #include "math.h"
+
 void Aimbot::Aimbot() {
-    if(!localPlayer)
+    if (!localPlayer)
         return;
     QAngle viewAngle = process->Read<QAngle>(localPlayer + 0x20B8);
-    BreathCompensation(out, viewAngle);
+    BreathCompensation(viewAngle);
 
     int state = inputSystem->Read<int>(inputBase + 0x8030);
     if (!state) {
@@ -44,13 +45,13 @@ void Aimbot::Aimbot() {
         Vector origin = process->Read<Vector>(entity + 0x12C);
 
         Vector enemyHeadPosition = GetBonePos(entity, 12, origin);
-        if(enemyHeadPosition.x == 0.0f && enemyHeadPosition.y == 0.0f && enemyHeadPosition.z == 0.0f)
+        if (enemyHeadPosition.x == 0.0f && enemyHeadPosition.y == 0.0f && enemyHeadPosition.z == 0.0f)
             continue;
 
         float distance = pos.DistTo(enemyHeadPosition);
 
         QAngle aimAngle = Math::CalcAngle(pos, enemyHeadPosition);
-        if((aimAngle.x == 0.0f && aimAngle.y == 0.0f && aimAngle.z == 0.0f)|| isnan(aimAngle.x) || isnan(aimAngle.y) || isnan(aimAngle.z) )
+        if ((aimAngle.x == 0.0f && aimAngle.y == 0.0f && aimAngle.z == 0.0f) || isnan(aimAngle.x) || isnan(aimAngle.y) || isnan(aimAngle.z))
             continue;
 
         float fov = Math::DistanceFOV(viewAngle, aimAngle, distance);
@@ -61,7 +62,7 @@ void Aimbot::Aimbot() {
 
     }
 
-    if(!finalEntity)
+    if (!finalEntity)
         return;
 
     Vector origin = process->Read<Vector>(finalEntity + 0x12C);
@@ -71,8 +72,8 @@ void Aimbot::Aimbot() {
     float dist = pos.DistTo(enemyHeadPosition);
     dist *= 0.01905f;
 
-    uintptr_t weapon = GetActiveWeapon(localPlayer, out);
-  
+    uintptr_t weapon = GetActiveWeapon(localPlayer);
+
     if (!weapon) {
         return;
     }
@@ -80,7 +81,7 @@ void Aimbot::Aimbot() {
     Nospread(weapon);
 
     float bulletVel = process->Read<float>(weapon + 0x1bac);
-    if(bulletVel == 0.0f)
+    if (bulletVel == 0.0f)
         return;
 
     bulletVel *= 0.01905f;
@@ -128,11 +129,11 @@ void Aimbot::RecoilCompensation(QAngle &angle) {
     angle -= aimpunch;
 }
 
-void Aimbot::BreathCompensation(FILE* out, QAngle &angle) {
+void Aimbot::BreathCompensation(QAngle &angle) {
     static QAngle oldBreath = QAngle();
 
     QAngle breath = angle - process->Read<QAngle>(localPlayer + 0x20A8);
-    if(breath.x != 0.0f && breath.y != 0.0f) {
+    if (breath.x != 0.0f && breath.y != 0.0f) {
         angle = (angle + oldBreath) - breath;
         oldBreath = breath;
     }
