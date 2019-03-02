@@ -86,7 +86,7 @@ void Aimbot::Aimbot(FILE* out) {
     bulletVel *= 0.01905f;
 
     Vector targetVelocity = process->Read<Vector>(finalEntity + 0x120);
-    targetVelocity *= 0.01905f;
+    //targetVelocity *= 0.01905f;
 
     //float interval_per_tick = process->Read<float>(0x1713CA8 + 0x44);
 
