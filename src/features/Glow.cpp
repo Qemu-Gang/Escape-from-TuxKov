@@ -3,8 +3,7 @@
 #include "../utils/Wrappers.h"
 #include "../sdk/CBaseEntity.h"
 
-static void WriteGlow( uintptr_t entity, float *colors )
-{
+static void WriteGlow(uintptr_t entity, float *colors) {
     process->Write<bool>(entity + OFFSET_OF(&CBaseEntity::bGlowEnable), true); // Enabling the Glow
     process->Write<int>(entity + OFFSET_OF(&CBaseEntity::iGlowEnable), 1); // Enabling the Glow
 
@@ -23,16 +22,26 @@ static void WriteGlow( uintptr_t entity, float *colors )
 }
 
 void Glow::Glow(float *colors) {
+    int teamTeamNumber = process->Read<int>(localPlayer + 0x3E4);
+
     for (size_t ent = 0; ent < entities.size(); ent++) {
 
         uintptr_t entity = entities.at(ent);
         if (entity == localPlayer) {
             continue;
         }
-        WriteGlow( entity, colors );
+
+        int tmp = process->Read<int>(entity + 0x3E4);
+        static float team[3] = {0.0f, 125.0f, 0.0f};
+        if (tmp == teamTeamNumber)
+            WriteGlow(entity, team);
+        else
+            WriteGlow(entity, colors);
+
+
     }
 }
 
 void Glow::GlowPlayer(uintptr_t entity, float *colors) {
-    WriteGlow( entity, colors );
+    WriteGlow(entity, colors);
 }

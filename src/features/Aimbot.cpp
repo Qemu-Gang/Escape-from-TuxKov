@@ -8,7 +8,7 @@ void Aimbot::Aimbot() {
     QAngle viewAngle = process->Read<QAngle>(localPlayer + 0x20B8);
     BreathCompensation(viewAngle);
 
-    int state = inputSystem->Read<int>(inputBase + 0x8030);
+    int state = inputSystem->Read<int>(inputBase + 0x3388);
     if (!state) {
         return;
     }
@@ -86,7 +86,8 @@ void Aimbot::Aimbot() {
 
     bulletVel *= 0.01905f;
 
-    Vector targetVelocity = process->Read<Vector>(finalEntity + 0x120);
+    Vector enemyVelocity = process->Read<Vector>(finalEntity + 0x120);
+    Vector targetVelocity = enemyVelocity - process->Read<Vector>(localPlayer + 0x120);
     //targetVelocity *= 0.01905f;
 
     //float interval_per_tick = process->Read<float>(0x1713CA8 + 0x44);
