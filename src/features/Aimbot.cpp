@@ -1,6 +1,7 @@
 #include "Aimbot.h"
 #include "Glow.h"
 #include "math.h"
+#include "../utils/Logger.h"
 
 void Aimbot::Aimbot() {
     if (!localPlayer)
@@ -15,14 +16,15 @@ void Aimbot::Aimbot() {
 
     uintptr_t finalEntity = 0;
 
-    Vector localOrigin = process->Read<Vector>(localPlayer + 0x12C);
+    //Vector localOrigin = process->Read<Vector>(localPlayer + 0x12C);
     //Vector localOrigin = process->Read<Vector>(localPlayer + 0x50);
     //Vector viewOffset = process->Read<Vector>(localPlayer + 0x30);
-    //Vector pos = process->Read<Vector>(localPlayer + 0x3AA0);
-    Vector pos = GetBonePos(localPlayer, 12, localOrigin);
+    Vector pos = process->Read<Vector>(localPlayer + 0x3AA0);
+    //Vector pos = GetBonePos(localPlayer, 12, localOrigin);
+    //Logger::Log("LocalEye: X:%f, Y:%f, Z:%f\n", pos.x, pos.y, pos.z);
+    //Logger::Log("LocalEye2: X:%f, Y:%f, Z:%f\n", pos2.x, pos2.y, pos2.z);
 
     int localTeam = process->Read<int>(localPlayer + 0x3E4);
-
 
     float bestFov = __FLT_MAX__;
     for (size_t ent = 0; ent < entities.size(); ent++) {

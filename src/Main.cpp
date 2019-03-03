@@ -13,7 +13,7 @@
 #include <atomic>
 #include <csignal>
 
-#define SWAGGIN
+//#define SWAGGIN
 
 #ifdef SWAGGIN
     #define PROCNAME "EasyAntiCheat_"
