@@ -3,6 +3,6 @@
 
 namespace Netvars
 {
-    void FindNetvars( WinProcess &process, const char *moduleName );
+    bool FindNetvars( WinProcess &process, const char *moduleName );
 }
 

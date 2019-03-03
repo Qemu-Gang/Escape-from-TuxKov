@@ -13,7 +13,7 @@
 #include <atomic>
 #include <csignal>
 
-//#define SWAGGIN
+#define SWAGGIN
 
 #ifdef SWAGGIN
     #define PROCNAME "EasyAntiCheat_"
@@ -51,7 +51,6 @@ void MainThread() {
                 inputSystem = &i;
 
                 for (auto &o : i.modules) {
-                    Logger::Log("%s\n", o.info.name);
                     if (!strcasecmp("inputsystem.exe", o.info.name)) {
                         Logger::Log("Found InputSystem Base: %p\n", (void*)o.info.baseAddress);
                         inputBase = o.info.baseAddress;
@@ -88,10 +87,20 @@ void MainThread() {
             return;
         }
 
-        Interfaces::FindInterfaces( *process, MODNAME );
-        //Netvars::FindNetvars( *process, MODNAME );
+        if( !Interfaces::FindInterfaces( *process, MODNAME ) ){
+            Logger::Log("Could not find interfaces!\n");
+            return;
+        }
+        if( !Netvars::FindNetvars( *process, MODNAME ) ){
+            Logger::Log("Could not find netvars!\n");
+            return;
+        }
 
         entList = GetAbsoluteAddressVm( *process, Scanner::FindPatternInModule( "48 8D 05 ?? ?? ?? ?? 48 C1 E1 05 48 03 C8 0F B7 05 ?? ?? ?? ?? 39 41 08 75 51", MODNAME, *process ), 3, 7 );
+        if( !entList ){
+            Logger::Log("Could not find Entlist!\n");
+            return;
+        }
 
         static float col[3] = {125.0f, 0.0f, 0.0f};
         Logger::Log("Starting Main Loop.\n");
