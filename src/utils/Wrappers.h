@@ -4,6 +4,7 @@
 
 #include "../sdk/Vector.h"
 #include "../sdk/QAngle.h"
+#include "Logger.h"
 
 struct BoneMatrix {
     char __buff_0x00[0xC];//0x00
@@ -42,11 +43,14 @@ inline uintptr_t GetActiveWeapon(uintptr_t entity) {
     uintptr_t weapon = process->Read<uintptr_t>(entity + 0x1634);
     if(!weapon)
         return 0;
+    //Logger::Log("Weapon ptr: %p\n", (void*)weapon);
 
     weapon &= 0xFFFF;
 
     if(!weapon)
         return 0;
+    //Logger::Log("ID: %i\n", weapon);
+
     return GetEntityById(weapon);
 }
 
