@@ -121,8 +121,9 @@ void Aimbot::Aimbot() {
     RecoilCompensation(aimAngle);
     aimAngle.Normalize();
     Math::Clamp(aimAngle);
-    process->Write(localPlayer + 0x20B8, aimAngle.x);
-    process->Write(localPlayer + 0x20BC, aimAngle.y);
+    process->Write(localPlayer + 0x20B8, aimAngle);
+    //process->Write(localPlayer + 0x20A8, aimAngle);
+    //process->Write(localPlayer + 0x20BC, aimAngle.y);
 
     static float col[3] = {0.0f, 0.0f, 255.0f};
     Glow::GlowPlayer(finalEntity, col);
@@ -138,8 +139,7 @@ void Aimbot::BreathCompensation(QAngle &viewAngle, QAngle &angle) {
     QAngle breath = process->Read<QAngle>(localPlayer + 0x20A8) - viewAngle;
     Logger::Log("Breath: (%f, %f, %f)\n", breath.x, breath.y, breath.z);
 
-    angle = angle + (breath * -1.0f);
-    //process->Write<QAngle>(localPlayer + 0x2B8, viewAngle);
+    angle += breath * 2.0f;
 }
 
 void Aimbot::Nospread(uintptr_t weapon) {
