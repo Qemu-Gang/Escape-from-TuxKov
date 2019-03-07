@@ -3,6 +3,6 @@
 
 namespace Interfaces
 {
-    void FindInterfaces( WinProcess &process, const char *moduleName );
+    bool FindInterfaces( WinProcess &process, const char *moduleName );
 
 }

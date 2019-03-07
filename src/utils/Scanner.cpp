@@ -1,7 +1,7 @@
 #include "Scanner.h"
 #include "Logger.h"
 
-char *byteCache; // Windows module copied in
+static unsigned char *byteCache; // Windows module copied in
 
 inline bool Compare( const unsigned char* pData, const unsigned char* bMask, const char* szMask )
 {
@@ -14,10 +14,9 @@ inline bool Compare( const unsigned char* pData, const unsigned char* bMask, con
 
 static uintptr_t FindPatternOffset( uintptr_t start, uintptr_t max, unsigned char* bMask, const char* szMask )
 {
-    for (uintptr_t i = 0; i < max; i++) {
-        uintptr_t currAddr = start + i;
-        if ( Compare( (unsigned char*)currAddr, bMask, szMask ) ){
-            return currAddr;
+    for (uintptr_t i = start; i < max; i++) {
+        if ( Compare( (unsigned char*)i, bMask, szMask ) ){
+            return i;
         }
     }
 
@@ -28,8 +27,8 @@ uintptr_t Scanner::FindPatternInModule( const char *pattern, const char *moduleN
     size_t patternLen = strlen( pattern );
     uintptr_t startingAddr = 0;
     uintptr_t endingAddr = 0;
-    uintptr_t ret = 0;
-
+    uintptr_t offset = 0;
+    size_t regionSize = 0;
     unsigned char *bMask = new unsigned char[patternLen](); //  bit bigger than needed but ok
     char *szMask = new char[patternLen](); //  ^^
 
@@ -49,12 +48,13 @@ uintptr_t Scanner::FindPatternInModule( const char *pattern, const char *moduleN
     }
 
     /* Copy module into linux memory */
-    byteCache = new char[endingAddr - startingAddr];
-    VMemRead( &process.ctx->process, process.proc.dirBase, (uint64_t)byteCache, startingAddr, endingAddr - startingAddr );
+    regionSize = endingAddr - startingAddr;
+    byteCache = new unsigned char[regionSize];
+    VMemRead( &process.ctx->process, process.proc.dirBase, (uint64_t)byteCache, startingAddr, regionSize );
 
 
     /* Generate a byte mask and x/? mask at the same time */
-    char byteBuffer[2];
+    char byteBuffer[3];
     for( size_t i = 0; i < patternLen; i++ ){
         if( pattern[i] == ' ' ){
             szMaskIndex++;
@@ -70,17 +70,20 @@ uintptr_t Scanner::FindPatternInModule( const char *pattern, const char *moduleN
         if( pattern[i+1] == ' ' || pattern[i+1] == '\0' ){
             byteBuffer[0] = pattern[i - 1];
             byteBuffer[1] = pattern[i];
-            bMask[bMaskIndex] = (unsigned char)strtol( byteBuffer, NULL, 16 );
+            bMask[bMaskIndex] = (unsigned char)strtoul( byteBuffer, NULL, 16 );
             bMaskIndex++;
         }
     }
 
-    ret = FindPatternOffset( (uintptr_t)byteCache, (uintptr_t)&byteCache[endingAddr - startingAddr], bMask, szMask );
-    ret = ret - (uintptr_t)byteCache;
-
+    /* Do the Scan in linux memory, subtract offset and apply */
+    offset = FindPatternOffset( (uintptr_t)byteCache, (uintptr_t)&byteCache[regionSize], bMask, szMask );
+    if( !offset ){
+        return 0;
+    }
+    offset = offset - (uintptr_t)byteCache;
 end:
     delete[] bMask;
     delete[] szMask;
     delete[] byteCache;
-    return startingAddr + ret;
+    return startingAddr + offset;
 }

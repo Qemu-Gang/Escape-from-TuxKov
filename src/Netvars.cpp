@@ -4,10 +4,12 @@
 #include "utils/Memutils.h"
 #include "sdk/ClientClass.h"
 
-void Netvars::FindNetvars( WinProcess &process, const char *moduleName ) {
+bool Netvars::FindNetvars( WinProcess &process, const char *moduleName ) {
     uintptr_t clientHeadAddr = GetAbsoluteAddressVm(process, Scanner::FindPatternInModule( "48 8B 1D ? ? ? ? 48 8B AC 24", moduleName, process ), 3, 7);
+    if( !clientHeadAddr ){
+        return false;
+    }
     Logger::Log( "ClientClassHead @ %p\n", (void*)clientHeadAddr );
-
     uintptr_t recvTable;
     int32_t propNum;
     uint32_t offset;
@@ -34,4 +36,6 @@ void Netvars::FindNetvars( WinProcess &process, const char *moduleName ) {
         }
 
     }
+
+    return true;
 }
