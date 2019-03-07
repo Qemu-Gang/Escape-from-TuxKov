@@ -2,6 +2,6 @@
 #include <cstdint>
 
 namespace Glow {
-    void Glow(float colors[3]);
+    void Glow();
     void GlowPlayer(uintptr_t entity, float colors[3]);
 };

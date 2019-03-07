@@ -95,7 +95,6 @@ void MainThread() {
         entList = GetAbsoluteAddressVm(*process, Scanner::FindPatternInModule("48 8D 05 ?? ?? ?? ?? 48 C1 E1 05 48 03 C8 0F B7 05 ?? ?? ?? ?? 39 41 08 75 51", MODNAME, *process),
                                        3, 7);
         //std::string init = process->Read<std::string>(localPlayer + )
-        static float col[3] = {125.0f, 0.0f, 0.0f};
         Logger::Log("Starting Main Loop.\n");
         while (running) {
             entities.clear();
@@ -106,7 +105,7 @@ void MainThread() {
             }
             localPlayer = GetLocalPlayer();
 
-            Glow::Glow(col);
+            Glow::Glow();
             Aimbot::Aimbot();
             //process->Write<std::string>(localPlayer + 0x21c9, "Nig");
 

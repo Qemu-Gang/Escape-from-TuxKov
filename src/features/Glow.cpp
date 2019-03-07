@@ -3,6 +3,32 @@
 #include "../utils/Wrappers.h"
 #include "../sdk/CBaseEntity.h"
 
+
+static float teamColors[][3] = {
+        { 0, 150, 0 }, // green
+        { 0, 75, 0 }, // dark green
+        { 75, 0, 0 }, // dark red
+        { 150, 0, 0 }, // red
+        { 0, 0, 75 }, // dark blue
+        { 0, 0, 150 }, // blue
+        { 75, 0, 75 }, // purpleish
+        { 0, 0, 0 }, // black
+        { 255, 255, 255 }, // white
+        { 0, 200, 200 }, // cyan
+        { 255, 128, 0 }, // pink
+        { 255, 255, 0 }, // yellow
+        { 100, 50, 0 }, // brown
+        { 96, 96, 96 }, // grey
+        { 0, 0, 255 }, // bright blue
+        { 255, 0, 0 }, // bright red
+        { 0, 255, 0 }, // bright green
+        { 50, 100, 0 }, // dark slime
+        { 75, 75, 0 }, // dank yellow
+        { 0, 150, 150 }, // dark teal
+        { 255, 0, 255 }, // hot pink - 20
+};
+
+
 static void WriteGlow(uintptr_t entity, float *colors) {
     process->Write<bool>(entity + OFFSET_OF(&CBaseEntity::bGlowEnable), true); // Enabling the Glow
     process->Write<int>(entity + OFFSET_OF(&CBaseEntity::iGlowEnable), 1); // Enabling the Glow
@@ -21,8 +47,8 @@ static void WriteGlow(uintptr_t entity, float *colors) {
     process->Write<float>(entity + OFFSET_OF(&CBaseEntity::glowDistance), __FLT_MAX__); //Set the Distance of the Glow to Max float value so we can see a long Distance
 }
 
-void Glow::Glow(float *colors) {
-    int teamTeamNumber = process->Read<int>(localPlayer + 0x3E4);
+void Glow::Glow() {
+    int localTeam = process->Read<int>(localPlayer + 0x3E4);
 
     for (size_t ent = 0; ent < entities.size(); ent++) {
 
@@ -31,14 +57,10 @@ void Glow::Glow(float *colors) {
             continue;
         }
 
-        int tmp = process->Read<int>(entity + 0x3E4);
-        static float team[3] = {0.0f, 125.0f, 0.0f};
-        if (tmp == teamTeamNumber)
-            WriteGlow(entity, team);
-        else
-            WriteGlow(entity, colors);
-
-
+        int team = process->Read<int>(entity + 0x3E4);
+        if (team != localTeam) {
+            WriteGlow(entity, teamColors[std::min(team, 20)]);
+        }
     }
 }
 
