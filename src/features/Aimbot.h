@@ -8,7 +8,7 @@ namespace Aimbot {
 
     void Nospread(uintptr_t weapon);
 
-    void BreathCompensation(QAngle &viewAngle);
+    void BreathCompensation(QAngle &viewAngle, QAngle &angle);
 
     void Aimbot();
 

@@ -8,13 +8,12 @@ namespace Math {
         QAngle angles;
         Vector delta = src - dst;
 
-        if(delta.x == 0.0f && delta.y == 0.0f) {
+        if (delta.x == 0.0f && delta.y == 0.0f) {
             angles[0] = (delta[2] > 0.0f) ? 270.0f : 90.0f; // Pitch (up/down)
             angles[1] = 0.0f; //yaw left/right
         } else {
             angles[PITCH] = (atan2(-delta.z, delta.Length2D())) * -180 / M_PI;
-            //ret[PITCH] = (asinf(delta.z / hyp)) * 180.0f / M_PI;
-            //ret[YAW] = (atanf(delta.y / delta.x)) * 180.0f / M_PI;
+
             angles[YAW] = (atan2(delta.y, delta.x)) * 180 / M_PI;
 
             if (angles[1] > 90)
@@ -60,7 +59,6 @@ namespace Math {
         float angleFOV = AngleFOV(viewAngle, aimAngle);
 
         float radian = DEG_TO_RADIAN(angleFOV);
-        distance *= 0.01905f;
         float distanceFOV = sinf(radian) * distance; // sin(dif) = viewAngle / realDelta
 
         return distanceFOV;

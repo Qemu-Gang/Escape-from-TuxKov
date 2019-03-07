@@ -16,11 +16,11 @@
 //#define SWAGGIN
 
 #ifdef SWAGGIN
-    #define PROCNAME "EasyAntiCheat_"
-    #define MODNAME "EasyAntiCheat_launcher.exe"
+#define PROCNAME "EasyAntiCheat_"
+#define MODNAME "EasyAntiCheat_launcher.exe"
 #else
-    #define PROCNAME "r5apex.exe"
-    #define MODNAME "r5apex.exe"
+#define PROCNAME "r5apex.exe"
+#define MODNAME "r5apex.exe"
 #endif
 
 static std::atomic<bool> running = true;
@@ -51,8 +51,9 @@ void MainThread() {
                 inputSystem = &i;
 
                 for (auto &o : i.modules) {
+                    Logger::Log("%s\n", o.info.name);
                     if (!strcasecmp("inputsystem.exe", o.info.name)) {
-                        Logger::Log("Found InputSystem Base: %p\n", (void*)o.info.baseAddress);
+                        Logger::Log("Found InputSystem Base: %p\n", (void *) o.info.baseAddress);
                         inputBase = o.info.baseAddress;
                     }
                 }
@@ -63,7 +64,8 @@ void MainThread() {
                 PEB peb = i.GetPeb();
                 short magic = i.Read<short>(peb.ImageBaseAddress);
                 uintptr_t translatedBase = VTranslate(&i.ctx->process, i.proc.dirBase, peb.ImageBaseAddress);
-                Logger::Log("\tWinBase:\t%p\tBase:\t%p\tQemuBase:\t%p\tMagic:\t%hx (valid: %hhx)\n", (void *) peb.ImageBaseAddress, (void *) i.proc.process, (void *) translatedBase,
+                Logger::Log("\tWinBase:\t%p\tBase:\t%p\tQemuBase:\t%p\tMagic:\t%hx (valid: %hhx)\n", (void *) peb.ImageBaseAddress, (void *) i.proc.process,
+                            (void *) translatedBase,
                             magic, (char) (magic == IMAGE_DOS_SIGNATURE));
                 process = &i;
 
@@ -78,49 +80,42 @@ void MainThread() {
             }
         }
 
-        if( !process || !apexBase ){
+        if (!process || !apexBase) {
             Logger::Log("Could not Find Apex Process/Base. Exiting...\n");
             return;
         }
-        if( !inputSystem || !inputBase ){
+        if (!inputSystem || !inputBase) {
             Logger::Log("Could not Find Input Process/Base. Exiting...\n");
             return;
         }
 
-        if( !Interfaces::FindInterfaces( *process, MODNAME ) ){
-            Logger::Log("Could not find interfaces!\n");
-            return;
-        }
-        if( !Netvars::FindNetvars( *process, MODNAME ) ){
-            Logger::Log("Could not find netvars!\n");
-            return;
-        }
+        Interfaces::FindInterfaces(*process, MODNAME);
+        //Netvars::FindNetvars( *process, MODNAME );
 
-        entList = GetAbsoluteAddressVm( *process, Scanner::FindPatternInModule( "48 8D 05 ?? ?? ?? ?? 48 C1 E1 05 48 03 C8 0F B7 05 ?? ?? ?? ?? 39 41 08 75 51", MODNAME, *process ), 3, 7 );
-        if( !entList ){
-            Logger::Log("Could not find Entlist!\n");
-            return;
-        }
-
+        entList = GetAbsoluteAddressVm(*process, Scanner::FindPatternInModule("48 8D 05 ?? ?? ?? ?? 48 C1 E1 05 48 03 C8 0F B7 05 ?? ?? ?? ?? 39 41 08 75 51", MODNAME, *process),
+                                       3, 7);
+        //std::string init = process->Read<std::string>(localPlayer + )
         static float col[3] = {125.0f, 0.0f, 0.0f};
         Logger::Log("Starting Main Loop.\n");
-        while ( running ) {
+        while (running) {
             entities.clear();
             for (int ent = 1; ent < 100; ent++) {
                 uintptr_t entity = GetEntityById(ent);
-                if( !entity ) continue;
+                if (!entity) continue;
                 entities.push_back(entity);
             }
             localPlayer = GetLocalPlayer();
 
             Glow::Glow(col);
             Aimbot::Aimbot();
+            //process->Write<std::string>(localPlayer + 0x21c9, "Nig");
+
 
             std::this_thread::sleep_for(std::chrono::microseconds(1000));
         }
         Logger::Log("Main Loop Ended.\n");
 
-    } catch (VMException& e) {
+    } catch (VMException &e) {
         Logger::Log("Initialization error: %d\n", e.value);
         return;
     }
@@ -139,6 +134,6 @@ void __attribute__((constructor)) Startup() {
 
 void __attribute__((destructor)) Shutdown() {
     Logger::Log("Unloading...");
-    sigaction( SIGXCPU, &oldSa, NULL );
+    sigaction(SIGXCPU, &oldSa, NULL);
     Logger::Log("Done\n");
 }

@@ -6,29 +6,48 @@
 void Aimbot::Aimbot() {
     if (!localPlayer)
         return;
-    QAngle viewAngle = process->Read<QAngle>(localPlayer + 0x20B8);
-    BreathCompensation(viewAngle);
+
 
     int state = inputSystem->Read<int>(inputBase + 0x3388);
     if (!state) {
         return;
     }
+    QAngle viewAngle = process->Read<QAngle>(localPlayer + 0x20A8);
+    //BreathCompensation(viewAngle, viewAngle);
 
     uintptr_t finalEntity = 0;
 
-    //Vector localOrigin = process->Read<Vector>(localPlayer + 0x12C);
-    //Vector localOrigin = process->Read<Vector>(localPlayer + 0x50);
-    //Vector viewOffset = process->Read<Vector>(localPlayer + 0x30);
-    Vector pos = process->Read<Vector>(localPlayer + 0x3AA0);
+    Vector localOrigin = process->Read<Vector>(localPlayer + 0x12C);
+    /*Vector localOrigin = process->Read<Vector>(localPlayer + 0x50);
+    Vector abslocalOrigin = process->Read<Vector>(localPlayer + 0x4);
+    Vector viewOffset = process->Read<Vector>(localPlayer + 0x30);
+    Vector localAngles = process->Read<Vector>(localPlayer + 0x414);
+    Vector pusherOrigin = process->Read<Vector>(localPlayer + 0x24);*/
+    Vector eyepos = process->Read<Vector>(localPlayer + 0x3AA0);
+    eyepos.x = localOrigin.x;
+    eyepos.y = localOrigin.y;
+
+    /*Logger::Log("Origin: (%f, %f, %f)\n", localOrigin.x, localOrigin.y, localOrigin.z);
+    Logger::Log("absOrigin: (%f, %f, %f)\n", abslocalOrigin.x, abslocalOrigin.y, abslocalOrigin.z);
+    Logger::Log("Offset: (%f, %f, %f)\n", viewOffset.x, viewOffset.y, viewOffset.z);
+    Logger::Log("localAngles: (%f, %f, %f)\n", localAngles.x, localAngles.y, localAngles.z);
+    Logger::Log("pusher: (%f, %f, %f)\n", pusherOrigin.x, pusherOrigin.y, pusherOrigin.z);
+    Logger::Log("eyepos: (%f, %f, %f)\n", eyepos.x, eyepos.y, eyepos.z);*/
+    //Vector pos = process->Read<Vector>(localPlayer + 0x3AA0);
     //Vector pos = GetBonePos(localPlayer, 12, localOrigin);
-    //Logger::Log("LocalEye: X:%f, Y:%f, Z:%f\n", pos.x, pos.y, pos.z);
-    //Logger::Log("LocalEye2: X:%f, Y:%f, Z:%f\n", pos2.x, pos2.y, pos2.z);
+    //Vector pos = process->Read<Vector>(localPlayer + 0x3AA0);
+    Vector pos = eyepos;
 
     int localTeam = process->Read<int>(localPlayer + 0x3E4);
 
-    float bestFov = __FLT_MAX__;
-    for (size_t ent = 0; ent < entities.size(); ent++) {
 
+    std::sort(entities.begin(), entities.end(), [viewAngle, &pos](const auto &a, const auto &b) {
+        Vector a_pos = GetBonePos(a, 12, process->Read<Vector>(a + 0x12c));
+        Vector b_pos = GetBonePos(b, 12, process->Read<Vector>(b + 0x12c));
+        return Math::DistanceFOV(viewAngle, Math::CalcAngle(pos, a_pos), pos.DistTo(a_pos)) < Math::DistanceFOV(viewAngle, Math::CalcAngle(pos, b_pos), pos.DistTo(b_pos));
+    });
+
+    for (int ent = 0; ent < entities.size(); ent++) {
         uintptr_t entity = entities.at(ent);
         if (!entity || entity == localPlayer) {
             continue;
@@ -39,31 +58,14 @@ void Aimbot::Aimbot() {
         if (teamnum == localTeam) {
             continue;
         }
-        int lifeState = process->Read<int>(entity + 0x718);
 
-        if (lifeState)
+        int state = process->Read<int>(entity + 0x2368);
+
+        if (state == 2)
             continue;
-
-        Vector origin = process->Read<Vector>(entity + 0x12C);
-
-        Vector enemyHeadPosition = GetBonePos(entity, 12, origin);
-        if (enemyHeadPosition.x == 0.0f && enemyHeadPosition.y == 0.0f && enemyHeadPosition.z == 0.0f)
-            continue;
-
-        float distance = pos.DistTo(enemyHeadPosition);
-
-        QAngle aimAngle = Math::CalcAngle(pos, enemyHeadPosition);
-        if ((aimAngle.x == 0.0f && aimAngle.y == 0.0f && aimAngle.z == 0.0f) || isnan(aimAngle.x) || isnan(aimAngle.y) || isnan(aimAngle.z))
-            continue;
-
-        float fov = Math::DistanceFOV(viewAngle, aimAngle, distance);
-        if (fov < bestFov) {
-            finalEntity = entity;
-            bestFov = fov;
-        }
-
+        finalEntity = entity;
+        break;
     }
-
     if (!finalEntity)
         return;
 
@@ -101,7 +103,7 @@ void Aimbot::Aimbot() {
 
     enemyHeadPosition.x += xTime * targetVelocity.x;
     enemyHeadPosition.y += yTime * targetVelocity.y;
-    //enemyHeadPosition.z += 375.0f * powf(xTime, 2.0f);
+    enemyHeadPosition.z += 375.0f * powf(xTime, 2.0f);
 
     QAngle aimAngle = Math::CalcAngle(pos, enemyHeadPosition);
 
@@ -114,9 +116,9 @@ void Aimbot::Aimbot() {
         return;
     }
 
+
+    BreathCompensation(viewAngle, aimAngle);
     RecoilCompensation(aimAngle);
-
-
     aimAngle.Normalize();
     Math::Clamp(aimAngle);
     process->Write(localPlayer + 0x20B8, aimAngle.x);
@@ -132,19 +134,15 @@ void Aimbot::RecoilCompensation(QAngle &angle) {
     angle -= aimpunch;
 }
 
-void Aimbot::BreathCompensation(QAngle &angle) {
-    static QAngle oldBreath = QAngle();
+void Aimbot::BreathCompensation(QAngle &viewAngle, QAngle &angle) {
+    QAngle breath = process->Read<QAngle>(localPlayer + 0x20A8) - viewAngle;
+    Logger::Log("Breath: (%f, %f, %f)\n", breath.x, breath.y, breath.z);
 
-    QAngle breath = angle - process->Read<QAngle>(localPlayer + 0x20A8);
-    if (breath.x != 0.0f && breath.y != 0.0f) {
-        angle = (angle + oldBreath) - breath;
-        oldBreath = breath;
-    }
+    angle = angle + (breath * -1.0f);
+    //process->Write<QAngle>(localPlayer + 0x2B8, viewAngle);
 }
 
 void Aimbot::Nospread(uintptr_t weapon) {
     process->Write<float>(weapon + 0x1330, 0.0f);
     process->Write<float>(weapon + 0x1340, 0.0f);
-
-    //fprintf(out, "Breath: (%f, %f, %f)\n", breath.x, breath.y, breath.z);
 }
