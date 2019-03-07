@@ -136,7 +136,7 @@ void Aimbot::RecoilCompensation(QAngle &angle) {
 
 void Aimbot::BreathCompensation(QAngle &viewAngle, QAngle &angle) {
     QAngle breath = process->Read<QAngle>(localPlayer + 0x20A8) - viewAngle;
-    Logger::Log("Breath: (%f, %f, %f)\n", breath.x, breath.y, breath.z);
+    //Logger::Log("Breath: (%f, %f, %f)\n", breath.x, breath.y, breath.z);
 
     angle = angle + (breath * -1.0f);
     //process->Write<QAngle>(localPlayer + 0x2B8, viewAngle);
