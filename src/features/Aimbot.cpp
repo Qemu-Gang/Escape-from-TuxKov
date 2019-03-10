@@ -137,7 +137,7 @@ void Aimbot::RecoilCompensation(QAngle &angle) {
 
 void Aimbot::SwayCompensation(QAngle &viewAngle, QAngle &angle) {
     QAngle dynamic = process->Read<QAngle>(localPlayer + 0x20A8);
-    QAngle sway = viewAngle - dynamic;
+    QAngle sway = dynamic - viewAngle;
   
     angle -= sway;
 }

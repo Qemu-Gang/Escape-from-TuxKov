@@ -30,12 +30,17 @@ static Vector teamColors[] = {
 };
 
 
-static void WriteGlow(uintptr_t entity, Vector &colors) {
+static void WriteGlow(uintptr_t entity, Vector &colors, float distance) {
+    distance *= 0.01905; // metric
+    distance /= 1.7f;
+    distance = 255.0f - distance;
+    std::clamp(distance, 1.0f, 255.0f);
+
     process->Write<bool>(entity + OFFSET_OF(&CBaseEntity::bGlowEnable), true); // Enabling the Glow
     process->Write<int>(entity + OFFSET_OF(&CBaseEntity::iGlowEnable), 1); // Enabling the Glow
 
 
-    process->Write<Vector>(entity + OFFSET_OF(&CBaseEntity::glowR), colors / 80.0f); // Setting a value for the Color Red between 0 and 255
+    process->Write<Vector>(entity + OFFSET_OF(&CBaseEntity::glowR), colors / distance); // Setting a value for the Color Red between 0 and 255
 
     //process->Write<float>(entity + OFFSET_OF(&CBaseEntity::glowG), colors[1] / 100.0f); // Setting a value for the Color Red between 0 and 255
     //process->Write<float>(entity + OFFSET_OF(&CBaseEntity::glowB), colors[2] / 100.0f); // Setting a value for the Color Red between 0 and 255
@@ -52,6 +57,7 @@ static void WriteGlow(uintptr_t entity, Vector &colors) {
 
 void Glow::Glow() {
     int localTeam = process->Read<int>(localPlayer + 0x3E4);
+    Vector localPos = process->Read<Vector>(localPlayer + 0x12C);
 
     for (size_t ent = 0; ent < entities.size(); ent++) {
 
@@ -62,11 +68,11 @@ void Glow::Glow() {
 
         int team = process->Read<int>(entity + 0x3E4);
         if (team != localTeam) {
-            WriteGlow(entity, teamColors[std::min(team, 20)]);
+            WriteGlow(entity, teamColors[std::min(team, 20)], localPos.DistTo(process->Read<Vector>(entity + 0x12C)));
         }
     }
 }
 
 void Glow::GlowPlayer(uintptr_t entity, Vector &colors) {
-    WriteGlow(entity, colors);
+    WriteGlow(entity, colors, 100);
 }
