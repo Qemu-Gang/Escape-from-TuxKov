@@ -7,3 +7,4 @@ src/.vscode/*
 CMakeFiles/*
 Makefile
 CMakeCache.txt
+*.so
