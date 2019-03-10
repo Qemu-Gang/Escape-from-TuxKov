@@ -81,15 +81,13 @@ void MainThread() {
         Interfaces::FindInterfaces(*process, MODNAME);
         //Netvars::FindNetvars( *process, MODNAME );
 
-        //entList = GetAbsoluteAddressVm(*process, Scanner::FindPatternInModule("48 8D 05 ?? ?? ?? ?? 48 C1 E1 05 48 03 C8 0F B7 05 ?? ?? ?? ?? 39 41 08 75 51", MODNAME, *process), 3, 7);
+        entList = GetAbsoluteAddressVm(*process, Scanner::FindPatternInModule("48 8D 05 ?? ?? ?? ?? 48 C1 E1 05 48 03 C8 0F B7 05 ?? ?? ?? ?? 39 41 08 75 51", MODNAME, *process), 3, 7);
   
-        entList = apexBase + 0x1f6cab8;
+        //entList = apexBase + 0x1f6cab8;
         
         Logger::Log("Entlist: %lx\n", entList);
 
         Logger::Log("Localplayer: %lx\n", GetLocalPlayer());
-
-        //std::string init = process->Read<std::string>(localPlayer + )
 
         Logger::Log("Starting Main Loop.\n");
         while (running) {
@@ -103,10 +101,8 @@ void MainThread() {
 
             Glow::Glow();
             Aimbot::Aimbot();
-            //process->Write<std::string>(localPlayer + 0x21c9, "Nig");
 
-
-            std::this_thread::sleep_for(std::chrono::microseconds(1000));
+            std::this_thread::sleep_for(std::chrono::milliseconds(1));
         }
         Logger::Log("Main Loop Ended.\n");
 

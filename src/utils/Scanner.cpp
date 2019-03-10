@@ -32,6 +32,8 @@ uintptr_t Scanner::FindPatternInModule( const char *pattern, const char *moduleN
     unsigned char *bMask = new unsigned char[patternLen](); //  bit bigger than needed but ok
     char *szMask = new char[patternLen](); //  ^^
 
+    char byteBuffer[3] = { '\0', '\0', '\0' };
+
     unsigned int bMaskIndex = 0;
     unsigned int szMaskIndex = 0;
 
@@ -52,9 +54,7 @@ uintptr_t Scanner::FindPatternInModule( const char *pattern, const char *moduleN
     byteCache = new unsigned char[regionSize];
     VMemRead( &process.ctx->process, process.proc.dirBase, (uint64_t)byteCache, startingAddr, regionSize );
 
-
     /* Generate a byte mask and x/? mask at the same time */
-    char byteBuffer[3];
     for( size_t i = 0; i < patternLen; i++ ){
         if( pattern[i] == ' ' ){
             szMaskIndex++;

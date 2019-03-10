@@ -1,0 +1,30 @@
+/home/rasp/.local/share/JetBrains/Toolbox/apps/CLion/ch-0/182.4505.18/bin/cmake/linux/bin/cmake -DCMAKE_BUILD_TYPE= -G "CodeBlocks - Unix Makefiles" /home/rasp/CLionProjects/Ape-ex-Abominations
+-- The C compiler identification is GNU 8.2.1
+-- The CXX compiler identification is GNU 8.2.1
+-- Check for working C compiler: /usr/bin/cc
+-- Check for working C compiler: /usr/bin/cc -- works
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- Check for working CXX compiler: /usr/bin/c++
+-- Check for working CXX compiler: /usr/bin/c++ -- works
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- No build type selected, default to Release
+Source files: /home/rasp/CLionProjects/Ape-ex-Abominations/src/Interfaces.cpp;/home/rasp/CLionProjects/Ape-ex-Abominations/src/Main.cpp;/home/rasp/CLionProjects/Ape-ex-Abominations/src/Netvars.cpp;/home/rasp/CLionProjects/Ape-ex-Abominations/src/features/Aimbot.cpp;/home/rasp/CLionProjects/Ape-ex-Abominations/src/features/Glow.cpp;/home/rasp/CLionProjects/Ape-ex-Abominations/src/utils/Logger.cpp;/home/rasp/CLionProjects/Ape-ex-Abominations/src/utils/Scanner.cpp
+Source files(C): 
+-- Looking for pthread.h
+-- Looking for pthread.h - found
+-- Looking for pthread_create
+-- Looking for pthread_create - not found
+-- Looking for pthread_create in pthreads
+-- Looking for pthread_create in pthreads - not found
+-- Looking for pthread_create in pthread
+-- Looking for pthread_create in pthread - found
+-- Found Threads: TRUE  
+-- Configuring done
+-- Generating done
+-- Build files have been written to: /home/rasp/CLionProjects/Ape-ex-Abominations
