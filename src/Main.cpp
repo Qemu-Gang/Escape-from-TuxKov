@@ -7,6 +7,8 @@
 #include "sdk/CBaseEntity.h"
 #include "utils/Scanner.h"
 #include "utils/Memutils.h"
+#include "globals.h"
+#include "utils/Wrappers.h"
 
 #include <unistd.h> //getpid
 #include <thread>

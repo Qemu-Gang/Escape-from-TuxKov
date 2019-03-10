@@ -1,7 +1,28 @@
 #include "Aimbot.h"
 #include "Glow.h"
-#include "math.h"
 #include "../utils/Logger.h"
+
+#include "../utils/Math.h"
+#include "../utils/Wrappers.h"
+
+static void RecoilCompensation(QAngle &angle) {
+    QAngle aimPunch = process->Read<QAngle>(localPlayer + 0x2014);
+
+    angle -= aimPunch;
+}
+
+static void SwayCompensation(QAngle &viewAngle, QAngle &angle) {
+    QAngle dynamic = process->Read<QAngle>(localPlayer + 0x20A8);
+    QAngle sway = dynamic - viewAngle;
+
+    angle -= sway;
+}
+
+static void NoSpread(uintptr_t weapon) {
+    process->Write<float>(weapon + 0x1330, 0.0f);
+    process->Write<float>(weapon + 0x1340, 0.0f);
+}
+
 
 void Aimbot::Aimbot() {
     if (!localPlayer)
@@ -127,22 +148,4 @@ void Aimbot::Aimbot() {
 
     static float col[3] = {0.0f, 0.0f, 255.0f};
     //Glow::GlowPlayer(finalEntity, col);
-}
-
-void Aimbot::RecoilCompensation(QAngle &angle) {
-    QAngle aimPunch = process->Read<QAngle>(localPlayer + 0x2014);
-
-    angle -= aimPunch;
-}
-
-void Aimbot::SwayCompensation(QAngle &viewAngle, QAngle &angle) {
-    QAngle dynamic = process->Read<QAngle>(localPlayer + 0x20A8);
-    QAngle sway = dynamic - viewAngle;
-  
-    angle -= sway;
-}
-
-void Aimbot::NoSpread(uintptr_t weapon) {
-    process->Write<float>(weapon + 0x1330, 0.0f);
-    process->Write<float>(weapon + 0x1340, 0.0f);
 }
