@@ -6,9 +6,9 @@
 namespace Aimbot {
     void RecoilCompensation(QAngle &angle);
 
-    void Nospread(uintptr_t weapon);
+    void NoSpread(uintptr_t weapon);
 
-    void BreathCompensation(QAngle &viewAngle, QAngle &angle);
+    void SwayCompensation(QAngle &viewAngle, QAngle &angle);
 
     void Aimbot();
 
