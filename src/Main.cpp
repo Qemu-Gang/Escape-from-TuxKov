@@ -33,8 +33,14 @@ static bool running = true;
 
 void MainThread() {
     Logger::Log("Main Loaded.\n");
-    pid_t pid = getpid();
-
+    pid_t pid;
+#if (LMODE() == MODE_EXTERNAL())
+    FILE* pipe = popen("pidof qemu-system-x86_64", "r");
+    fscanf(pipe, "%d", &pid);
+    pclose(pipe);
+#else
+    pid = getpid();
+#endif
     try {
         //input.Init(kb);
         //input.Init(ms);
