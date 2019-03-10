@@ -81,6 +81,8 @@ void MainThread() {
         Interfaces::FindInterfaces(*process, MODNAME);
         //Netvars::FindNetvars( *process, MODNAME );
 
+        //entList = GetAbsoluteAddressVm(*process, Scanner::FindPatternInModule("48 8D 05 ?? ?? ?? ?? 48 C1 E1 05 48 03 C8 0F B7 05 ?? ?? ?? ?? 39 41 08 75 51", MODNAME, *process), 3, 7);
+  
         entList = apexBase + 0x1f6cab8;
         
         Logger::Log("Entlist: %lx\n", entList);
@@ -88,6 +90,7 @@ void MainThread() {
         Logger::Log("Localplayer: %lx\n", GetLocalPlayer());
 
         //std::string init = process->Read<std::string>(localPlayer + )
+
         Logger::Log("Starting Main Loop.\n");
         while (running) {
             entities.clear();

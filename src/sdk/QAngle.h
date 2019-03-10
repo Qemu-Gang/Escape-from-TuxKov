@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Vector.h"
+#include "math.h"
 
 enum {
     PITCH = 0,    // up / down
@@ -31,7 +32,7 @@ public:
     void Random( float minVal, float maxVal );
 
     // Got any nasty NAN's?
-    bool IsValid() const;
+    bool IsValid() const { return (!isnan(x) && !isnan(y) && !isnan(z)); };
 
     void Invalidate();
 

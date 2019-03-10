@@ -52,7 +52,8 @@ namespace Math {
             fov -= 360.0f;
 
         fov = fabsf(fov);
-
+        if(fov >= 180.0f)
+            fov -= 0.1f;
         return fov;
     }
 
