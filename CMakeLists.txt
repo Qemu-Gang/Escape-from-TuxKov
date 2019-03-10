@@ -18,6 +18,7 @@ file(GLOB_RECURSE SOURCE_FILES_C "${CMAKE_SOURCE_DIR}/src/*.c")
 
 list(REMOVE_ITEM SOURCE_FILES_C "${CMAKE_SOURCE_DIR}/src/vmread/example.c")
 list(REMOVE_ITEM SOURCE_FILES_C "${CMAKE_SOURCE_DIR}/src/vmread/vmmem.c")
+list(REMOVE_ITEM SOURCE_FILES_C "${CMAKE_SOURCE_DIR}/src/vmread/intmem.c")
 list(REMOVE_ITEM SOURCE_FILES_CXX "${CMAKE_SOURCE_DIR}/src/vmread/example.cpp")
 
 message("Source files: ${SOURCE_FILES_CXX}")
@@ -27,6 +28,10 @@ find_package(Threads)
 
 include_directories(${INCLUDE_DIRS})
 
-add_library(Ape-ex SHARED ${SOURCE_FILES_CXX} ${SOURCE_FILES_C})
+add_library(Ape-ex SHARED ${SOURCE_FILES_CXX} ${SOURCE_FILES_C} "${CMAKE_SOURCE_DIR}/src/vmread/intmem.c")
 target_link_libraries(Ape-ex dl ${CMAKE_THREAD_LIBS_INIT})
 target_compile_definitions(Ape-ex PUBLIC LMODE=MODE_QEMU_INJECT)
+
+add_executable(Ape-ex-ex ${SOURCE_FILES_CXX} ${SOURCE_FILES_C} "${CMAKE_SOURCE_DIR}/src/vmread/vmmem.c")
+target_link_libraries(Ape-ex-ex dl ${CMAKE_THREAD_LIBS_INIT})
+target_compile_definitions(Ape-ex-ex PUBLIC LMODE=MODE_EXTERNAL)

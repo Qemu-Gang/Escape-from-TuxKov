@@ -23,6 +23,12 @@
 #define MODNAME "r5apex.exe"
 #endif
 
+#if (LMODE() == MODE_EXTERNAL())
+int main() {
+    return 0;
+}
+#endif
+
 static bool running = true;
 
 void MainThread() {
@@ -82,9 +88,9 @@ void MainThread() {
         //Netvars::FindNetvars( *process, MODNAME );
 
         entList = GetAbsoluteAddressVm(*process, Scanner::FindPatternInModule("48 8D 05 ?? ?? ?? ?? 48 C1 E1 05 48 03 C8 0F B7 05 ?? ?? ?? ?? 39 41 08 75 51", MODNAME, *process), 3, 7);
-  
+
         //entList = apexBase + 0x1f6cab8;
-        
+
         Logger::Log("Entlist: %lx\n", entList);
 
         Logger::Log("Localplayer: %lx\n", GetLocalPlayer());
@@ -121,7 +127,7 @@ void __attribute__((constructor)) Startup() {
 
 void __attribute__((destructor)) Shutdown() {
     Logger::Log("Unloading...");
-    
+
     running = false;
     std::this_thread::sleep_for(std::chrono::seconds(1));
 

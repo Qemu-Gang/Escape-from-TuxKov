@@ -14,11 +14,16 @@ void Logger::Log( const char *format, ... ) {
 
     if ( bFirst ) {
         logFile = fopen(LOGFILE_NAME, "w"); // create new log
-        fprintf(logFile, "--Start of log--\n");
         bFirst = false;
+        if (logFile)
+            fprintf(logFile, "--Start of log--\n");
     } else {
         logFile = fopen(LOGFILE_NAME, "a"); // append to log
     }
+
+    if (!logFile)
+        return;
+
     setbuf( logFile, NULL ); // Turn off buffered I/O, decreases performance but if crash occurs, no unflushed buffer.
     va_list args;
     va_start(args, format);
