@@ -1,7 +1,8 @@
 #include "../sdk/Vector.h"
 #include "../sdk/QAngle.h"
+#include "../utils/Logger.h"
 
-#define DEG_TO_RADIAN(deg) (deg * M_PI / 180.0f)
+#define DEG2RAD(deg) (deg * M_PI / 180.0f)
 
 namespace Math {
     inline QAngle CalcAngle(Vector &src, Vector &dst) {
@@ -58,11 +59,19 @@ namespace Math {
 
     inline float DistanceFOV(const QAngle &viewAngle, const QAngle &aimAngle, float distance) {
         float angleFOV = AngleFOV(viewAngle, aimAngle);
+        float extraBehind = 0.0f;
+        float distanceFOV = 0.0f;
 
-        float radian = DEG_TO_RADIAN(angleFOV);
-        float distanceFOV = sinf(radian) * distance; // sin(dif) = viewAngle / realDelta
+        if( angleFOV > 90.0f ){ // behind us
+            extraBehind = angleFOV - 90.0f; // how much behind us?
+            extraBehind = sinf(DEG2RAD(extraBehind)) * distance; // calculate distance factor, we'll add it in the result later.
+        }
 
-        return distanceFOV;
+        angleFOV = std::min(angleFOV, 90.0f); // only get the stuff in front of us
+        distanceFOV += sinf(DEG2RAD(angleFOV)) * distance; // stuff in front of us distance factor
+        distanceFOV += extraBehind; // stuff behind us distance factor
+
+        return distanceFOV; // from [0.0 * distanc -> 2.0 * distance]; 0.0 = right on target, 2.0 = directly behind.
     }
 
 }

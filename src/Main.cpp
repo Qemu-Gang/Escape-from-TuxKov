@@ -23,18 +23,7 @@
 #define MODNAME "r5apex.exe"
 #endif
 
-static std::atomic<bool> running = true;
-
-struct sigaction sa;
-struct sigaction oldSa;
-
-
-/* We need to stop threads before unloading.
- * The unload script will send a signal that we intercept here */
-static void SignalHandler(int sigNum, siginfo_t *si, void *uContext) {
-    running = false;
-}
-
+static bool running = true;
 
 void MainThread() {
     Logger::Log("Main Loaded.\n");
@@ -93,7 +82,15 @@ void MainThread() {
         //Netvars::FindNetvars( *process, MODNAME );
 
         //entList = GetAbsoluteAddressVm(*process, Scanner::FindPatternInModule("48 8D 05 ?? ?? ?? ?? 48 C1 E1 05 48 03 C8 0F B7 05 ?? ?? ?? ?? 39 41 08 75 51", MODNAME, *process), 3, 7);
-        entList = apexBase + 0x1F6CAB8;
+  
+        entList = apexBase + 0x1f6cab8;
+        
+        Logger::Log("Entlist: %lx\n", entList);
+
+        Logger::Log("Localplayer: %lx\n", GetLocalPlayer());
+
+        //std::string init = process->Read<std::string>(localPlayer + )
+
         Logger::Log("Starting Main Loop.\n");
         while (running) {
             entities.clear();
@@ -121,10 +118,6 @@ void MainThread() {
 }
 
 void __attribute__((constructor)) Startup() {
-    sa.sa_flags = SA_SIGINFO;
-    sigemptyset(&sa.sa_mask);
-    sa.sa_sigaction = SignalHandler;
-    sigaction(SIGXCPU, &sa, &oldSa);
 
     std::thread mainthread(MainThread);
     mainthread.detach();
@@ -132,6 +125,9 @@ void __attribute__((constructor)) Startup() {
 
 void __attribute__((destructor)) Shutdown() {
     Logger::Log("Unloading...");
-    sigaction(SIGXCPU, &oldSa, NULL);
+    
+    running = false;
+    std::this_thread::sleep_for(std::chrono::seconds(1));
+
     Logger::Log("Done\n");
 }

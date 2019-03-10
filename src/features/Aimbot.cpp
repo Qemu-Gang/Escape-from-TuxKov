@@ -120,8 +120,7 @@ void Aimbot::Aimbot() {
     RecoilCompensation(aimAngle);
     aimAngle.Normalize();
     Math::Clamp(aimAngle);
-    if (!localPlayer)
-        return;
+
     process->Write(localPlayer + 0x20B8, aimAngle);
     //process->Write(localPlayer + 0x20A8, aimAngle);
     //process->Write(localPlayer + 0x20BC, aimAngle.y);
@@ -139,7 +138,7 @@ void Aimbot::RecoilCompensation(QAngle &angle) {
 void Aimbot::SwayCompensation(QAngle &viewAngle, QAngle &angle) {
     QAngle dynamic = process->Read<QAngle>(localPlayer + 0x20A8);
     QAngle sway = viewAngle - dynamic;
-
+  
     angle -= sway;
 }
 
