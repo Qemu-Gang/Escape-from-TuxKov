@@ -4,3 +4,6 @@ build/*
 .idea/*
 cmake-build-debug/*
 src/.vscode/*
+CMakeFiles/*
+Makefile
+CMakeCache.txt
