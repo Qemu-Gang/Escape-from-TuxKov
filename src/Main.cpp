@@ -23,13 +23,15 @@
 #define MODNAME "r5apex.exe"
 #endif
 
+static bool running = true;
+
 #if (LMODE() == MODE_EXTERNAL())
 int main() {
+    while (running)
+        usleep(1000000);
     return 0;
 }
 #endif
-
-static bool running = true;
 
 void MainThread() {
     Logger::Log("Main Loaded.\n");
@@ -83,10 +85,12 @@ void MainThread() {
 
         if (!process || !apexBase) {
             Logger::Log("Could not Find Apex Process/Base. Exiting...\n");
+            running = false;
             return;
         }
         if (!inputSystem || !inputBase) {
             Logger::Log("Could not Find Input Process/Base. Exiting...\n");
+            running = false;
             return;
         }
 
@@ -120,6 +124,7 @@ void MainThread() {
 
     } catch (VMException &e) {
         Logger::Log("Initialization error: %d\n", e.value);
+        running = false;
         return;
     }
     Logger::Log("Main Ended.\n");
