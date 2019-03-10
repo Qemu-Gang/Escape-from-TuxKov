@@ -1,0 +1,3 @@
+[submodule "src/vmread"]
+	path = src/vmread
+	url = https://github.com/Heep042/vmread
