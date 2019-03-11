@@ -12,6 +12,8 @@ inline uintptr_t localPlayer;
 inline uintptr_t entList;
 inline uintptr_t sendpacket;
 inline uintptr_t globalVars;
+inline uintptr_t netTime; // double
+inline uintptr_t nextCmdTime; // double
 
 inline WinProcess *process;
 inline WinProcess *inputSystem;
