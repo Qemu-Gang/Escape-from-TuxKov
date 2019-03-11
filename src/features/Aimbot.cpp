@@ -6,13 +6,11 @@
 #include "../utils/Wrappers.h"
 
 static void RecoilCompensation(QAngle &angle) {
-    QAngle aimPunch = process->Read<QAngle>(localPlayer + 0x2014);
-
-    angle -= aimPunch;
+    angle -= localPlayer.aimPunch;
 }
 
 static void SwayCompensation(QAngle &viewAngle, QAngle &angle) {
-    QAngle dynamic = process->Read<QAngle>(localPlayer + 0x20A8);
+    QAngle dynamic = localPlayer.viewAngles;
     QAngle sway = dynamic - viewAngle;
 
     angle -= sway;
@@ -33,17 +31,17 @@ void Aimbot::Aimbot() {
     if (!state) {
         return;
     }
-    QAngle viewAngle = process->Read<QAngle>(localPlayer + 0x20A8);
+    QAngle viewAngle = localPlayer.viewAngles;
 
-    uintptr_t finalEntity = 0;
+    CBaseEntity* finalEntity = nullptr;
 
-    Vector localOrigin = process->Read<Vector>(localPlayer + 0x12C);
+    Vector localOrigin = localPlayer.origin;
     /*Vector localOrigin = process->Read<Vector>(localPlayer + 0x50);
     Vector abslocalOrigin = process->Read<Vector>(localPlayer + 0x4);
     Vector viewOffset = process->Read<Vector>(localPlayer + 0x30);
     Vector localAngles = process->Read<Vector>(localPlayer + 0x414);
     Vector pusherOrigin = process->Read<Vector>(localPlayer + 0x24);*/
-    Vector eyepos = process->Read<Vector>(localPlayer + 0x3AA0);
+    Vector eyepos = localPlayer.eyePos;
     eyepos.x = localOrigin.x;
     eyepos.y = localOrigin.y;
 
@@ -58,40 +56,36 @@ void Aimbot::Aimbot() {
     //Vector pos = process->Read<Vector>(localPlayer + 0x3AA0);
     Vector pos = eyepos;
 
-    int localTeam = process->Read<int>(localPlayer + 0x3E4);
+    int localTeam = localPlayer.teamNum;
 
 
     std::sort(sortedEntities.begin(), sortedEntities.end(), [viewAngle, &pos](const auto &a, const auto &b) {
-        Vector a_pos = GetBonePos(a, 12, process->Read<Vector>(a + 0x12c));
-        Vector b_pos = GetBonePos(b, 12, process->Read<Vector>(b + 0x12c));
+        Vector a_pos = GetBonePos(entities[a], 12, entities[a].origin);
+        Vector b_pos = GetBonePos(entities[b], 12, entities[b].origin);
         return Math::DistanceFOV(viewAngle, Math::CalcAngle(pos, a_pos), pos.DistTo(a_pos)) < Math::DistanceFOV(viewAngle, Math::CalcAngle(pos, b_pos), pos.DistTo(b_pos));
     });
 
     for (size_t ent = 0; ent < sortedEntities.size(); ent++) {
-        uintptr_t entity = entities[sortedEntities[ent]].GetBaseClass().address;
+        CBaseEntity& entity = entities[sortedEntities[ent]];
         if (!entity || entity == localPlayer) {
             continue;
         }
 
-        int teamnum = process->Read<int>(entity + 0x3E4);
-
-        if (teamnum == localTeam) {
+        if (entity.teamNum == localTeam) {
             continue;
         }
 
-        int lifeState = process->Read<int>(entity + 0x2368);
+        int lifeState = entity.lifeState;
 
         if (lifeState != 0)
             continue;
-        finalEntity = entity;
+        finalEntity = &entity;
         break;
     }
     if (!finalEntity)
         return;
 
-    Vector origin = process->Read<Vector>(finalEntity + 0x12C);
-
-    Vector enemyHeadPosition = GetBonePos(finalEntity, 12, origin);
+    Vector enemyHeadPosition = GetBonePos(*finalEntity, 12, finalEntity->origin);
 
     float dist = pos.DistTo(enemyHeadPosition);
     dist *= 0.01905f;
@@ -110,8 +104,8 @@ void Aimbot::Aimbot() {
 
     bulletVel *= 0.01905f;
 
-    Vector enemyVelocity = process->Read<Vector>(finalEntity + 0x120);
-    Vector targetVelocity = enemyVelocity - process->Read<Vector>(localPlayer + 0x120);
+    Vector enemyVelocity = finalEntity->velocity;
+    Vector targetVelocity = enemyVelocity - localPlayer.velocity;
     //targetVelocity *= 0.01905f;
 
     //float interval_per_tick = process->Read<float>(0x1713CA8 + 0x44);
@@ -142,7 +136,7 @@ void Aimbot::Aimbot() {
     aimAngle.Normalize();
     Math::Clamp(aimAngle);
 
-    process->Write(localPlayer + 0x20B8, aimAngle);
+    localPlayer.swayAngles = aimAngle;
     //process->Write(localPlayer + 0x20A8, aimAngle);
     //process->Write(localPlayer + 0x20BC, aimAngle.y);
 

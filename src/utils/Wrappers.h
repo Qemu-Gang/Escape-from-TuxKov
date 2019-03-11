@@ -2,6 +2,7 @@
 
 #include "../globals.h"
 
+#include "../sdk/CBaseEntity.h"
 #include "../sdk/Vector.h"
 #include "../sdk/QAngle.h"
 #include "Logger.h"
@@ -15,8 +16,8 @@ struct BoneMatrix {
     float z;//0x2c
 };
 
-inline Vector GetBonePos(uintptr_t entity, int bone, Vector rootpos) {
-    uintptr_t p_matrix = process->Read<uintptr_t>(entity + 0xED8);
+inline Vector GetBonePos(CBaseEntity &entity, int bone, Vector rootpos) {
+    uintptr_t p_matrix = entity.boneMatrix;
 
     if (!p_matrix)
         return Vector();
@@ -39,8 +40,8 @@ inline uintptr_t GetEntityById(ssize_t ent) {
     return process->Read<uintptr_t>(entList + (ent << 5));
 }
 
-inline uintptr_t GetActiveWeapon(uintptr_t entity) {
-    uintptr_t weapon = process->Read<uintptr_t>(entity + 0x1634);
+inline uintptr_t GetActiveWeapon(CBaseEntity &entity) {
+    uintptr_t weapon = entity.activeWeapon;
     if(!weapon)
         return 0;
     //Logger::Log("Weapon ptr: %p\n", (void*)weapon);
