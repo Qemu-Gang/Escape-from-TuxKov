@@ -53,7 +53,7 @@ static void MainThread() {
         WinContext ctx(pid);
         ctx.processList.Refresh();
         for (auto &i : ctx.processList) {
-            if (!strcasecmp("inputsystem.ex", i.proc.name)) {
+            if (!inputSystem && !strcasecmp("inputsystem.ex", i.proc.name)) {
                 inputSystem = &i;
 
                 for (auto &o : i.modules) {
@@ -102,12 +102,15 @@ static void MainThread() {
 
         entList = GetAbsoluteAddressVm(*process, Scanner::FindPatternInModule("48 8D 05 ?? ?? ?? ?? 48 C1 E1 05 48 03 C8 0F B7 05 ?? ?? ?? ?? 39 41 08 75 51", MODNAME, *process),
                                        3, 7);
-        sendpacket = Scanner::FindPatternInModule("41 B7 01 44 0F 29", MODNAME, *process) + 2;
         globalVars = process->Read<uintptr_t>(GetAbsoluteAddressVm(*process, Scanner::FindPatternInModule("4C 8B 15 ?? ?? ?? ?? 88", MODNAME, *process), 3, 7));
+        netTime = GetAbsoluteAddressVm(*process, Scanner::FindPatternInModule("F2 0F 58 0D ?? ?? ?? ?? 66 0F 2F C1 77", MODNAME, *process), 4, 8);
+        nextCmdTime = GetAbsoluteAddressVm(*process, Scanner::FindPatternInModule("F2 0F 10 05 ?? ?? ?? ?? F2 0F 58 0D", MODNAME, *process), 4, 8);
 
         Logger::Log("Entlist: %p\n", (void *) entList);
         Logger::Log("Localplayer: %p\n", (void *) GetLocalPlayer());
         Logger::Log("GlobalVars: %p\n", (void *) globalVars);
+        Logger::Log("nextCmdTime: %p\n", (void *)nextCmdTime);
+        Logger::Log("netTime: %p\n", (void *)netTime);
 
         Logger::Log("Starting Main Loop.\n");
         while (running) {
