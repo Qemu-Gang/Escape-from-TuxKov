@@ -56,8 +56,8 @@ static void WriteGlow(CBaseEntity &entity, Vector &colors, float distance) {
 }
 
 void Glow::Glow() {
-    int localTeam = process->Read<int>(localPlayer + 0x3E4);
-    Vector localPos = process->Read<Vector>(localPlayer + 0x12C);
+    int localTeam = localPlayer.teamNum;
+    Vector localPos = localPlayer.origin;
 
     for (size_t entID = 0; entID < sortedEntities.size(); entID++) {
 
@@ -66,9 +66,8 @@ void Glow::Glow() {
             continue;
         }
 
-        int team = process->Read<int>(entity.GetBaseClass().address + 0x3E4);
-        if (team != localTeam) {
-            WriteGlow(entity, teamColors[std::min(team, 20)], localPos.DistTo(process->Read<Vector>(entity.GetBaseClass().address + 0x12C)));
+        if (entity.teamNum != localTeam) {
+            WriteGlow(entity, teamColors[std::min((int)entity.teamNum, 20)], localPos.DistTo(entity.origin));
         }
     }
 }

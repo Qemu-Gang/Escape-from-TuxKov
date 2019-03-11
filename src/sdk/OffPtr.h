@@ -34,7 +34,7 @@ struct OffPtr
         maxOff = maxOff > off ? maxOff : off;
     }
 
-    constexpr T& GetDirect()
+    constexpr T& GetDirect() const
     {
         return *(T*)((uintptr_t)baseClass.readBuf + off);
     }

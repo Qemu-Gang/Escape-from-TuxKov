@@ -8,7 +8,7 @@
 inline std::vector<size_t> sortedEntities;
 inline CBaseEntity entities[100];
 
-inline uintptr_t localPlayer;
+inline CBaseEntity localPlayer;
 inline uintptr_t entList;
 inline uintptr_t sendpacket;
 inline uintptr_t globalVars;

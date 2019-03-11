@@ -116,7 +116,7 @@ static void MainThread() {
                 sortedEntities.push_back(ent);
                 entities[ent].Update(entity);
             }
-            localPlayer = GetLocalPlayer();
+            localPlayer.Update(GetLocalPlayer());
 
             Glow::Glow();
             Aimbot::Aimbot();
@@ -125,6 +125,8 @@ static void MainThread() {
 
             for (size_t i : sortedEntities)
                 entities[i].WriteBack(writeList);
+
+            localPlayer.WriteBack(writeList);
 
             writeList.Commit();
 
