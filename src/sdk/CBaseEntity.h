@@ -33,7 +33,7 @@
 class CBaseEntity
 {
   private:
-    char rBuf[0x3000];
+    char rBuf[0x4000];
     ProcessBaseClass baseClass;
   public:
 
