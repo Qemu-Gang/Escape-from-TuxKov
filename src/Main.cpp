@@ -100,12 +100,12 @@ void MainThread() {
         //Netvars::FindNetvars( *process, MODNAME );
 
         entList = GetAbsoluteAddressVm(*process, Scanner::FindPatternInModule("48 8D 05 ?? ?? ?? ?? 48 C1 E1 05 48 03 C8 0F B7 05 ?? ?? ?? ?? 39 41 08 75 51", MODNAME, *process), 3, 7);
-
-        //entList = apexBase + 0x1f6cab8;
+        sendpacket = Scanner::FindPatternInModule("41 B7 01 44 0F 29", MODNAME, *process) + 2;
+        globalVars = process->Read<uintptr_t>(GetAbsoluteAddressVm(*process, Scanner::FindPatternInModule("4C 8B 15 ?? ?? ?? ?? 88", MODNAME, *process), 3, 7));
 
         Logger::Log("Entlist: %lx\n", entList);
-
         Logger::Log("Localplayer: %lx\n", GetLocalPlayer());
+        Logger::Log("GlobalVars: %p\n", (void*)globalVars);
 
         Logger::Log("Starting Main Loop.\n");
         while (running) {
