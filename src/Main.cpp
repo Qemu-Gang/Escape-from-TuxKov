@@ -5,6 +5,7 @@
 #include "features/Aimbot.h"
 #include "features/Glow.h"
 #include "sdk/CBaseEntity.h"
+#include "sdk/CGlobalVars.h"
 #include "utils/Scanner.h"
 #include "utils/Memutils.h"
 #include "globals.h"
@@ -56,7 +57,7 @@ static void MainThread() {
                 inputSystem = &i;
 
                 for (auto &o : i.modules) {
-                    Logger::Log("%s\n", o.info.name);
+                    //Logger::Log("%s\n", o.info.name);
                     if (!strcasecmp("inputsystem.exe", o.info.name)) {
                         Logger::Log("Found InputSystem Base: %p\n", (void *) o.info.baseAddress);
                         inputBase = o.info.baseAddress;
@@ -99,17 +100,30 @@ static void MainThread() {
         Interfaces::FindInterfaces(*process, MODNAME);
         //Netvars::FindNetvars( *process, MODNAME );
 
-        entList = GetAbsoluteAddressVm(*process, Scanner::FindPatternInModule("48 8D 05 ?? ?? ?? ?? 48 C1 E1 05 48 03 C8 0F B7 05 ?? ?? ?? ?? 39 41 08 75 51", MODNAME, *process), 3, 7);
+        entList = GetAbsoluteAddressVm(*process, Scanner::FindPatternInModule("48 8D 05 ?? ?? ?? ?? 48 C1 E1 05 48 03 C8 0F B7 05 ?? ?? ?? ?? 39 41 08 75 51", MODNAME, *process),
+                                       3, 7);
         sendpacket = Scanner::FindPatternInModule("41 B7 01 44 0F 29", MODNAME, *process) + 2;
         globalVars = process->Read<uintptr_t>(GetAbsoluteAddressVm(*process, Scanner::FindPatternInModule("4C 8B 15 ?? ?? ?? ?? 88", MODNAME, *process), 3, 7));
 
-        Logger::Log("Entlist: %lx\n", entList);
-        Logger::Log("Localplayer: %lx\n", GetLocalPlayer());
-        Logger::Log("GlobalVars: %p\n", (void*)globalVars);
+        Logger::Log("Entlist: %p\n", (void *) entList);
+        Logger::Log("Localplayer: %p\n", (void *) GetLocalPlayer());
+        Logger::Log("GlobalVars: %p\n", (void *) globalVars);
 
         Logger::Log("Starting Main Loop.\n");
         while (running) {
+            static int oldTickCount = 0;
+            CGlobalVars globalvars = process->Read<CGlobalVars>(globalVars);
+
+            if (globalvars.tickCount == oldTickCount) {
+                std::this_thread::sleep_for(std::chrono::milliseconds(1));
+                continue;
+            }
+            else if (globalvars.tickCount - oldTickCount > 1);
+                //Logger::Log("tick: %i\n", globalvars.tickCount);
+
+            oldTickCount = globalvars.tickCount;
             entities.clear();
+
             for (int ent = 1; ent < 100; ent++) {
                 uintptr_t entity = GetEntityById(ent);
                 if (!entity) continue;
@@ -120,7 +134,7 @@ static void MainThread() {
             Glow::Glow();
             Aimbot::Aimbot();
 
-            std::this_thread::sleep_for(std::chrono::milliseconds(1));
+            //std::this_thread::sleep_for(std::chrono::milliseconds(1));
         }
         Logger::Log("Main Loop Ended.\n");
 
