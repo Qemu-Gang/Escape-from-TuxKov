@@ -7,7 +7,9 @@
 //LMODE
 #include "../vmread/definitions.h"
 
+#if (LMODE() != MODE_EXTERNAL())
 #define LOGFILE_NAME "/tmp/apex.log"
+#endif
 
 void Logger::Log( const char *format, ... ) {
     char buffer[4096];

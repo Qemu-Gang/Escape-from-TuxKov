@@ -36,7 +36,7 @@ struct OffPtr
 
     constexpr T& GetDirect()
     {
-        return *(T*)(baseClass.readBuf + off);
+        return *(T*)((uintptr_t)baseClass.readBuf + off);
     }
 
     constexpr operator T() const

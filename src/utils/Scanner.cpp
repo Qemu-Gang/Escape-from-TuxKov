@@ -70,7 +70,7 @@ uintptr_t Scanner::FindPatternInModule( const char *pattern, const char *moduleN
         if( pattern[i+1] == ' ' || pattern[i+1] == '\0' ){
             byteBuffer[0] = pattern[i - 1];
             byteBuffer[1] = pattern[i];
-            bMask[bMaskIndex] = (unsigned char)strtoul( byteBuffer, NULL, 16 );
+            bMask[bMaskIndex] = (unsigned char)strtoul( byteBuffer, nullptr, 16 );
             bMaskIndex++;
         }
     }

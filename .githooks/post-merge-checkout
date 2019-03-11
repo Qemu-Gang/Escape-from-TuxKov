@@ -37,5 +37,13 @@ if [[ -n "$MOD_SUBMODULES" || -n "$NEW_SUBMODULES" ]]; then
         echo "$NEW_SUBMODULES"
     fi
 
-    echo "Be sure to update the submodules using 'git submodule init' and 'git submodule update'"
+    echo -n "Update submodules? [n] "
+    read -n 1 reply </dev/tty
+    echo
+    if [[ "$reply" == "y" || "$reply" == "Y" ]]; then
+        if [[ -n "$NEW_SUBMODULES" ]]; then
+            git submodule init
+        fi
+        git submodule update
+    fi
 fi

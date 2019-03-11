@@ -68,15 +68,15 @@ void Glow::Glow() {
             continue;
         }
 
-        CBaseEntity ent(entity);
-        ent.Update();
+        CBaseEntity classEnt(entity);
+        classEnt.Update();
 
         int team = process->Read<int>(entity + 0x3E4);
         if (team != localTeam) {
-            WriteGlow(ent, teamColors[std::min(team, 20)], localPos.DistTo(process->Read<Vector>(entity + 0x12C)));
+            WriteGlow(classEnt, teamColors[std::min(team, 20)], localPos.DistTo(process->Read<Vector>(entity + 0x12C)));
         }
 
-        ent.WriteBack(writeList);
+        classEnt.WriteBack(writeList);
     }
 
     writeList.Commit();
