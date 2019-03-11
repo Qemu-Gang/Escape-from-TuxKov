@@ -118,7 +118,7 @@ static void MainThread() {
             CGlobalVars globalvars = process->Read<CGlobalVars>(globalVars);
 
             if (globalvars.tickCount == oldTickCount) {
-                std::this_thread::sleep_for(std::chrono::milliseconds(1));
+                std::this_thread::sleep_for(std::chrono::microseconds(500));
                 continue;
             } else if (globalvars.tickCount - oldTickCount > 1);
             //Logger::Log("tick: %i\n", globalvars.tickCount);
