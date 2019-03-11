@@ -15,6 +15,7 @@
 #include <thread>
 #include <atomic>
 #include <csignal>
+#include <numeric>
 
 //#define SWAGGIN
 
@@ -105,6 +106,7 @@ static void MainThread() {
         globalVars = process->Read<uintptr_t>(GetAbsoluteAddressVm(*process, Scanner::FindPatternInModule("4C 8B 15 ?? ?? ?? ?? 88", MODNAME, *process), 3, 7));
         netTime = GetAbsoluteAddressVm(*process, Scanner::FindPatternInModule("F2 0F 58 0D ?? ?? ?? ?? 66 0F 2F C1 77", MODNAME, *process), 4, 8);
         nextCmdTime = GetAbsoluteAddressVm(*process, Scanner::FindPatternInModule("F2 0F 10 05 ?? ?? ?? ?? F2 0F 58 0D", MODNAME, *process), 4, 8);
+        sendpacket = Scanner::FindPatternInModule("41 B7 01 44 0F 29", MODNAME, *process) + 2;
 
         Logger::Log("Entlist: %p\n", (void *) entList);
         Logger::Log("Localplayer: %p\n", (void *) GetLocalPlayer());
@@ -113,15 +115,36 @@ static void MainThread() {
         Logger::Log("netTime: %p\n", (void *)netTime);
 
         Logger::Log("Starting Main Loop.\n");
+
+
+        static int oldTickCount = 0;
+        static int lastTickSent = 0;
+        static bool doubleSend = false; // doublesend for it to kick in ( 1 tick delay )
+        static int lastTick = 0;
         while (running) {
-            static int oldTickCount = 0;
             CGlobalVars globalvars = process->Read<CGlobalVars>(globalVars);
 
-            if (globalvars.tickCount == oldTickCount) {
-                std::this_thread::sleep_for(std::chrono::milliseconds(1));
+            if (globalvars.tickCount <= oldTickCount) {
                 continue;
-            } else if (globalvars.tickCount - oldTickCount > 1);
-            //Logger::Log("tick: %i\n", globalvars.tickCount);
+            }
+
+            if( globalvars.tickCount != lastTick +1 ){
+                Logger::Log("Missed a Tick!: [%d->%d]\n", lastTick, globalvars.tickCount);
+            }
+            lastTick = globalvars.tickCount;
+
+
+            if( globalvars.tickCount - lastTickSent > 7 ){
+                sendpacket = true;
+                doubleSend = true;
+            } else {
+                if( doubleSend ){
+                    sendpacket = true;
+                    doubleSend = false;
+                } else {
+                    sendpacket = false;
+                }
+            }
 
             oldTickCount = globalvars.tickCount;
             sortedEntities.clear();
@@ -146,7 +169,12 @@ static void MainThread() {
 
             writeList.Commit();
 
-            std::this_thread::sleep_for(std::chrono::milliseconds(1));
+            process->Write<double>( nextCmdTime, sendpacket ? 0.0 : std::numeric_limits<double>::max() );
+
+            if( sendpacket ){
+                //Logger::Log("Sending on tick: %d\n", globalvars.tickCount);
+                lastTickSent = globalvars.tickCount;
+            }
         }
         Logger::Log("Main Loop Ended.\n");
 
@@ -155,6 +183,8 @@ static void MainThread() {
         running = false;
         return;
     }
+
+    process->Write<double>( nextCmdTime, 0.0 ); // reset sendpacket
     Logger::Log("Main Ended.\n");
 }
 
