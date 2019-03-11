@@ -30,8 +30,15 @@ class CBaseEntity
     {
     }
 
-    void Update()
+    const ProcessBaseClass& GetBaseClass()
     {
+        return baseClass;
+    }
+
+    void Update(uintptr_t newAddress = 0)
+    {
+        if (newAddress)
+            baseClass.address = newAddress;
         process->Read(baseClass.address, rBuf, sizeof(rBuf));
     }
 
