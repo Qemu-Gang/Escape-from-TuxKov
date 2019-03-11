@@ -10,7 +10,6 @@ inline CBaseEntity entities[100];
 
 inline CBaseEntity localPlayer;
 inline uintptr_t entList;
-inline uintptr_t sendpacket;
 inline uintptr_t globalVars;
 inline uintptr_t netTime; // double
 inline uintptr_t nextCmdTime; // double
