@@ -59,33 +59,20 @@ void Glow::Glow() {
     int localTeam = process->Read<int>(localPlayer + 0x3E4);
     Vector localPos = process->Read<Vector>(localPlayer + 0x12C);
 
-    WriteList writeList(process);
+    for (size_t entID = 0; entID < sortedEntities.size(); entID++) {
 
-    for (size_t entID = 0; entID < entities.size(); entID++) {
-
-        uintptr_t entity = entities.at(entID);
-        if (entity == localPlayer) {
+        CBaseEntity &entity = entities[sortedEntities[entID]];
+        if (entity.GetBaseClass().address == localPlayer) {
             continue;
         }
 
-        CBaseEntity classEnt(entity);
-        classEnt.Update();
-
-        int team = process->Read<int>(entity + 0x3E4);
+        int team = process->Read<int>(entity.GetBaseClass().address + 0x3E4);
         if (team != localTeam) {
-            WriteGlow(classEnt, teamColors[std::min(team, 20)], localPos.DistTo(process->Read<Vector>(entity + 0x12C)));
+            WriteGlow(entity, teamColors[std::min(team, 20)], localPos.DistTo(process->Read<Vector>(entity.GetBaseClass().address + 0x12C)));
         }
-
-        classEnt.WriteBack(writeList);
     }
-
-    writeList.Commit();
 }
 
-void Glow::GlowPlayer(uintptr_t entity, Vector &colors) {
-    WriteList writeList(process);
-    CBaseEntity ent(entity);
-    ent.Update();
-    WriteGlow(ent, colors, 100);
-    ent.WriteBack(writeList);
+void Glow::GlowPlayer(CBaseEntity &entity, Vector &colors) {
+     WriteGlow(entity, colors, 100);
 }

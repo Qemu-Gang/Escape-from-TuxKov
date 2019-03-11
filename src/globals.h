@@ -1,10 +1,12 @@
 #pragma once
 
 #include "vmread/hlapi/hlapi.h"
+#include "sdk/CBaseEntity.h"
 #include <vector>
 #include <cstdint>
 
-inline std::vector<uintptr_t> entities;
+inline std::vector<size_t> sortedEntities;
+inline CBaseEntity entities[100];
 
 inline uintptr_t localPlayer;
 inline uintptr_t entList;

@@ -61,14 +61,14 @@ void Aimbot::Aimbot() {
     int localTeam = process->Read<int>(localPlayer + 0x3E4);
 
 
-    std::sort(entities.begin(), entities.end(), [viewAngle, &pos](const auto &a, const auto &b) {
+    std::sort(sortedEntities.begin(), sortedEntities.end(), [viewAngle, &pos](const auto &a, const auto &b) {
         Vector a_pos = GetBonePos(a, 12, process->Read<Vector>(a + 0x12c));
         Vector b_pos = GetBonePos(b, 12, process->Read<Vector>(b + 0x12c));
         return Math::DistanceFOV(viewAngle, Math::CalcAngle(pos, a_pos), pos.DistTo(a_pos)) < Math::DistanceFOV(viewAngle, Math::CalcAngle(pos, b_pos), pos.DistTo(b_pos));
     });
 
-    for (size_t ent = 0; ent < entities.size(); ent++) {
-        uintptr_t entity = entities.at(ent);
+    for (size_t ent = 0; ent < sortedEntities.size(); ent++) {
+        uintptr_t entity = entities[sortedEntities[ent]].GetBaseClass().address;
         if (!entity || entity == localPlayer) {
             continue;
         }

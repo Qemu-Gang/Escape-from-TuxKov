@@ -117,24 +117,31 @@ static void MainThread() {
             if (globalvars.tickCount == oldTickCount) {
                 std::this_thread::sleep_for(std::chrono::milliseconds(1));
                 continue;
-            }
-            else if (globalvars.tickCount - oldTickCount > 1);
-                //Logger::Log("tick: %i\n", globalvars.tickCount);
+            } else if (globalvars.tickCount - oldTickCount > 1);
+            //Logger::Log("tick: %i\n", globalvars.tickCount);
 
             oldTickCount = globalvars.tickCount;
-            entities.clear();
+            sortedEntities.clear();
 
             for (int ent = 1; ent < 100; ent++) {
                 uintptr_t entity = GetEntityById(ent);
                 if (!entity) continue;
-                entities.push_back(entity);
+                sortedEntities.push_back(ent);
+                entities[ent].Update(entity);
             }
             localPlayer = GetLocalPlayer();
 
             Glow::Glow();
             Aimbot::Aimbot();
 
-            //std::this_thread::sleep_for(std::chrono::milliseconds(1));
+            WriteList writeList(process);
+
+            for (size_t i : sortedEntities)
+                entities[i].WriteBack(writeList);
+
+            writeList.Commit();
+
+            std::this_thread::sleep_for(std::chrono::milliseconds(1));
         }
         Logger::Log("Main Loop Ended.\n");
 

@@ -2,8 +2,10 @@
 #include <cstdint>
 #include "../sdk/Vector.h"
 
+class CBaseEntity;
+
 namespace Glow {
     void Glow();
 
-    void GlowPlayer(uintptr_t entity, Vector &colors);
+    void GlowPlayer(CBaseEntity &entity, Vector &colors);
 }
