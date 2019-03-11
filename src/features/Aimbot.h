@@ -3,4 +3,4 @@
 
 namespace Aimbot {
     void Aimbot();
-};
+}

@@ -79,9 +79,9 @@ void Aimbot::Aimbot() {
             continue;
         }
 
-        int state = process->Read<int>(entity + 0x2368);
+        int lifeState = process->Read<int>(entity + 0x2368);
 
-        if (state != 0)
+        if (lifeState != 0)
             continue;
         finalEntity = entity;
         break;
@@ -146,6 +146,7 @@ void Aimbot::Aimbot() {
     //process->Write(localPlayer + 0x20A8, aimAngle);
     //process->Write(localPlayer + 0x20BC, aimAngle.y);
 
-    static float col[3] = {0.0f, 0.0f, 255.0f};
+    //Unused at the moment
+    //static float col[3] = {0.0f, 0.0f, 255.0f};
     //Glow::GlowPlayer(finalEntity, col);
 }

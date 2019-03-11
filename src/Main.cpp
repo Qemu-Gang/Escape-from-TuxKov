@@ -35,7 +35,7 @@ int main() {
 }
 #endif
 
-void MainThread() {
+static void MainThread() {
     Logger::Log("Main Loaded.\n");
     pid_t pid;
 #if (LMODE() == MODE_EXTERNAL())
@@ -132,13 +132,13 @@ void MainThread() {
     Logger::Log("Main Ended.\n");
 }
 
-void __attribute__((constructor)) Startup() {
+static void __attribute__((constructor)) Startup() {
 
     std::thread mainthread(MainThread);
     mainthread.detach();
 }
 
-void __attribute__((destructor)) Shutdown() {
+static void __attribute__((destructor)) Shutdown() {
     Logger::Log("Unloading...");
 
     running = false;

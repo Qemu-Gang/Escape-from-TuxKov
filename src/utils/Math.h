@@ -2,10 +2,11 @@
 #include "../sdk/QAngle.h"
 #include "../utils/Logger.h"
 
-#define DEG2RAD(deg) (deg * M_PI / 180.0f)
+static constexpr float F_PI = (float)M_PI;
+#define DEG2RAD(deg) (deg * F_PI / 180.0f)
 
 namespace Math {
-    inline QAngle CalcAngle(Vector &src, Vector &dst) {
+    inline QAngle CalcAngle(const Vector &src, const Vector &dst) {
         QAngle angles;
         Vector delta = src - dst;
 
@@ -13,9 +14,9 @@ namespace Math {
             angles[PITCH] = (delta[2] > 0.0f) ? 270.0f : 90.0f; // Pitch (up/down)
             angles[YAW] = 0.0f; //yaw left/right
         } else {
-            angles[PITCH] = (atan2(-delta.z, delta.Length2D())) * -180 / M_PI;
+            angles[PITCH] = (atan2(-delta.z, delta.Length2D())) * -180 / F_PI;
 
-            angles[YAW] = (atan2(delta.y, delta.x)) * 180 / M_PI;
+            angles[YAW] = (atan2(delta.y, delta.x)) * 180 / F_PI;
 
             if (angles[YAW] > 90)
                 angles[YAW] -= 180;

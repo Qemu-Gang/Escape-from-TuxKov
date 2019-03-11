@@ -21,6 +21,8 @@ public:
     QAngle( float X, float Y, float Z );
     //      QAngle(RadianEuler const &angles);      // evil auto type promotion!!!
 
+    QAngle(const QAngle&) = default;
+
     // Allow pass-by-value
     operator QAngleByValue&() { return *( ( QAngleByValue* ) ( this ) ); }
 
@@ -32,7 +34,7 @@ public:
     void Random( float minVal, float maxVal );
 
     // Got any nasty NAN's?
-    bool IsValid() const { return (!isnan(x) && !isnan(y) && !isnan(z)); };
+    bool IsValid() const { return (!isnan(x) && !isnan(y) && !isnan(z)); }
 
     void Invalidate();
 
@@ -90,8 +92,6 @@ public:
 #else
 
     private:
-        // No copy constructors allowed if we're in optimal mode
-        QAngle(const QAngle& vOther);
 
 #endif
 };
@@ -204,7 +204,7 @@ inline float& QAngle::operator[]( int i ) {
 
 inline float QAngle::operator[]( int i ) const {
     Assert( ( i >= 0 ) && ( i < 3 ) );
-    return ( ( float* ) this )[i];
+    return ( ( const float* ) this )[i];
 }
 
 //-----------------------------------------------------------------------------

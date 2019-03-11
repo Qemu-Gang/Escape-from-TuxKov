@@ -12,7 +12,7 @@ template <typename T,
 >
 constexpr std::size_t offset_of()
 {
-    return reinterpret_cast<std::size_t>(&(((T*)0)->*M));
+    return reinterpret_cast<std::size_t>(&(((T*)nullptr)->*M));
 }
 
 // Compile-time Offset in class ( Usage: OFFSET_OF(&classname::x) )

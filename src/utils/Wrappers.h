@@ -29,7 +29,7 @@ inline Vector GetBonePos(uintptr_t entity, int bone, Vector rootpos) {
     return returnW;
 }
 
-inline uintptr_t GetEntityById(int ent) {
+inline uintptr_t GetEntityById(ssize_t ent) {
     uintptr_t baseEntity = process->Read<uintptr_t>(entList);
 
     if (!baseEntity || !ent) {

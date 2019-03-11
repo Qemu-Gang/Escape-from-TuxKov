@@ -3,7 +3,7 @@
 #include <cmath>
 
 #define Assert(_exp) ((void)0)
-#define FastSqrt(x)            (sqrt)(x)
+#define FastSqrt(x)            (sqrtf)(x)
 #define VALVE_RAND_MAX 0x7fff
 
 class Vector {
@@ -13,6 +13,8 @@ public:
     Vector(void);
 
     Vector(float X, float Y, float Z);
+
+    Vector(const Vector&) = default;
 
     void Init(float ix = 0.0f, float iy = 0.0f, float iz = 0.0f);
 
@@ -136,7 +138,7 @@ inline float &Vector::operator[](int i) {
 //===============================================
 inline float Vector::operator[](int i) const {
     Assert((i >= 0) && (i < 3));
-    return ((float *) this)[i];
+    return ((const float *) this)[i];
 }
 
 //===============================================
@@ -240,7 +242,7 @@ inline float Vector::Length2D(void) const {
 
     float sqst = x * x + y * y;
 
-    root = sqrt(sqst);
+    root = sqrtf(sqst);
 
     return root;
 }
@@ -426,8 +428,9 @@ inline void VectorMA(const float *start, float scale, const float *direction, fl
     VectorMAInline(start, scale, direction, dest);
 }
 
-inline unsigned long &FloatBits(float &f) {
-    return *reinterpret_cast<unsigned long *>(&f);
+inline unsigned long &FloatBits(const float &f) {
+    void* fptr = (void*)&f;
+    return *reinterpret_cast<unsigned long *>(fptr);
 }
 
 inline bool IsFinite(float f) {
@@ -701,7 +704,7 @@ inline float &Vector2D::operator[](int i) {
 
 inline float Vector2D::operator[](int i) const {
     Assert((i >= 0) && (i < 2));
-    return ((float *) this)[i];
+    return ((const float *) this)[i];
 }
 
 //-----------------------------------------------------------------------------

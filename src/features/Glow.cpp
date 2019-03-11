@@ -31,7 +31,7 @@ static Vector teamColors[] = {
 
 
 static void WriteGlow(uintptr_t entity, Vector &colors, float distance) {
-    distance *= 0.01905; // metric
+    distance *= 0.01905f; // metric
     distance /= 1.7f;
     distance = 255.0f - distance;
     std::clamp(distance, 1.0f, 255.0f);

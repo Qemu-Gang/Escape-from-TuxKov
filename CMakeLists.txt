@@ -1,8 +1,17 @@
 cmake_minimum_required(VERSION 2.8)
 project(Ape-ex)
 set(CMAKE_CXX_STANDARD 17)
+include(CheckCXXCompilerFlag)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -Wall -ldl -fpic --no-gnu-unique")
+CHECK_CXX_COMPILER_FLAG(-Weverything COMPILER_SUPPORTS_WEVERYTHING)
+
+if (COMPILER_SUPPORTS_WEVERYTHING)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Weverything")
+else()
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
+endif()
+
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-sign-conversion -Wno-c++98-compat -Wno-padded -Wno-c++98-compat-pedantic -Wno-weak-vtables -Wno-documentation-unknown-command -Wno-old-style-cast -Wno-float-equal -Wno-missing-variable-declarations -Wno-global-constructors -Wno-exit-time-destructors -pedantic -ldl -fpic -DMVERBOSE=0")
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -ggdb")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -s -fvisibility=hidden -fvisibility-inlines-hidden")
 
