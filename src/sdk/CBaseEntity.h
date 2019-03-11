@@ -1,25 +1,44 @@
 #pragma once
 #include "BaseStruct.h"
+#include "OffPtr.h"
+
+#define CBASE_ENTITY_OFFSETS(HANDLER)           \
+    HANDLER(Vector, 0x1b0, glowCol)             \
+    HANDLER(float, 0x2b0, glowTimes1)           \
+    HANDLER(float, 0x2b4, glowTimes2)           \
+    HANDLER(float, 0x2b8, glowTimes3)           \
+    HANDLER(float, 0x2bc, glowTimes4)           \
+    HANDLER(float, 0x2c0, glowTimes5)           \
+    HANDLER(float, 0x2c4, glowTimes6)           \
+    HANDLER(float, 0x2dc, glowDistance)         \
+    HANDLER(int, 0x2f0, iGlowEnable)            \
+    HANDLER(bool, 0x380, bGlowEnable)
+
+#define CONSTRUCTOR_HANDLER(type, offset, name) , name(baseClass)
+#define DEFINE_HANDLER(type, offset, name) OffPtr<type, offset> name;
+#define WRITE_BACK_HANDLER(type, offset, name) name.WriteBack(writeList);
 
 class CBaseEntity
 {
-public:
-    char _pad[0x1B0];
-    float glowR; // 1b0
-    float glowG; // 1b4
-    float glowB; // 1b8
-    char _pad2[0xF8];
-    float glowTimes1; // 2b0-2c8
-    float glowTimes2; // 2b0-2c8
-    float glowTimes3; // 2b0-2c8
-    float glowTimes4; // 2b0-2c8
-    float glowTimes5; // 2b0-2c8
-    float glowTimes6; // 2b0-2c8
-    char _pad3[0x10];
-    float glowDistance; // 2DC
-    char _pad4[0x10];
-    int iGlowEnable; // 2f0
-    char _pad5[0x8C];
-    bool bGlowEnable; // 0x380
+  private:
+    char rBuf[0x800];
+    ProcessBaseClass baseClass;
+  public:
 
+    CBaseEntity(uintptr_t addr = 0)
+        : baseClass(rBuf, addr) CBASE_ENTITY_OFFSETS(CONSTRUCTOR_HANDLER)
+    {
+    }
+
+    void Update()
+    {
+        process->Read(baseClass.address, rBuf, sizeof(rBuf));
+    }
+
+    void WriteBack(WriteList& writeList)
+    {
+        CBASE_ENTITY_OFFSETS(WRITE_BACK_HANDLER);
+    }
+
+    CBASE_ENTITY_OFFSETS(DEFINE_HANDLER)
 };

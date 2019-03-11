@@ -30,49 +30,62 @@ static Vector teamColors[] = {
 };
 
 
-static void WriteGlow(uintptr_t entity, Vector &colors, float distance) {
+static void WriteGlow(CBaseEntity &entity, Vector &colors, float distance) {
     distance *= 0.01905f; // metric
     distance /= 1.7f;
     distance = 255.0f - distance;
     std::clamp(distance, 1.0f, 255.0f);
 
-    process->Write<bool>(entity + OFFSET_OF(&CBaseEntity::bGlowEnable), true); // Enabling the Glow
-    process->Write<int>(entity + OFFSET_OF(&CBaseEntity::iGlowEnable), 1); // Enabling the Glow
+    entity.bGlowEnable = true; // Enabling the Glow
+    entity.iGlowEnable = 1; // Enabling the Glow
 
 
-    process->Write<Vector>(entity + OFFSET_OF(&CBaseEntity::glowR), colors / distance); // Setting a value for the Color Red between 0 and 255
+    entity.glowCol = colors / distance; // Setting a value for the Color Red between 0 and 255
 
     //process->Write<float>(entity + OFFSET_OF(&CBaseEntity::glowG), colors[1] / 100.0f); // Setting a value for the Color Red between 0 and 255
     //process->Write<float>(entity + OFFSET_OF(&CBaseEntity::glowB), colors[2] / 100.0f); // Setting a value for the Color Red between 0 and 255
 
-    process->Write<float>(entity + OFFSET_OF(&CBaseEntity::glowTimes1), __FLT_MAX__); // Setting the time of the Glow to be the Max Float value so it never runs out
-    process->Write<float>(entity + OFFSET_OF(&CBaseEntity::glowTimes2), __FLT_MAX__); // Setting the time of the Glow to be the Max Float value so it never runs out
-    process->Write<float>(entity + OFFSET_OF(&CBaseEntity::glowTimes3), __FLT_MAX__); // Setting the time of the Glow to be the Max Float value so it never runs out
-    process->Write<float>(entity + OFFSET_OF(&CBaseEntity::glowTimes4), __FLT_MAX__); // Setting the time of the Glow to be the Max Float value so it never runs out
-    process->Write<float>(entity + OFFSET_OF(&CBaseEntity::glowTimes5), __FLT_MAX__); // Setting the time of the Glow to be the Max Float value so it never runs out
-    process->Write<float>(entity + OFFSET_OF(&CBaseEntity::glowTimes6), __FLT_MAX__); // Setting the time of the Glow to be the Max Float value so it never runs out
+    entity.glowTimes1 = __FLT_MAX__; // Setting the time of the Glow to be the Max Float value so it never runs out
+    entity.glowTimes2 = __FLT_MAX__; // Setting the time of the Glow to be the Max Float value so it never runs out
+    entity.glowTimes3 = __FLT_MAX__; // Setting the time of the Glow to be the Max Float value so it never runs out
+    entity.glowTimes4 = __FLT_MAX__; // Setting the time of the Glow to be the Max Float value so it never runs out
+    entity.glowTimes5 = __FLT_MAX__; // Setting the time of the Glow to be the Max Float value so it never runs out
+    entity.glowTimes6 = __FLT_MAX__; // Setting the time of the Glow to be the Max Float value so it never runs out
 
-    process->Write<float>(entity + OFFSET_OF(&CBaseEntity::glowDistance), __FLT_MAX__); //Set the Distance of the Glow to Max float value so we can see a long Distance
+    entity.glowDistance = __FLT_MAX__; //Set the Distance of the Glow to Max float value so we can see a long Distance
 }
 
 void Glow::Glow() {
     int localTeam = process->Read<int>(localPlayer + 0x3E4);
     Vector localPos = process->Read<Vector>(localPlayer + 0x12C);
 
-    for (size_t ent = 0; ent < entities.size(); ent++) {
+    WriteList writeList(process);
 
-        uintptr_t entity = entities.at(ent);
+    for (size_t entID = 0; entID < entities.size(); entID++) {
+
+        uintptr_t entity = entities.at(entID);
         if (entity == localPlayer) {
             continue;
         }
 
+        CBaseEntity ent(entity);
+        ent.Update();
+
         int team = process->Read<int>(entity + 0x3E4);
         if (team != localTeam) {
-            WriteGlow(entity, teamColors[std::min(team, 20)], localPos.DistTo(process->Read<Vector>(entity + 0x12C)));
+            WriteGlow(ent, teamColors[std::min(team, 20)], localPos.DistTo(process->Read<Vector>(entity + 0x12C)));
         }
+
+        ent.WriteBack(writeList);
     }
+
+    writeList.Commit();
 }
 
 void Glow::GlowPlayer(uintptr_t entity, Vector &colors) {
-    WriteGlow(entity, colors, 100);
+    WriteList writeList(process);
+    CBaseEntity ent(entity);
+    ent.Update();
+    WriteGlow(ent, colors, 100);
+    ent.WriteBack(writeList);
 }
