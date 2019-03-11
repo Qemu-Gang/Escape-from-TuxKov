@@ -117,14 +117,13 @@ static void MainThread() {
         Logger::Log("Starting Main Loop.\n");
 
 
-        static int oldTickCount = 0;
         static int lastTickSent = 0;
         static bool doubleSend = false; // doublesend for it to kick in ( 1 tick delay )
         static int lastTick = 0;
         while (running) {
             CGlobalVars globalvars = process->Read<CGlobalVars>(globalVars);
 
-            if (globalvars.tickCount <= oldTickCount) {
+            if (globalvars.tickCount <= lastTick) {
                 continue;
             }
 
@@ -146,7 +145,6 @@ static void MainThread() {
                 }
             }
 
-            oldTickCount = globalvars.tickCount;
             sortedEntities.clear();
 
             for (int ent = 1; ent < 100; ent++) {
