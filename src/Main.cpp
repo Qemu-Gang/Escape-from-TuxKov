@@ -31,8 +31,11 @@ static bool running = true;
 
 #if (LMODE() == MODE_EXTERNAL())
 int main() {
-    while (running)
+    while (running){
         usleep(1000000);
+    }
+
+    process->Write<double>(nextCmdTime, 0.0); // reset sendpacket
     return 0;
 }
 #endif
@@ -84,13 +87,8 @@ static void MainThread() {
             }
         }
 
-        if (!process || !apexBase) {
-            Logger::Log("Could not Find Apex Process/Base. Exiting...\n");
-            running = false;
-            return;
-        }
-        if (!inputSystem || !inputBase) {
-            Logger::Log("Could not Find Input Process/Base. Exiting...\n");
+        if (!process || !apexBase || !inputSystem || !inputBase) {
+            Logger::Log("Could not Find Apex/InputSystem Process/Base. Exiting...\n");
             running = false;
             return;
         }
@@ -104,8 +102,10 @@ static void MainThread() {
         netTime = GetAbsoluteAddressVm(*process, Scanner::FindPatternInModule("F2 0F 58 0D ?? ?? ?? ?? 66 0F 2F C1 77", MODNAME, *process), 4, 8);
         nextCmdTime = GetAbsoluteAddressVm(*process, Scanner::FindPatternInModule("F2 0F 10 05 ?? ?? ?? ?? F2 0F 58 0D", MODNAME, *process), 4, 8);
         signonState = GetAbsoluteAddressVm(*process, Scanner::FindPatternInModule("83 3D ?? ?? ?? ?? ?? 0F B6 DA", MODNAME, *process), 2, 7);
+        netChannel = process->Read<uintptr_t>(
+                GetAbsoluteAddressVm(*process, Scanner::FindPatternInModule("48 8B 1D ?? ?? ?? ?? 48 8D 05 ?? ?? ?? ?? 48 89 ?? ?? ?? 8B 05", MODNAME, *process), 3, 7));
 
-        if (!entList || !globalVars || !netTime || !nextCmdTime || !signonState) {
+        if (!entList || !globalVars || !netTime || !nextCmdTime || !signonState || !netChannel) {
             Logger::Log("One of the sigs failed. Stopping.\n");
             running = false;
             return;
@@ -113,44 +113,29 @@ static void MainThread() {
         Logger::Log("Localplayer: %p\n", (void *) GetLocalPlayer());
         Logger::Log("Entlist: %p\n", (void *) entList);
         Logger::Log("GlobalVars: %p\n", (void *) globalVars);
-
         Logger::Log("nextCmdTime: %p\n", (void *) nextCmdTime);
         Logger::Log("netTime: %p\n", (void *) netTime);
         Logger::Log("SignonState: %p\n", (void *) signonState);
+        Logger::Log("netChannel: %p\n", (void *) netChannel);
 
         Logger::Log("Starting Main Loop.\n");
 
-        static int oldFrameCount = 0;
-
-
-        static int lastTickSent = 0;
-        static bool doubleSend = false; // doublesend for it to kick in ( 1 tick delay )
+        static int lastFrame = 0;
         static int lastTick = 0;
+        static bool updateWrites = false;
 
-        static bool shouldProcess = false;
         while (running) {
             CGlobalVars globalvars = process->Read<CGlobalVars>(globalVars);
-            //int tickCount = process->Read<int>(globalVars + 0x40);
-            //int frameCount = process->Read<int>(globalVars + 0x8);
-            shouldProcess = (globalvars.tickCount != lastTick || globalvars.framecount != oldFrameCount);
+            int chokedTicks = process->Read<int>(netChannel + 0x10);
+
+            /* Per Tick Operations */
             if (globalvars.tickCount > lastTick) {
                 if (globalvars.tickCount != lastTick + 1) {
                     //Logger::Log("Missed a Tick!: [%d->%d]\n", lastTick, globalvars.tickCount);
                 }
                 lastTick = globalvars.tickCount;
 
-
-                if (globalvars.tickCount - lastTickSent > 7) {
-                    sendpacket = true;
-                    doubleSend = true;
-                } else {
-                    if (doubleSend) {
-                        sendpacket = true;
-                        doubleSend = false;
-                    } else {
-                        sendpacket = false;
-                    }
-                }
+                sendpacket = (chokedTicks > 12);
 
                 sortedEntities.clear();
 
@@ -163,24 +148,17 @@ static void MainThread() {
                 localPlayer.Update(GetLocalPlayer());
                 Aimbot::Aimbot();
 
-                //Aimbot::Aimbot();
-                //Glow::Glow();
-
-
-
                 process->Write<double>(nextCmdTime, sendpacket ? 0.0 : std::numeric_limits<double>::max());
 
-                if (sendpacket) {
-                    //Logger::Log("Sending on tick: %d\n", globalvars.tickCount);
-                    lastTickSent = globalvars.tickCount;
-                }
+                updateWrites = true;
             }
-            if (oldFrameCount != globalvars.framecount) {
+            /* Per Frame Operations */
+            if (globalvars.framecount > lastFrame) {
                 Glow::Glow();
-                //Logger::Log("calling glow: %i\n", globalvars.framecount);
-                oldFrameCount = globalvars.framecount;
+                lastFrame = globalvars.framecount;
+                updateWrites = true;
             }
-            if (shouldProcess) {
+            if (updateWrites) {
                 WriteList writeList(process);
 
                 for (size_t i : sortedEntities)
@@ -189,11 +167,12 @@ static void MainThread() {
                 localPlayer.WriteBack(writeList);
 
                 writeList.Commit();
-            } else
+
+            } else {
                 std::this_thread::sleep_for(std::chrono::microseconds(2000));
+            }
         }
         Logger::Log("Main Loop Ended.\n");
-
     } catch (VMException &e) {
         Logger::Log("Initialization error: %d\n", e.value);
         running = false;
