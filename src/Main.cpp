@@ -133,7 +133,7 @@ static void MainThread() {
             //int tickCount = process->Read<int>(globalVars + 0x40);
             //int frameCount = process->Read<int>(globalVars + 0x8);
             shouldProcess = (globalvars.tickCount != lastTick || globalvars.framecount != oldFrameCount);
-            if (globalvars.tickCount >= lastTick) {
+            if (globalvars.tickCount > lastTick) {
                 if (globalvars.tickCount != lastTick + 1) {
                     //Logger::Log("Missed a Tick!: [%d->%d]\n", lastTick, globalvars.tickCount);
                 }
@@ -190,7 +190,7 @@ static void MainThread() {
 
                 writeList.Commit();
             } else
-                std::this_thread::sleep_for(std::chrono::microseconds(1000));
+                std::this_thread::sleep_for(std::chrono::microseconds(2000));
         }
         Logger::Log("Main Loop Ended.\n");
 
