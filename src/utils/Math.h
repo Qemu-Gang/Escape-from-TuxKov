@@ -61,7 +61,7 @@ namespace Math {
 
         angleFOV /= 90.0f;
 
-        float distanceFOV = sin(angleFOV) * distance; // sin(dif) = viewAngle / realDelta
+        float distanceFOV = angleFOV * distance; // sin(dif) = viewAngle / realDelta
 
         return distanceFOV;
     }

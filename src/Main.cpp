@@ -129,10 +129,10 @@ static void MainThread() {
             int chokedTicks = process->Read<int>(netChannel + 0x10);
 
             /* Per Tick Operations */
-            if (globalvars.tickCount > lastTick) {
-                if (globalvars.tickCount != lastTick + 1) {
+            if (globalvars.tickCount != lastTick) {
+                //if (globalvars.tickCount != lastTick + 1) {
                     //Logger::Log("Missed a Tick!: [%d->%d]\n", lastTick, globalvars.tickCount);
-                }
+                //}
                 lastTick = globalvars.tickCount;
 
                 sendpacket = (chokedTicks > 12);
@@ -153,7 +153,7 @@ static void MainThread() {
                 updateWrites = true;
             }
             /* Per Frame Operations */
-            if (globalvars.framecount > lastFrame) {
+            if (globalvars.framecount != lastFrame) {
                 Glow::Glow();
                 lastFrame = globalvars.framecount;
                 updateWrites = true;
