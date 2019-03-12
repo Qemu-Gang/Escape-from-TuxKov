@@ -129,7 +129,7 @@ static void MainThread() {
             int chokedTicks = process->Read<int>(netChannel + 0x10);
 
             /* Per Tick Operations */
-            if (globalvars.tickCount != lastTick) {
+            if (globalvars.tickCount > lastTick) {
                 //if (globalvars.tickCount != lastTick + 1) {
                     //Logger::Log("Missed a Tick!: [%d->%d]\n", lastTick, globalvars.tickCount);
                 //}
