@@ -111,7 +111,7 @@ static void* MainThread(void*) {
         //Netvars::FindNetvars( *process, MODNAME );
 
         entList = PatternScan::FindPattern("[48 8D 05 *?? ?? ?? ??] 48 C1 E1 05 48 03 C8 0F B7 05 ?? ?? ?? ?? 39 41 08 75 51", MODNAME);
-        globalVars = PatternScan::FindPattern("[4C 8B 15 *?? ?? ?? ??] 88", MODNAME);
+        globalVars = PatternScan::FindPattern("[4C 8B 15 **?? ?? ?? ??] 88", MODNAME);
         netTime = PatternScan::FindPattern("[F2 0F 58 0D *?? ?? ?? ??] 66 0F 2F C1 77", MODNAME);
         nextCmdTime = PatternScan::FindPattern("[F2 0F 10 05 *?? ?? ?? ??] F2 0F 58 0D", MODNAME);
         signonState = PatternScan::FindPattern("[83 3D *?? ?? ?? ?? ??] 0F B6 DA", MODNAME);
