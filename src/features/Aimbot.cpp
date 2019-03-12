@@ -31,6 +31,7 @@ void Aimbot::Aimbot() {
     if (!state) {
         return;
     }
+    sendpacket = true; // want to send packets when aiming
     QAngle viewAngle = localPlayer.viewAngles;
 
     CBaseEntity* finalEntity = nullptr;

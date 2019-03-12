@@ -14,6 +14,8 @@ inline uintptr_t globalVars;
 inline uintptr_t netTime; // double
 inline uintptr_t nextCmdTime; // double
 
+inline bool sendpacket = true; // should send packet this tick
+
 inline WinProcess *process;
 inline WinProcess *inputSystem;
 
