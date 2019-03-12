@@ -2,6 +2,7 @@
 
 #include "vmread/hlapi/hlapi.h"
 #include "sdk/CBaseEntity.h"
+#include "sdk/Definitions.h"
 #include <vector>
 #include <cstdint>
 
@@ -13,6 +14,7 @@ inline uintptr_t entList;
 inline uintptr_t globalVars;
 inline uintptr_t netTime; // double
 inline uintptr_t nextCmdTime; // double
+inline uintptr_t signonState;
 
 inline bool sendpacket = true; // should send packet this tick
 

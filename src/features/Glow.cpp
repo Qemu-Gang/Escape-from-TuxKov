@@ -39,7 +39,7 @@ static void WriteGlow(CBaseEntity &entity, Vector &colors, float distance) {
     if (distance < 100.0f) {
         distance *= 2.55f;
         distance = 255.0f - distance;
-        std::clamp(distance, 1.0f, 3.0f);
+        std::clamp(distance, 1.0f, 1.5f);
         //colors /= distance;
         entity.glowCol = colors / distance; // Setting a value for the Color Red between 0 and 255
     } else
