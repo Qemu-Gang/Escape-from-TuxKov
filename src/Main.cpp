@@ -31,8 +31,11 @@ static bool running = true;
 
 #if (LMODE() == MODE_EXTERNAL())
 int main() {
-    while (running)
+    while (running){
         usleep(1000000);
+    }
+
+    process->Write<double>(nextCmdTime, 0.0); // reset sendpacket
     return 0;
 }
 #endif
@@ -84,13 +87,8 @@ static void MainThread() {
             }
         }
 
-        if (!process || !apexBase) {
-            Logger::Log("Could not Find Apex Process/Base. Exiting...\n");
-            running = false;
-            return;
-        }
-        if (!inputSystem || !inputBase) {
-            Logger::Log("Could not Find Input Process/Base. Exiting...\n");
+        if (!process || !apexBase || !inputSystem || !inputBase) {
+            Logger::Log("Could not Find Apex/InputSystem Process/Base. Exiting...\n");
             running = false;
             return;
         }
@@ -105,7 +103,8 @@ static void MainThread() {
         nextCmdTime = GetAbsoluteAddressVm(*process, Scanner::FindPatternInModule("F2 0F 10 05 ?? ?? ?? ?? F2 0F 58 0D", MODNAME, *process), 4, 8);
         signonState = GetAbsoluteAddressVm(*process, Scanner::FindPatternInModule("83 3D ?? ?? ?? ?? ?? 0F B6 DA", MODNAME, *process), 2, 7);
         netChannel = process->Read<uintptr_t>(GetAbsoluteAddressVm(*process, Scanner::FindPatternInModule("48 8B 1D ?? ?? ?? ?? 48 8D 05 ?? ?? ?? ?? 48 89 ?? ?? ?? 8B 05", MODNAME, *process), 3, 7 ));
-        if( !entList || !globalVars || !netTime || !nextCmdTime || !signonState || !netChannel ){
+
+        if (!entList || !globalVars || !netTime || !nextCmdTime || !signonState || !netChannel) {
             Logger::Log("One of the sigs failed. Stopping.\n");
             running = false;
             return;
@@ -113,81 +112,72 @@ static void MainThread() {
         Logger::Log("Localplayer: %p\n", (void *) GetLocalPlayer());
         Logger::Log("Entlist: %p\n", (void *) entList);
         Logger::Log("GlobalVars: %p\n", (void *) globalVars);
-        Logger::Log("nextCmdTime: %p\n", (void *)nextCmdTime);
-        Logger::Log("netTime: %p\n", (void *)netTime);
-        Logger::Log("SignonState: %p\n", (void *)signonState);
+        Logger::Log("nextCmdTime: %p\n", (void *) nextCmdTime);
+        Logger::Log("netTime: %p\n", (void *) netTime);
+        Logger::Log("SignonState: %p\n", (void *) signonState);
         Logger::Log("netChannel: %p\n", (void *)netChannel);
 
         Logger::Log("Starting Main Loop.\n");
 
-        static int lastTickSent = 0;
-        static bool doubleSend = false; // doublesend for it to kick in ( 1 tick delay )
+        static int lastFrame = 0;
         static int lastTick = 0;
+        static bool updateWrites = false;
+
         while (running) {
             CGlobalVars globalvars = process->Read<CGlobalVars>(globalVars);
             int chokedTicks = process->Read<int>( netChannel + 0x10 );
 
-            if (globalvars.tickCount <= lastTick) {
-                //std::this_thread::sleep_for(std::chrono::milliseconds(4));
-                continue;
-            }
-
-            if( globalvars.tickCount != lastTick +1 ){
-                Logger::Log("Missed a Tick!: [%d->%d]\n", lastTick, globalvars.tickCount);
-            }
-            lastTick = globalvars.tickCount;
-
-
-            if( chokedTicks > 12 ){
-                sendpacket = true;
-                doubleSend = true;
-            } else {
-                if( doubleSend ){
-                    sendpacket = true;
-                    doubleSend = false;
-                } else {
-                    sendpacket = false;
+            /* Per Tick Operations */
+            if (globalvars.tickCount >= lastTick) {
+                if (globalvars.tickCount != lastTick + 1) {
+                    //Logger::Log("Missed a Tick!: [%d->%d]\n", lastTick, globalvars.tickCount);
                 }
+                lastTick = globalvars.tickCount;
+
+                sendpacket = (chokedTicks > 12);
+
+                sortedEntities.clear();
+
+                for (int ent = 1; ent < 100; ent++) {
+                    uintptr_t entity = GetEntityById(ent);
+                    if (!entity) continue;
+                    sortedEntities.push_back(ent);
+                    entities[ent].Update(entity);
+                }
+                localPlayer.Update(GetLocalPlayer());
+                Aimbot::Aimbot();
+
+                process->Write<double>(nextCmdTime, sendpacket ? 0.0 : std::numeric_limits<double>::max());
+
+                updateWrites = true;
             }
-
-            sortedEntities.clear();
-
-            for (int ent = 1; ent < 100; ent++) {
-                uintptr_t entity = GetEntityById(ent);
-                if (!entity) continue;
-                sortedEntities.push_back(ent);
-                entities[ent].Update(entity);
+            /* Per Frame Operations */
+            if (globalvars.framecount >= lastFrame) {
+                Glow::Glow();
+                lastFrame = globalvars.framecount;
+                updateWrites = true;
             }
-            localPlayer.Update(GetLocalPlayer());
+            if (updateWrites) {
+                WriteList writeList(process);
 
-            Glow::Glow();
-            Aimbot::Aimbot();
+                for (size_t i : sortedEntities)
+                    entities[i].WriteBack(writeList);
 
-            WriteList writeList(process);
+                localPlayer.WriteBack(writeList);
 
-            for (size_t i : sortedEntities)
-                entities[i].WriteBack(writeList);
-
-            localPlayer.WriteBack(writeList);
-
-            writeList.Commit();
-
-            process->Write<double>( nextCmdTime, sendpacket ? 0.0 : std::numeric_limits<double>::max() );
-
-            if( sendpacket ){
-                //Logger::Log("Sending on tick: %d\n", globalvars.tickCount);
-                lastTickSent = globalvars.tickCount;
+                writeList.Commit();
+            } else {
+                std::this_thread::sleep_for( std::chrono::microseconds( 1000 ) );
             }
         }
         Logger::Log("Main Loop Ended.\n");
-
     } catch (VMException &e) {
         Logger::Log("Initialization error: %d\n", e.value);
         running = false;
         return;
     }
 
-    process->Write<double>( nextCmdTime, 0.0 ); // reset sendpacket
+    process->Write<double>(nextCmdTime, 0.0); // reset sendpacket
     Logger::Log("Main Ended.\n");
 }
 

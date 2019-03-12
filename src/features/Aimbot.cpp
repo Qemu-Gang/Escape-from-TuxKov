@@ -106,7 +106,7 @@ void Aimbot::Aimbot() {
     bulletVel *= 0.01905f;
 
     Vector enemyVelocity = finalEntity->velocity;
-    Vector targetVelocity = enemyVelocity - localPlayer.velocity;
+    Vector targetVelocity = enemyVelocity;
     //targetVelocity *= 0.01905f;
 
     //float interval_per_tick = process->Read<float>(0x1713CA8 + 0x44);
