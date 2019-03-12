@@ -105,15 +105,19 @@ static void MainThread() {
         nextCmdTime = GetAbsoluteAddressVm(*process, Scanner::FindPatternInModule("F2 0F 10 05 ?? ?? ?? ?? F2 0F 58 0D", MODNAME, *process), 4, 8);
         signonState = GetAbsoluteAddressVm(*process, Scanner::FindPatternInModule("83 3D ?? ?? ?? ?? ?? 0F B6 DA", MODNAME, *process), 2, 7);
 
-        Logger::Log("Entlist: %p\n", (void *) entList);
+        if( !entList || !globalVars || !netTime || !nextCmdTime || !signonState ){
+            Logger::Log("One of the sigs failed. Stopping.\n");
+            running = false;
+            return;
+        }
         Logger::Log("Localplayer: %p\n", (void *) GetLocalPlayer());
+        Logger::Log("Entlist: %p\n", (void *) entList);
         Logger::Log("GlobalVars: %p\n", (void *) globalVars);
         Logger::Log("nextCmdTime: %p\n", (void *)nextCmdTime);
         Logger::Log("netTime: %p\n", (void *)netTime);
         Logger::Log("SignonState: %p\n", (void *)signonState);
 
         Logger::Log("Starting Main Loop.\n");
-
 
         static int lastTickSent = 0;
         static bool doubleSend = false; // doublesend for it to kick in ( 1 tick delay )

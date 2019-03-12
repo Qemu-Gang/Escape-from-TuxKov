@@ -28,6 +28,7 @@ uintptr_t Scanner::FindPatternInModule( const char *pattern, const char *moduleN
     uintptr_t startingAddr = 0;
     uintptr_t endingAddr = 0;
     uintptr_t offset = 0;
+    uintptr_t ret = 0;
     size_t regionSize = 0;
     unsigned char *bMask = new unsigned char[patternLen](); //  bit bigger than needed but ok
     char *szMask = new char[patternLen](); //  ^^
@@ -46,6 +47,7 @@ uintptr_t Scanner::FindPatternInModule( const char *pattern, const char *moduleN
 
     if( !startingAddr || !endingAddr ) {
         Logger::Log("ERROR: No Starting/Ending Addr");
+        ret = 0;
         goto end;
     }
 
@@ -78,12 +80,15 @@ uintptr_t Scanner::FindPatternInModule( const char *pattern, const char *moduleN
     /* Do the Scan in linux memory, subtract offset and apply */
     offset = FindPatternOffset( (uintptr_t)byteCache, (uintptr_t)&byteCache[regionSize], bMask, szMask );
     if( !offset ){
-        return 0;
+        Logger::Log("ERROR: Pattern %s not found!\n", pattern);
+        ret = 0;
+        goto end;
     }
     offset = offset - (uintptr_t)byteCache;
+    ret = startingAddr + offset;
 end:
     delete[] bMask;
     delete[] szMask;
     delete[] byteCache;
-    return startingAddr + offset;
+    return ret;
 }
