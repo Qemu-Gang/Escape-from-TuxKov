@@ -1,8 +1,9 @@
 #include "Interfaces.h"
 #include "utils/Logger.h"
-#include "utils/Scanner.h"
 #include "utils/Memutils.h"
 #include "sdk/BaseStruct.h"
+#include "m0dular/utils/pattern_scan.h"
+
 
 typedef void* (*InstantiateInterfaceFn) ();
 
@@ -14,7 +15,7 @@ struct InterfaceReg
 };
 
 bool Interfaces::FindInterfaces( WinProcess &process, const char *moduleName ) {
-    uintptr_t createInterfaceFunc = Scanner::FindPatternInModule( "48 89 5C 24 08 48 89 6C 24 10 48 89 74 24 18 57 48 83 EC ?? 48 8B 1D ?? ?? ?? ?? 48 8B FA 48", moduleName, process );
+    uintptr_t createInterfaceFunc = PatternScan::FindPattern("48 89 5C 24 08 48 89 6C 24 10 48 89 74 24 18 57 48 83 EC ?? 48 8B 1D ?? ?? ?? ?? 48 8B FA 48", moduleName);
     if( !createInterfaceFunc ){
         return false;
     }

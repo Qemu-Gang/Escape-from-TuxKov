@@ -6,7 +6,6 @@
 #include "features/Glow.h"
 #include "sdk/CBaseEntity.h"
 #include "sdk/CGlobalVars.h"
-#include "utils/Scanner.h"
 #include "utils/Memutils.h"
 #include "globals.h"
 #include "utils/Wrappers.h"
