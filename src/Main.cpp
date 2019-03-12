@@ -104,8 +104,8 @@ static void MainThread() {
         netTime = GetAbsoluteAddressVm(*process, Scanner::FindPatternInModule("F2 0F 58 0D ?? ?? ?? ?? 66 0F 2F C1 77", MODNAME, *process), 4, 8);
         nextCmdTime = GetAbsoluteAddressVm(*process, Scanner::FindPatternInModule("F2 0F 10 05 ?? ?? ?? ?? F2 0F 58 0D", MODNAME, *process), 4, 8);
         signonState = GetAbsoluteAddressVm(*process, Scanner::FindPatternInModule("83 3D ?? ?? ?? ?? ?? 0F B6 DA", MODNAME, *process), 2, 7);
-
-        if( !entList || !globalVars || !netTime || !nextCmdTime || !signonState ){
+        netChannel = process->Read<uintptr_t>(GetAbsoluteAddressVm(*process, Scanner::FindPatternInModule("48 8B 1D ?? ?? ?? ?? 48 8D 05 ?? ?? ?? ?? 48 89 ?? ?? ?? 8B 05", MODNAME, *process), 3, 7 ));
+        if( !entList || !globalVars || !netTime || !nextCmdTime || !signonState || !netChannel ){
             Logger::Log("One of the sigs failed. Stopping.\n");
             running = false;
             return;
@@ -116,6 +116,7 @@ static void MainThread() {
         Logger::Log("nextCmdTime: %p\n", (void *)nextCmdTime);
         Logger::Log("netTime: %p\n", (void *)netTime);
         Logger::Log("SignonState: %p\n", (void *)signonState);
+        Logger::Log("netChannel: %p\n", (void *)netChannel);
 
         Logger::Log("Starting Main Loop.\n");
 
@@ -124,6 +125,7 @@ static void MainThread() {
         static int lastTick = 0;
         while (running) {
             CGlobalVars globalvars = process->Read<CGlobalVars>(globalVars);
+            int chokedTicks = process->Read<int>( netChannel + 0x10 );
 
             if (globalvars.tickCount <= lastTick) {
                 //std::this_thread::sleep_for(std::chrono::milliseconds(4));
@@ -136,7 +138,7 @@ static void MainThread() {
             lastTick = globalvars.tickCount;
 
 
-            if( globalvars.tickCount - lastTickSent > 7 ){
+            if( chokedTicks > 12 ){
                 sendpacket = true;
                 doubleSend = true;
             } else {
