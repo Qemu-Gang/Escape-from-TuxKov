@@ -140,15 +140,13 @@ static void* MainThread(void*) {
         while (running) {
             CGlobalVars globalvars = process->Read<CGlobalVars>(globalVars);
             int chokedTicks = process->Read<int>(netChannel + 0x10);
-
+            sendpacket = (chokedTicks > 12);
             /* Per Tick Operations */
             if (globalvars.tickCount > lastTick) {
                 //if (globalvars.tickCount != lastTick + 1) {
                     //Logger::Log("Missed a Tick!: [%d->%d]\n", lastTick, globalvars.tickCount);
                 //}
                 lastTick = globalvars.tickCount;
-
-                sendpacket = (chokedTicks > 12);
 
                 sortedEntities.clear();
 
@@ -160,9 +158,6 @@ static void* MainThread(void*) {
                 }
                 localPlayer.Update(GetLocalPlayer());
                 Aimbot::Aimbot();
-
-                process->Write<double>(nextCmdTime, sendpacket ? 0.0 : std::numeric_limits<double>::max());
-
                 updateWrites = true;
             }
             /* Per Frame Operations */
@@ -184,6 +179,7 @@ static void* MainThread(void*) {
             } else {
                 std::this_thread::sleep_for(std::chrono::microseconds(2000));
             }
+            process->Write<double>(nextCmdTime, sendpacket ? 0.0 : std::numeric_limits<double>::max());
         }
         Logger::Log("Main Loop Ended.\n");
     } catch (VMException &e) {
