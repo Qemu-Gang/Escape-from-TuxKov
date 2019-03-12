@@ -30,6 +30,8 @@
 #define MODNAME "R5Apex.exe"
 #endif
 
+#include "Signatures.h"
+
 static bool running = true;
 static thread_t mainThread;
 
@@ -39,7 +41,6 @@ int main() {
         usleep(1000000);
     }
 
-    process->Write<double>(nextCmdTime, 0.0); // reset sendpacket
     return 0;
 }
 #endif
@@ -49,6 +50,15 @@ int main() {
 
 typedef std::chrono::high_resolution_clock Clock;
 
+static void* ThreadSignature(const Signature* sig)
+{
+    *sig->result = PatternScan::FindPattern(sig->pattern, sig->module);
+
+    if (!*sig->result)
+        Logger::Log("Failed to find pattern {%s}\n", sig->pattern);
+
+    return nullptr;
+}
 
 static void* MainThread(void*) {
     Logger::Log("Main Loaded.\n");
@@ -105,15 +115,13 @@ static void* MainThread(void*) {
 
         auto t1 = Clock::now();
 
-        Interfaces::FindInterfaces(*process, MODNAME);
+        Threading::QueueJobRef(Interfaces::FindInterfaces, MODNAME);
         //Netvars::FindNetvars( *process, MODNAME );
 
-        entList = PatternScan::FindPattern("[48 8D 05 *?? ?? ?? ??] 48 C1 E1 05 48 03 C8 0F B7 05 ?? ?? ?? ?? 39 41 08 75 51", MODNAME);
-        globalVars = PatternScan::FindPattern("[4C 8B 15 **?? ?? ?? ??] 88", MODNAME);
-        netTime = PatternScan::FindPattern("[F2 0F 58 0D *?? ?? ?? ??] 66 0F 2F C1 77", MODNAME);
-        nextCmdTime = PatternScan::FindPattern("[F2 0F 10 05 *?? ?? ?? ??] F2 0F 58 0D", MODNAME);
-        signonState = PatternScan::FindPattern("[83 3D *?? ?? ?? ?? ??] 0F B6 DA", MODNAME);
-        netChannel = PatternScan::FindPattern("[48 8B 1D **?? ?? ?? ??] 48 8D 05 ?? ?? ?? ?? 48 89 ?? ?? ?? 8B 05", MODNAME);
+        for (const Signature& sig : signatures)
+            Threading::QueueJobRef(ThreadSignature, &sig);
+
+        Threading::FinishQueue(true);
 
         if (!entList || !globalVars || !netTime || !nextCmdTime || !signonState || !netChannel) {
             Logger::Log("One of the sigs failed. Stopping.\n");
@@ -181,6 +189,8 @@ static void* MainThread(void*) {
             }
             process->Write<double>(nextCmdTime, sendpacket ? 0.0 : std::numeric_limits<double>::max());
         }
+
+        process->Write<double>(nextCmdTime, 0.0); // reset sendpacket
         Logger::Log("Main Loop Ended.\n");
     } catch (VMException &e) {
         Logger::Log("Initialization error: %d\n", e.value);
@@ -188,7 +198,6 @@ static void* MainThread(void*) {
         return nullptr;
     }
 
-    process->Write<double>(nextCmdTime, 0.0); // reset sendpacket
     Logger::Log("Main Ended.\n");
 
     return nullptr;
