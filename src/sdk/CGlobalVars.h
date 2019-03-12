@@ -3,8 +3,7 @@
 class CGlobalVars
 {
 public:
-    char pad_0000[4]; //0x0000
-    float realtime; //0x0004
+    double realtime;
     int32_t framecount; //0x0008
     float absoluteframetime; //0x000C
     float curtime; //0x0010

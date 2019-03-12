@@ -48,9 +48,6 @@ static void MainThread() {
     pid = getpid();
 #endif
     try {
-        //input.Init(kb);
-        //input.Init(ms);
-
         WinContext ctx(pid);
         ctx.processList.Refresh();
         for (auto &i : ctx.processList) {
@@ -106,13 +103,14 @@ static void MainThread() {
         globalVars = process->Read<uintptr_t>(GetAbsoluteAddressVm(*process, Scanner::FindPatternInModule("4C 8B 15 ?? ?? ?? ?? 88", MODNAME, *process), 3, 7));
         netTime = GetAbsoluteAddressVm(*process, Scanner::FindPatternInModule("F2 0F 58 0D ?? ?? ?? ?? 66 0F 2F C1 77", MODNAME, *process), 4, 8);
         nextCmdTime = GetAbsoluteAddressVm(*process, Scanner::FindPatternInModule("F2 0F 10 05 ?? ?? ?? ?? F2 0F 58 0D", MODNAME, *process), 4, 8);
-        sendpacket = Scanner::FindPatternInModule("41 B7 01 44 0F 29", MODNAME, *process) + 2;
+        signonState = GetAbsoluteAddressVm(*process, Scanner::FindPatternInModule("83 3D ?? ?? ?? ?? ?? 0F B6 DA", MODNAME, *process), 2, 7);
 
         Logger::Log("Entlist: %p\n", (void *) entList);
         Logger::Log("Localplayer: %p\n", (void *) GetLocalPlayer());
         Logger::Log("GlobalVars: %p\n", (void *) globalVars);
         Logger::Log("nextCmdTime: %p\n", (void *)nextCmdTime);
         Logger::Log("netTime: %p\n", (void *)netTime);
+        Logger::Log("SignonState: %p\n", (void *)signonState);
 
         Logger::Log("Starting Main Loop.\n");
 
@@ -124,6 +122,7 @@ static void MainThread() {
             CGlobalVars globalvars = process->Read<CGlobalVars>(globalVars);
 
             if (globalvars.tickCount <= lastTick) {
+                //std::this_thread::sleep_for(std::chrono::milliseconds(4));
                 continue;
             }
 
