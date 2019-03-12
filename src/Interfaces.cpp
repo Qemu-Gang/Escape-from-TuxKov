@@ -1,6 +1,5 @@
 #include "Interfaces.h"
 #include "utils/Logger.h"
-#include "utils/Scanner.h"
 #include "utils/Memutils.h"
 #include "sdk/BaseStruct.h"
 #include "m0dular/utils/pattern_scan.h"

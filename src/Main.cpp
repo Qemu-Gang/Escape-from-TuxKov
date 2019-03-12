@@ -6,7 +6,6 @@
 #include "features/Glow.h"
 #include "sdk/CBaseEntity.h"
 #include "sdk/CGlobalVars.h"
-#include "utils/Scanner.h"
 #include "utils/Memutils.h"
 #include "globals.h"
 #include "utils/Wrappers.h"
@@ -150,9 +149,11 @@ static void* MainThread(void*) {
             int chokedTicks = process->Read<int>(netChannel + 0x10);
             sendpacket = (chokedTicks > 12);
             /* Per Tick Operations */
+            updateWrites = (globalvars.tickCount > lastTick || globalvars.framecount != lastFrame);
+
             if (globalvars.tickCount > lastTick) {
                 //if (globalvars.tickCount != lastTick + 1) {
-                    //Logger::Log("Missed a Tick!: [%d->%d]\n", lastTick, globalvars.tickCount);
+                //Logger::Log("Missed a Tick!: [%d->%d]\n", lastTick, globalvars.tickCount);
                 //}
                 lastTick = globalvars.tickCount;
 
@@ -166,13 +167,14 @@ static void* MainThread(void*) {
                 }
                 localPlayer.Update(GetLocalPlayer());
                 Aimbot::Aimbot();
-                updateWrites = true;
+
+                process->Write<double>(nextCmdTime, sendpacket ? 0.0 : std::numeric_limits<double>::max());
+
             }
             /* Per Frame Operations */
             if (globalvars.framecount != lastFrame) {
                 Glow::Glow();
                 lastFrame = globalvars.framecount;
-                updateWrites = true;
             }
             if (updateWrites) {
                 WriteList writeList(process);

@@ -1,15 +1,14 @@
 #include "Netvars.h"
-#include "utils/Scanner.h"
 #include "utils/Logger.h"
 #include "utils/Memutils.h"
 #include "sdk/ClientClass.h"
+#include "m0dular/utils/pattern_scan.h"
 
 bool Netvars::FindNetvars( WinProcess &process, const char *moduleName ) {
-    uintptr_t clientHeadAddr = GetAbsoluteAddressVm(process, Scanner::FindPatternInModule( "48 8B 1D ? ? ? ? 48 8B AC 24", moduleName, process ), 3, 7);
+    uintptr_t clientHeadAddr = PatternScan::FindPattern("[48 8B 1D *?? ?? ?? ??] 48 8B AC 24", moduleName);
     if( !clientHeadAddr ){
         return false;
     }
-    Logger::Log( "ClientClassHead @ %p\n", (void*)clientHeadAddr );
     uintptr_t recvTable;
     int32_t propNum;
     uint32_t offset;
