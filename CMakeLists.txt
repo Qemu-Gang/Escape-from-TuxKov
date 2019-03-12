@@ -11,7 +11,7 @@ else()
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
 endif()
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-sign-conversion -Wno-covered-switch-default -Wno-c++98-compat -Wno-padded -Wno-c++98-compat-pedantic -Wno-weak-vtables -Wno-documentation-unknown-command -Wno-old-style-cast -Wno-float-equal -Wno-missing-variable-declarations -Wno-global-constructors -Wno-exit-time-destructors -pedantic -ldl -fpic -DMVERBOSE=0")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-sign-conversion -Wno-covered-switch-default -Wno-c++98-compat -Wno-padded -Wno-c++98-compat-pedantic -Wno-weak-vtables -Wno-documentation-unknown-command -Wno-old-style-cast -Wno-float-equal -Wno-missing-variable-declarations -Wno-global-constructors -Wno-exit-time-destructors -Wno-reserved-id-macro -pedantic -ldl -fpic -DMVERBOSE=0 -DNUM_THREADS=4 -DMEMUTILS_CUSTOM_RW -DPATTERN_SCAN_PAGE_SCAN")
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -g -fsanitize=address")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -s -fvisibility=hidden -fvisibility-inlines-hidden")
 
@@ -22,7 +22,16 @@ if(NOT CMAKE_BUILD_TYPE)
 	set(CMAKE_BUILD_TYPE RELEASE)
 endif(NOT CMAKE_BUILD_TYPE)
 
-file(GLOB_RECURSE SOURCE_FILES_CXX "${CMAKE_SOURCE_DIR}/src/*.cpp")
+foreach(SFILE "threading.cpp" "semaphores.cpp" "atomic_lock.cpp" "mutex.cpp" "pattern_scan.cpp")
+  message("${SFILE}")
+  list(APPEND SOURCE_FILES_CXX "${CMAKE_SOURCE_DIR}/src/m0dular/utils/${SFILE}")
+endforeach(SFILE)
+
+foreach(SFILE "src/*.cpp" "src/utils/*.cpp" "src/sdk/*.cpp" "src/features/*.cpp" "src/vmread/hlapi/*.cpp")
+  file(GLOB GLOB_FILES "${CMAKE_SOURCE_DIR}/${SFILE}")
+  list(APPEND SOURCE_FILES_CXX ${GLOB_FILES})
+endforeach(SFILE)
+
 file(GLOB_RECURSE SOURCE_FILES_C "${CMAKE_SOURCE_DIR}/src/*.c")
 
 list(REMOVE_ITEM SOURCE_FILES_C "${CMAKE_SOURCE_DIR}/src/vmread/example.c")

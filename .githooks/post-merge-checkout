@@ -41,9 +41,10 @@ if [[ -n "$MOD_SUBMODULES" || -n "$NEW_SUBMODULES" ]]; then
     read -n 1 reply </dev/tty
     echo
     if [[ "$reply" == "y" || "$reply" == "Y" ]]; then
+        git submodule update --init --recursive
         if [[ -n "$NEW_SUBMODULES" ]]; then
             git submodule init
         fi
-        git submodule update
+        git submodule update --recursive
     fi
 fi
