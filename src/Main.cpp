@@ -146,8 +146,7 @@ static void* MainThread(void*) {
 
         while (running) {
             CGlobalVars globalvars = process->Read<CGlobalVars>(globalVars);
-            int chokedTicks = process->Read<int>(netChannel + 0x10);
-            sendpacket = (chokedTicks > 12);
+            sendpacket = (process->Read<int>(netChannel + 0x10) > 12);
             /* Per Tick Operations */
             updateWrites = (globalvars.tickCount > lastTick || globalvars.framecount != lastFrame);
 
@@ -167,9 +166,6 @@ static void* MainThread(void*) {
                 }
                 localPlayer.Update(GetLocalPlayer());
                 Aimbot::Aimbot();
-
-                process->Write<double>(nextCmdTime, sendpacket ? 0.0 : std::numeric_limits<double>::max());
-
             }
             /* Per Frame Operations */
             if (globalvars.framecount != lastFrame) {
