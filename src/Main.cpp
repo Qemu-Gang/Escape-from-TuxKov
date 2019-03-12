@@ -11,6 +11,9 @@
 #include "globals.h"
 #include "utils/Wrappers.h"
 
+#include "m0dular/utils/threading.h"
+#include "m0dular/utils/pattern_scan.h"
+
 #include <unistd.h> //getpid
 #include <thread>
 #include <atomic>
@@ -24,10 +27,11 @@
 #define MODNAME "EasyAntiCheat_launcher.exe"
 #else
 #define PROCNAME "r5apex.exe"
-#define MODNAME "r5apex.exe"
+#define MODNAME "R5Apex.exe"
 #endif
 
 static bool running = true;
+static thread_t mainThread;
 
 #if (LMODE() == MODE_EXTERNAL())
 int main() {
@@ -40,7 +44,13 @@ int main() {
 }
 #endif
 
-static void MainThread() {
+#include <thread>
+#include <chrono>
+
+typedef std::chrono::high_resolution_clock Clock;
+
+
+static void* MainThread(void*) {
     Logger::Log("Main Loaded.\n");
     pid_t pid;
 #if (LMODE() == MODE_EXTERNAL())
@@ -90,25 +100,25 @@ static void MainThread() {
         if (!process || !apexBase || !inputSystem || !inputBase) {
             Logger::Log("Could not Find Apex/InputSystem Process/Base. Exiting...\n");
             running = false;
-            return;
+            return nullptr;
         }
+
+        auto t1 = Clock::now();
 
         Interfaces::FindInterfaces(*process, MODNAME);
         //Netvars::FindNetvars( *process, MODNAME );
 
-        entList = GetAbsoluteAddressVm(*process, Scanner::FindPatternInModule("48 8D 05 ?? ?? ?? ?? 48 C1 E1 05 48 03 C8 0F B7 05 ?? ?? ?? ?? 39 41 08 75 51", MODNAME, *process),
-                                       3, 7);
-        globalVars = process->Read<uintptr_t>(GetAbsoluteAddressVm(*process, Scanner::FindPatternInModule("4C 8B 15 ?? ?? ?? ?? 88", MODNAME, *process), 3, 7));
-        netTime = GetAbsoluteAddressVm(*process, Scanner::FindPatternInModule("F2 0F 58 0D ?? ?? ?? ?? 66 0F 2F C1 77", MODNAME, *process), 4, 8);
-        nextCmdTime = GetAbsoluteAddressVm(*process, Scanner::FindPatternInModule("F2 0F 10 05 ?? ?? ?? ?? F2 0F 58 0D", MODNAME, *process), 4, 8);
-        signonState = GetAbsoluteAddressVm(*process, Scanner::FindPatternInModule("83 3D ?? ?? ?? ?? ?? 0F B6 DA", MODNAME, *process), 2, 7);
-        netChannel = process->Read<uintptr_t>(
-                GetAbsoluteAddressVm(*process, Scanner::FindPatternInModule("48 8B 1D ?? ?? ?? ?? 48 8D 05 ?? ?? ?? ?? 48 89 ?? ?? ?? 8B 05", MODNAME, *process), 3, 7));
+        entList = PatternScan::FindPattern("[48 8D 05 *?? ?? ?? ??] 48 C1 E1 05 48 03 C8 0F B7 05 ?? ?? ?? ?? 39 41 08 75 51", MODNAME);
+        globalVars = PatternScan::FindPattern("[4C 8B 15 **?? ?? ?? ??] 88", MODNAME);
+        netTime = PatternScan::FindPattern("[F2 0F 58 0D *?? ?? ?? ??] 66 0F 2F C1 77", MODNAME);
+        nextCmdTime = PatternScan::FindPattern("[F2 0F 10 05 *?? ?? ?? ??] F2 0F 58 0D", MODNAME);
+        signonState = PatternScan::FindPattern("[83 3D *?? ?? ?? ?? ??] 0F B6 DA", MODNAME);
+        netChannel = PatternScan::FindPattern("[48 8B 1D **?? ?? ?? ??] 48 8D 05 ?? ?? ?? ?? 48 89 ?? ?? ?? 8B 05", MODNAME);
 
         if (!entList || !globalVars || !netTime || !nextCmdTime || !signonState || !netChannel) {
             Logger::Log("One of the sigs failed. Stopping.\n");
             running = false;
-            return;
+            return nullptr;
         }
         Logger::Log("Localplayer: %p\n", (void *) GetLocalPlayer());
         Logger::Log("Entlist: %p\n", (void *) entList);
@@ -117,6 +127,9 @@ static void MainThread() {
         Logger::Log("netTime: %p\n", (void *) netTime);
         Logger::Log("SignonState: %p\n", (void *) signonState);
         Logger::Log("netChannel: %p\n", (void *) netChannel);
+
+        auto t2 = Clock::now();
+        printf("Initialization time: %lld ms\n", (long long)std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count());
 
         Logger::Log("Starting Main Loop.\n");
 
@@ -127,7 +140,7 @@ static void MainThread() {
         while (running) {
             CGlobalVars globalvars = process->Read<CGlobalVars>(globalVars);
             int chokedTicks = process->Read<int>(netChannel + 0x10);
-
+            sendpacket = (chokedTicks > 12);
             /* Per Tick Operations */
             updateWrites = (globalvars.tickCount > lastTick || globalvars.framecount != lastFrame);
 
@@ -136,8 +149,6 @@ static void MainThread() {
                 //Logger::Log("Missed a Tick!: [%d->%d]\n", lastTick, globalvars.tickCount);
                 //}
                 lastTick = globalvars.tickCount;
-
-                sendpacket = (chokedTicks > 12);
 
                 sortedEntities.clear();
 
@@ -171,29 +182,33 @@ static void MainThread() {
             } else {
                 std::this_thread::sleep_for(std::chrono::microseconds(2000));
             }
+            process->Write<double>(nextCmdTime, sendpacket ? 0.0 : std::numeric_limits<double>::max());
         }
         Logger::Log("Main Loop Ended.\n");
     } catch (VMException &e) {
         Logger::Log("Initialization error: %d\n", e.value);
         running = false;
-        return;
+        return nullptr;
     }
 
     process->Write<double>(nextCmdTime, 0.0); // reset sendpacket
     Logger::Log("Main Ended.\n");
+
+    return nullptr;
 }
 
 static void __attribute__((constructor)) Startup() {
-
-    std::thread mainthread(MainThread);
-    mainthread.detach();
+    Threading::InitThreads();
+    mainThread = Threading::StartThread(MainThread, nullptr);
 }
 
 static void __attribute__((destructor)) Shutdown() {
     Logger::Log("Unloading...");
 
     running = false;
-    std::this_thread::sleep_for(std::chrono::seconds(1));
+
+    Threading::JoinThread(mainThread, nullptr);
+    Threading::EndThreads();
 
     Logger::Log("Done\n");
 }
