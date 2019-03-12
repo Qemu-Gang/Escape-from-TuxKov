@@ -3,7 +3,6 @@
 qemu_pid=$(pidof qemu-system-x86_64)
 filename="$(pwd)/build/libApe-ex.so"
 
-
 if grep -q "$filename" /proc/"$qemu_pid"/maps; then
     sudo gdb -n -q -batch \
   	-ex "set logging on" \
@@ -15,7 +14,6 @@ if grep -q "$filename" /proc/"$qemu_pid"/maps; then
     -ex "set \$library = \$dlopen(\"$filename\", 6)" \
     -ex "call \$dlclose(\$library)" \
 	-ex "call \$dlclose(\$library)" \
-    -ex "detach" \
     -ex "quit"
 else
 	echo "Ape-ex is not injected!"

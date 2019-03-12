@@ -18,6 +18,8 @@
 #include <atomic>
 #include <csignal>
 #include <numeric>
+#include <thread>
+#include <chrono>
 
 //#define SWAGGIN
 
@@ -43,9 +45,6 @@ int main() {
     return 0;
 }
 #endif
-
-#include <thread>
-#include <chrono>
 
 typedef std::chrono::high_resolution_clock Clock;
 
@@ -210,6 +209,8 @@ static void __attribute__((destructor)) Shutdown() {
     Logger::Log("Unloading...");
 
     running = false;
+
+    std::this_thread::sleep_for(std::chrono::seconds(1));
 
     Threading::JoinThread(mainThread, nullptr);
     Threading::EndThreads();

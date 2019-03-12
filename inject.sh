@@ -15,5 +15,4 @@ sudo gdb -n -q -batch \
     -ex "attach $qemu_pid" \
     -ex "set \$dlopen = (void*(*)(char*, int)) dlopen" \
     -ex "set \$library = \$dlopen(\"$filename\", 1)" \
-    -ex "detach" \
     -ex "quit"
