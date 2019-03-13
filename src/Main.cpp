@@ -48,12 +48,16 @@ int main() {
 
 typedef std::chrono::high_resolution_clock Clock;
 
+static bool sigscanFailed = false;
+
 static void* ThreadSignature(const Signature* sig)
 {
     *sig->result = PatternScan::FindPattern(sig->pattern, sig->module);
 
-    if (!*sig->result)
+    if (!*sig->result) {
         Logger::Log("Failed to find pattern {%s}\n", sig->pattern);
+        sigscanFailed = true;
+    }
 
     return nullptr;
 }
@@ -105,7 +109,7 @@ static void* MainThread(void*) {
             }
         }
 
-        if (!process || !apexBase || !inputSystem || !inputBase) {
+        if (sigscanFailed) {
             Logger::Log("Could not Find Apex/InputSystem Process/Base. Exiting...\n");
             running = false;
             return nullptr;
