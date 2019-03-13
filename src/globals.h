@@ -26,3 +26,5 @@ inline WinProcess *inputSystem;
 
 inline uintptr_t inputBase;
 inline uintptr_t apexBase;
+
+inline int pressedKeys;

@@ -172,19 +172,23 @@ static void* MainThread(void*) {
             sendpacket = (process->Read<int>(netChannel + 0x10) > 12);
             //CUserCmd cmd = process->Read<CUserCmd>( userCmdsArr );
 
-            if( inputSystem->Read<bool>(inputBase + 0xc7009) ){// mouse3 pressed down
+            if( pressedKeys & KEY_ALT ){// ALT pressed down
                 process->Write<float>( apexBase + 0x18B4DF0, 10.0f );
             } else {
                 process->Write<float>( apexBase + 0x18B4DF0, 1.0f );
             }
             /* Per Tick Operations */
-            updateWrites = (globalvars.tickCount > lastTick || globalvars.framecount != lastFrame);
+            updateWrites = (globalvars.tickCount != lastTick || globalvars.framecount != lastFrame);
 
-            if (globalvars.tickCount > lastTick) {
+            if (globalvars.tickCount != lastTick) {
                 MTR_SCOPED_TRACE("MainLoop", "Tick");
                 //if (globalvars.tickCount != lastTick + 1) {
                 //Logger::Log("Missed a Tick!: [%d->%d]\n", lastTick, globalvars.tickCount);
                 //}
+
+                // Update pressed keys
+                pressedKeys = inputSystem->Read<int>(inputBase + 0x4388);
+
                 lastTick = globalvars.tickCount;
 
                 sortedEntities.clear();

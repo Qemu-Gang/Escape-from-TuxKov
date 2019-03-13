@@ -6,17 +6,35 @@
 #include <chrono>
 #include <thread>
 
-static volatile bool mouse3;
-static volatile bool mouse4;
+volatile static int keys = 0;
+#define KEY_ALT (1 << 0)
+#define KEY_MOUSE4 (1 << 1)
+#define KEY_MOUSE5 (1 << 2)
 
 int main()
 {
-    std::cout<<"Mouse3 @+"<< std::hex << (uintptr_t)&mouse3 - (uintptr_t)GetModuleHandle(NULL) << std::endl;
-    std::cout<<"Mouse4 @+"<< std::hex << (uintptr_t)&mouse4 - (uintptr_t)GetModuleHandle(NULL) << std::endl;
-    while( true ){
-        mouse4 = GetKeyState(0x05) & 0x80;
-        mouse3 = GetKeyState(0x06) & 0x80;
+    std::cout << "Keys @+" << std::hex << (uintptr_t)&keys - (uintptr_t)GetModuleHandle(NULL) << std::endl;
+
+    while (true) {
+        if (GetAsyncKeyState(VK_LMENU) & 0x8000) {
+            keys |= KEY_ALT;
+        }
+        else {
+            keys &= ~KEY_ALT;
+        }
+        if (GetAsyncKeyState(VK_XBUTTON1) & 0x8000) {
+            keys |= KEY_MOUSE4;
+        }
+        else {
+            keys &= ~KEY_MOUSE4;
+        }
+        if (GetAsyncKeyState(VK_XBUTTON2) & 0x8000) {
+            keys |= KEY_MOUSE5;
+        }
+        else {
+            keys &= ~KEY_MOUSE5;
+        }
+
         std::this_thread::sleep_for(std::chrono::milliseconds(50));
     }
-    return 0;
 }
