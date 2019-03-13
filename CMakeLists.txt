@@ -23,6 +23,11 @@ if(NOT CMAKE_BUILD_TYPE)
 	set(CMAKE_BUILD_TYPE RELEASE)
 endif(NOT CMAKE_BUILD_TYPE)
 
+if(USE_EAC_LAUNCHER)
+  message("Using EAC Launcher")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DUSE_EAC_LAUNCHER=1")
+endif()
+
 if(BUILD_WITH_SANITIZERS)
 	message("Enabling ASan")
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address")

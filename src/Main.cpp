@@ -21,9 +21,7 @@
 #include <thread>
 #include <chrono>
 
-#define SWAGGIN
-
-#ifdef SWAGGIN
+#ifdef USE_EAC_LAUNCHER
 #define PROCNAME "EasyAntiCheat_"
 #define MODNAME "EasyAntiCheat_launcher.exe"
 #else
@@ -109,7 +107,7 @@ static void* MainThread(void*) {
             }
         }
 
-        if (sigscanFailed) {
+        if (!process || !inputSystem) {
             Logger::Log("Could not Find Apex/InputSystem Process/Base. Exiting...\n");
             running = false;
             return nullptr;
@@ -125,7 +123,7 @@ static void* MainThread(void*) {
 
         Threading::FinishQueue(true);
 
-        if (!entList || !globalVars || !netTime || !nextCmdTime || !signonState || !netChannel || !input ) {
+        if (sigscanFailed) {
             Logger::Log("One of the sigs failed. Stopping.\n");
             running = false;
             return nullptr;
