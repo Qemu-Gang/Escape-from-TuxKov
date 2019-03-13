@@ -26,11 +26,9 @@ void Aimbot::Aimbot() {
     if (!localPlayer)
         return;
 
-
-    int state = inputSystem->Read<int>(inputBase + 0x3388);
-    if (!state) {
+    if( !inputSystem->Read<bool>(inputBase + 0xc7008) ) // mouse4 pressed down
         return;
-    }
+
     sendpacket = true; // want to send packets when aiming
     QAngle viewAngle = localPlayer.viewAngles;
 

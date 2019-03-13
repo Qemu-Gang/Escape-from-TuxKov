@@ -21,7 +21,7 @@
 #include <thread>
 #include <chrono>
 
-#define SWAGGIN
+//#define SWAGGIN
 
 #ifdef SWAGGIN
 #define PROCNAME "EasyAntiCheat_"
@@ -144,9 +144,18 @@ static void* MainThread(void*) {
         static int lastTick = 0;
         static bool updateWrites = false;
 
+        uintptr_t userCmdsArr = process->Read<uintptr_t>( input + OFFSET_OF(&CInput::m_commands) );
+        uintptr_t verifiedCmdsArr = process->Read<uintptr_t>( input + OFFSET_OF(&CInput::m_verifiedCommands) );
         while (running) {
             CGlobalVars globalvars = process->Read<CGlobalVars>(globalVars);
             sendpacket = (process->Read<int>(netChannel + 0x10) > 12);
+            //CUserCmd cmd = process->Read<CUserCmd>( userCmdsArr );
+
+            if( inputSystem->Read<bool>(inputBase + 0xc7009) ){// mouse3 pressed down
+                process->Write<float>( apexBase + 0x18B4DF0, 10.0f );
+            } else {
+                process->Write<float>( apexBase + 0x18B4DF0, 1.0f );
+            }
             /* Per Tick Operations */
             updateWrites = (globalvars.tickCount > lastTick || globalvars.framecount != lastFrame);
 
@@ -185,10 +194,11 @@ static void* MainThread(void*) {
             } else {
                 std::this_thread::sleep_for(std::chrono::microseconds(2000));
             }
-            process->Write<double>(nextCmdTime, sendpacket ? 0.0 : std::numeric_limits<double>::max());
+            //process->Write<double>(nextCmdTime, sendpacket ? 0.0 : std::numeric_limits<double>::max());
         }
 
         process->Write<double>(nextCmdTime, 0.0); // reset sendpacket
+        process->Write<float>( apexBase + 0x18B4DF0, 1.0f ); // reset speedhack
         Logger::Log("Main Loop Ended.\n");
     } catch (VMException &e) {
         Logger::Log("Initialization error: %d\n", e.value);

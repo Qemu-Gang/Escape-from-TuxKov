@@ -2,6 +2,7 @@
 
 #include "vmread/hlapi/hlapi.h"
 #include "sdk/CBaseEntity.h"
+#include "sdk/CInput.h"
 #include "sdk/Definitions.h"
 #include <vector>
 #include <cstdint>
