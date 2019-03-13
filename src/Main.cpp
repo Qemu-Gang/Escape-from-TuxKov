@@ -81,8 +81,9 @@ static void* MainThread(void*) {
     Logger::Log("Initialize performance tracing...\n");
     mtr_init("/tmp/ape-ex-trace.json");
     MTR_META_PROCESS_NAME("Ape-ex");
-    MTR_META_THREAD_NAME("Main Thread");
 #endif
+
+    Threading::InitThreads();
 
     try {
         MTR_BEGIN("Initialization", "InitCTX");
@@ -220,6 +221,9 @@ static void* MainThread(void*) {
   quit:
     running = false;
 
+    Threading::FinishQueue(true);
+    Threading::EndThreads();
+
 #ifdef MTR_ENABLED
     mtr_flush();
     mtr_shutdown();
@@ -231,7 +235,6 @@ static void* MainThread(void*) {
 }
 
 static void __attribute__((constructor)) Startup() {
-    Threading::InitThreads();
     mainThread = Threading::StartThread(MainThread, nullptr, false);
 }
 
@@ -241,7 +244,6 @@ static void __attribute__((destructor)) Shutdown() {
     running = false;
 
     Threading::JoinThread(mainThread, nullptr);
-    Threading::EndThreads();
 
     Logger::Log("Done\n");
 }
