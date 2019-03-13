@@ -43,8 +43,8 @@ void Aimbot::Aimbot() {
     Vector localAngles = process->Read<Vector>(localPlayer + 0x414);
     Vector pusherOrigin = process->Read<Vector>(localPlayer + 0x24);*/
     Vector eyepos = localPlayer.eyePos;
-    eyepos.x = localOrigin.x;
-    eyepos.y = localOrigin.y;
+    eyepos->x = localOrigin->x;
+    eyepos->y = localOrigin->y;
 
     /*Logger::Log("Origin: (%f, %f, %f)\n", localOrigin.x, localOrigin.y, localOrigin.z);
     Logger::Log("absOrigin: (%f, %f, %f)\n", abslocalOrigin.x, abslocalOrigin.y, abslocalOrigin.z);
@@ -116,9 +116,9 @@ void Aimbot::Aimbot() {
     float xTime = dist / bulletVel;
     float yTime = xTime;
 
-    enemyHeadPosition.x += xTime * targetVelocity.x;
-    enemyHeadPosition.y += yTime * targetVelocity.y;
-    enemyHeadPosition.z += yTime * targetVelocity.z + 375.0f * powf(xTime, 2.0f);
+    enemyHeadPosition->x += xTime * targetVelocity->x;
+    enemyHeadPosition->y += yTime * targetVelocity->y;
+    enemyHeadPosition->z += yTime * targetVelocity->z + 375.0f * powf(xTime, 2.0f);
 
     QAngle aimAngle = Math::CalcAngle(pos, enemyHeadPosition);
 
@@ -127,7 +127,7 @@ void Aimbot::Aimbot() {
 
     //int lifeState = process->Read<int>(finalEntity + 0x718);
 
-    if ((aimAngle.x == 0 && aimAngle.y == 0 && aimAngle.z == 0) || !aimAngle.IsValid()) {
+    if ((aimAngle->x == 0 && aimAngle->y == 0 && aimAngle->z == 0) || !aimAngle.IsValid()) {
         return;
     }
 

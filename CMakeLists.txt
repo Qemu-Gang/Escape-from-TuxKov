@@ -3,15 +3,16 @@ project(Ape-ex)
 set(CMAKE_CXX_STANDARD 17)
 include(CheckCXXCompilerFlag)
 
-CHECK_CXX_COMPILER_FLAG(-Weverything COMPILER_SUPPORTS_WEVERYTHING)
+foreach(COMP_ARG "-Weverything -Wall -Wno-sign-conversion" "-Wno-covered-switch-default" "-Wno-c++98-compat" "-Wno-padded" "-Wno-c++98-compat-pedantic" "-Wno-weak-vtables" "-Wno-documentation-unknown-command" "-Wno-old-style-cast" "-Wno-float-equal" "-Wno-missing-variable-declarations" "-Wno-global-constructors" "-Wno-exit-time-destructors" "-Wno-reserved-id-macro" "-Wno-extra-semi" "-Wno-shadow" "-Wno-gnu-anonymous-struct" "-Wno-nested-anon-types" "-Wno-newline-eof" "-Wno-unused-command-line-argument")
+  CHECK_CXX_COMPILER_FLAG("${COMP_ARG}" ARG_SUPPORTED)
+  if(ARG_SUPPORTED)
+    set(WARNING_ARGS "${WARNING_ARGS} ${COMP_ARG}")
+  endif()
+endforeach(COMP_ARG)
 
-if (COMPILER_SUPPORTS_WEVERYTHING)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Weverything")
-else()
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
-endif()
+message("Supported warning args: ${WARNING_ARGS}")
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-sign-conversion -Wno-covered-switch-default -Wno-c++98-compat -Wno-padded -Wno-c++98-compat-pedantic -Wno-weak-vtables -Wno-documentation-unknown-command -Wno-old-style-cast -Wno-float-equal -Wno-missing-variable-declarations -Wno-global-constructors -Wno-exit-time-destructors -Wno-reserved-id-macro -pedantic -ldl -fpic -DMVERBOSE=0 -DNUM_THREADS=4 -DMEMUTILS_CUSTOM_RW -DPATTERN_SCAN_PAGE_SCAN")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${WARNING_ARGS} -pedantic -ldl -fpic -DMVERBOSE=0 -DNUM_THREADS=4 -DMEMUTILS_CUSTOM_RW -DPATTERN_SCAN_PAGE_SCAN")
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -g")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -s -fvisibility=hidden -fvisibility-inlines-hidden")
 
@@ -28,7 +29,6 @@ if(BUILD_WITH_SANITIZERS)
 endif(BUILD_WITH_SANITIZERS)
 
 foreach(SFILE "threading.cpp" "semaphores.cpp" "atomic_lock.cpp" "mutex.cpp" "pattern_scan.cpp")
-  message("${SFILE}")
   list(APPEND SOURCE_FILES_CXX "${CMAKE_SOURCE_DIR}/src/m0dular/utils/${SFILE}")
 endforeach(SFILE)
 
