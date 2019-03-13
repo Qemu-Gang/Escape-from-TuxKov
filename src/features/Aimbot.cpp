@@ -4,6 +4,7 @@
 
 #include "../utils/Math.h"
 #include "../utils/Wrappers.h"
+#include "../utils/minitrace.h"
 
 static void RecoilCompensation(QAngle &angle) {
     angle -= localPlayer.aimPunch;
@@ -23,6 +24,8 @@ static void NoSpread(uintptr_t weapon) {
 
 
 void Aimbot::Aimbot() {
+    MTR_SCOPED_TRACE("Aimbot", "Run");
+
     if (!localPlayer)
         return;
 
@@ -41,8 +44,8 @@ void Aimbot::Aimbot() {
     Vector localAngles = process->Read<Vector>(localPlayer + 0x414);
     Vector pusherOrigin = process->Read<Vector>(localPlayer + 0x24);*/
     Vector eyepos = localPlayer.eyePos;
-    eyepos.x = localOrigin.x;
-    eyepos.y = localOrigin.y;
+    eyepos->x = localOrigin->x;
+    eyepos->y = localOrigin->y;
 
     /*Logger::Log("Origin: (%f, %f, %f)\n", localOrigin.x, localOrigin.y, localOrigin.z);
     Logger::Log("absOrigin: (%f, %f, %f)\n", abslocalOrigin.x, abslocalOrigin.y, abslocalOrigin.z);
@@ -61,7 +64,7 @@ void Aimbot::Aimbot() {
     std::sort(sortedEntities.begin(), sortedEntities.end(), [viewAngle, &pos](const auto &a, const auto &b) {
         Vector a_pos = GetBonePos(entities[a], 12, entities[a].origin);
         Vector b_pos = GetBonePos(entities[b], 12, entities[b].origin);
-        return Math::DistanceFOV(viewAngle, Math::CalcAngle(pos, a_pos), pos.DistTo(a_pos)) < Math::DistanceFOV(viewAngle, Math::CalcAngle(pos, b_pos), pos.DistTo(b_pos));
+        return Math::DistanceFOV(viewAngle, QAngle(a_pos - pos), pos.DistTo(a_pos)) < Math::DistanceFOV(viewAngle, QAngle(b_pos - pos), pos.DistTo(b_pos));
     });
 
     for (size_t ent = 0; ent < sortedEntities.size(); ent++) {
@@ -114,18 +117,18 @@ void Aimbot::Aimbot() {
     float xTime = dist / bulletVel;
     float yTime = xTime;
 
-    enemyHeadPosition.x += xTime * targetVelocity.x;
-    enemyHeadPosition.y += yTime * targetVelocity.y;
-    enemyHeadPosition.z += yTime * targetVelocity.z + 375.0f * powf(xTime, 2.0f);
+    enemyHeadPosition->x += xTime * targetVelocity->x;
+    enemyHeadPosition->y += yTime * targetVelocity->y;
+    enemyHeadPosition->z += yTime * targetVelocity->z + 375.0f * powf(xTime, 2.0f);
 
-    QAngle aimAngle = Math::CalcAngle(pos, enemyHeadPosition);
+    QAngle aimAngle(enemyHeadPosition - pos);
 
     aimAngle.Normalize();
     Math::Clamp(aimAngle);
 
     //int lifeState = process->Read<int>(finalEntity + 0x718);
 
-    if ((aimAngle.x == 0 && aimAngle.y == 0 && aimAngle.z == 0) || !aimAngle.IsValid()) {
+    if ((aimAngle->x == 0 && aimAngle->y == 0 && aimAngle->z == 0) || !aimAngle.IsValid()) {
         return;
     }
 
