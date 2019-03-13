@@ -8,31 +8,33 @@
 class CUserCmd
 {
 public:
-    uint32_t m_commandNumber; //0x0000
-    uint32_t m_tickcount; //0x0004
-    float m_curtime; //0x0008
-    Vector m_viewangles; //0x000C
-    Vector m_aimDirection; //0x0018
-    float m_forwardmove; //0x0024
-    float m_sidemove; //0x0028
-    float m_upmove; //0x002C
-    uint32_t m_buttons; //0x0030
-    char pad_0034[336]; //0x0034
-    uint32_t m_randomSeed; //0x0184
-    char pad_0188[8]; //0x0188
-    Vector m_origin; //0x0190
-    char pad_019C[60]; //0x019C
-    uint32_t m_prevTickcount; //0x01D8
-    uint32_t m_nextTickcount; //0x01DC
-    char pad_01E0[8]; //0x01E0
-    float m_frametime; //0x01E8s
-    char pad_01EC[12]; //0x01EC
+	uint32_t m_commandNumber; //0x0000
+	uint32_t m_tickcount; //0x0004
+	float m_curtime; //0x0008
+	vec3 m_viewangles; //0x000C
+	vec3 m_aimDirection; //0x0018
+	float m_forwardmove; //0x0024
+	float m_sidemove; //0x0028
+	float m_upmove; //0x002C
+	uint32_t m_buttons; //0x0030
+	int32_t m_impulse; //0x0034
+	char pad_0038[332]; //0x0038
+	uint32_t m_randomSeed; //0x0184
+	char pad_0188[8]; //0x0188
+	vec3 m_origin; //0x0190
+	char pad_019C[60]; //0x019C
+	uint32_t m_prevTickcount; //0x01D8
+	uint32_t m_nextTickcount; //0x01DC
+	char pad_01E0[8]; //0x01E0
+	float m_frametime; //0x01E8
+	char pad_01EC[12]; //0x01EC
 }; //Size: 0x01F8
+
 
 class CVerifiedUserCmd : public CUserCmd
 {
 public:
-    uint64_t crc64; //0x01F8
+    uint64_t m_crc64; //0x01F8
 }; //Size: 0x0200
 
 class CInput
@@ -52,6 +54,6 @@ public:
     char pad_00DC[12]; //0x00DC
     float m_lastForwardMove; //0x00E8
     int32_t m_clearInputState; //0x00EC
-    class CUserCmd* m_commands; //0x00F0 // Does not change or go null
-    class CVerifiedUserCmd* m_verifiedCommands; //0x00F8 // Does not change or go null
+    CUserCmd* m_commands; //0x00F0 // Does not change or go null
+    CVerifiedUserCmd* m_verifiedCommands; //0x00F8 // Does not change or go null
 }; //Size: 0x0100
