@@ -21,7 +21,7 @@
 #include <thread>
 #include <chrono>
 
-//#define SWAGGIN
+#define SWAGGIN
 
 #ifdef SWAGGIN
 #define PROCNAME "EasyAntiCheat_"
@@ -121,7 +121,7 @@ static void* MainThread(void*) {
 
         Threading::FinishQueue(true);
 
-        if (!entList || !globalVars || !netTime || !nextCmdTime || !signonState || !netChannel) {
+        if (!entList || !globalVars || !netTime || !nextCmdTime || !signonState || !netChannel || !input ) {
             Logger::Log("One of the sigs failed. Stopping.\n");
             running = false;
             return nullptr;
@@ -133,6 +133,7 @@ static void* MainThread(void*) {
         Logger::Log("netTime: %p\n", (void *) netTime);
         Logger::Log("SignonState: %p\n", (void *) signonState);
         Logger::Log("netChannel: %p\n", (void *) netChannel);
+        Logger::Log("input: %p\n", (void *)input);
 
         auto t2 = Clock::now();
         printf("Initialization time: %lld ms\n", (long long)std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count());

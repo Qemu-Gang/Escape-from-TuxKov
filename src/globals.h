@@ -16,6 +16,7 @@ inline uintptr_t netTime; // double
 inline uintptr_t nextCmdTime; // double
 inline uintptr_t signonState;
 inline uintptr_t netChannel;
+inline uintptr_t input;
 
 inline bool sendpacket = true; // should send packet this tick
 
