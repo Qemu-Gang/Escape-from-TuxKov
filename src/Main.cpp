@@ -173,7 +173,7 @@ static void* MainThread(void*) {
             //CUserCmd cmd = process->Read<CUserCmd>( userCmdsArr );
 
             if( pressedKeys & KEY_ALT ){// ALT pressed down
-                process->Write<float>( apexBase + 0x18B4DF0, 10.0f );
+                process->Write<float>( apexBase + 0x18B4DF0, 30.0f );
             } else {
                 process->Write<float>( apexBase + 0x18B4DF0, 1.0f );
             }
