@@ -4,6 +4,7 @@
 
 #include "../utils/Math.h"
 #include "../utils/Wrappers.h"
+#include "../utils/minitrace.h"
 
 static void RecoilCompensation(QAngle &angle) {
     angle -= localPlayer.aimPunch;
@@ -23,6 +24,8 @@ static void NoSpread(uintptr_t weapon) {
 
 
 void Aimbot::Aimbot() {
+    MTR_SCOPED_TRACE("Aimbot", "Run");
+
     if (!localPlayer)
         return;
 

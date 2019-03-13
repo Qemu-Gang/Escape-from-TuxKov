@@ -2,6 +2,7 @@
 
 #include "../utils/Wrappers.h"
 #include "../sdk/CBaseEntity.h"
+#include "../utils/minitrace.h"
 
 
 static Vector teamColors[] = {

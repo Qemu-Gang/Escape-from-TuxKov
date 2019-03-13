@@ -9,6 +9,7 @@
 #include "utils/Memutils.h"
 #include "globals.h"
 #include "utils/Wrappers.h"
+#include "utils/minitrace.h"
 
 #include "m0dular/utils/threading.h"
 #include "m0dular/utils/pattern_scan.h"
@@ -37,7 +38,10 @@ static thread_t mainThread;
 #if (LMODE() == MODE_EXTERNAL())
 int main() {
     while (running){
-        usleep(1000000);
+        char c = (char)getchar();
+
+        if (c == 'Q')
+            break;
     }
 
     return 0;
@@ -50,6 +54,8 @@ static bool sigscanFailed = false;
 
 static void* ThreadSignature(const Signature* sig)
 {
+    MTR_SCOPED_TRACE("Initialization", "ThreadedSignature");
+
     *sig->result = PatternScan::FindPattern(sig->pattern, sig->module);
 
     if (!*sig->result) {
@@ -70,8 +76,19 @@ static void* MainThread(void*) {
 #else
     pid = getpid();
 #endif
+
+#ifdef MTR_ENABLED
+    Logger::Log("Initialize performance tracing...\n");
+    mtr_init("/tmp/ape-ex-trace.json");
+    MTR_META_PROCESS_NAME("Ape-ex");
+    MTR_META_THREAD_NAME("Main Thread");
+#endif
+
     try {
+        MTR_BEGIN("Initialization", "InitCTX");
         WinContext ctx(pid);
+        MTR_END("Initialization", "InitCTX");
+        MTR_BEGIN("Initialization", "FindProcesses");
         ctx.processList.Refresh();
         for (auto &i : ctx.processList) {
             if (!inputSystem && !strcasecmp("inputsystem.ex", i.proc.name)) {
@@ -106,15 +123,16 @@ static void* MainThread(void*) {
 
             }
         }
+        MTR_END("Initialization", "FindProcesses");
 
         if (!process || !inputSystem) {
             Logger::Log("Could not Find Apex/InputSystem Process/Base. Exiting...\n");
-            running = false;
-            return nullptr;
+            goto quit;
         }
 
         auto t1 = Clock::now();
 
+        MTR_BEGIN("Initialization", "FindOffsets");
         Threading::QueueJobRef(Interfaces::FindInterfaces, MODNAME);
         //Netvars::FindNetvars( *process, MODNAME );
 
@@ -122,11 +140,11 @@ static void* MainThread(void*) {
             Threading::QueueJobRef(ThreadSignature, &sig);
 
         Threading::FinishQueue(true);
+        MTR_END("Initialization", "FindOffsets");
 
         if (sigscanFailed) {
             Logger::Log("One of the sigs failed. Stopping.\n");
-            running = false;
-            return nullptr;
+            goto quit;
         }
         Logger::Log("Localplayer: %p\n", (void *) GetLocalPlayer());
         Logger::Log("Entlist: %p\n", (void *) entList);
@@ -153,6 +171,7 @@ static void* MainThread(void*) {
             updateWrites = (globalvars.tickCount > lastTick || globalvars.framecount != lastFrame);
 
             if (globalvars.tickCount > lastTick) {
+                MTR_SCOPED_TRACE("MainLoop", "Tick");
                 //if (globalvars.tickCount != lastTick + 1) {
                 //Logger::Log("Missed a Tick!: [%d->%d]\n", lastTick, globalvars.tickCount);
                 //}
@@ -171,10 +190,12 @@ static void* MainThread(void*) {
             }
             /* Per Frame Operations */
             if (globalvars.framecount != lastFrame) {
+                MTR_SCOPED_TRACE("MainLoop", "Frame");
                 Glow::Glow();
                 lastFrame = globalvars.framecount;
             }
             if (updateWrites) {
+                MTR_SCOPED_TRACE("MainLoop", "WriteBack");
                 WriteList writeList(process);
 
                 for (size_t i : sortedEntities)
@@ -194,9 +215,15 @@ static void* MainThread(void*) {
         Logger::Log("Main Loop Ended.\n");
     } catch (VMException &e) {
         Logger::Log("Initialization error: %d\n", e.value);
-        running = false;
-        return nullptr;
     }
+
+  quit:
+    running = false;
+
+#ifdef MTR_ENABLED
+    mtr_flush();
+    mtr_shutdown();
+#endif
 
     Logger::Log("Main Ended.\n");
 
