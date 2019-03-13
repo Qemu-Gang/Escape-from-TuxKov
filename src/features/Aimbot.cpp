@@ -63,7 +63,7 @@ void Aimbot::Aimbot() {
     std::sort(sortedEntities.begin(), sortedEntities.end(), [viewAngle, &pos](const auto &a, const auto &b) {
         Vector a_pos = GetBonePos(entities[a], 12, entities[a].origin);
         Vector b_pos = GetBonePos(entities[b], 12, entities[b].origin);
-        return Math::DistanceFOV(viewAngle, Math::CalcAngle(pos, a_pos), pos.DistTo(a_pos)) < Math::DistanceFOV(viewAngle, Math::CalcAngle(pos, b_pos), pos.DistTo(b_pos));
+        return Math::DistanceFOV(viewAngle, QAngle(a_pos - pos), pos.DistTo(a_pos)) < Math::DistanceFOV(viewAngle, QAngle(b_pos - pos), pos.DistTo(b_pos));
     });
 
     for (size_t ent = 0; ent < sortedEntities.size(); ent++) {
@@ -120,7 +120,7 @@ void Aimbot::Aimbot() {
     enemyHeadPosition->y += yTime * targetVelocity->y;
     enemyHeadPosition->z += yTime * targetVelocity->z + 375.0f * powf(xTime, 2.0f);
 
-    QAngle aimAngle = Math::CalcAngle(pos, enemyHeadPosition);
+    QAngle aimAngle(enemyHeadPosition - pos);
 
     aimAngle.Normalize();
     Math::Clamp(aimAngle);

@@ -3,10 +3,6 @@
 #include "../utils/Logger.h"
 
 namespace Math {
-    inline QAngle CalcAngle(const Vector &src, const Vector &dst) {
-        return QAngle(src - dst);
-    }
-
 
     inline void Clamp(QAngle &angles) {
         if (angles[YAW] > 180.0f) {
