@@ -1,4 +1,4 @@
-#include "../m0dular/utils/memutils.h"
+#include "m0dular/utils/memutils.h"
 #include "../globals.h"
 
 //TODO: Add thread-local process selection

@@ -1,4 +1,4 @@
-#include "../m0dular/utils/handles.h"
+#include "m0dular/utils/handles.h"
 #include "../globals.h"
 
 ModuleInfo Handles::GetModuleInfo(const char *module)

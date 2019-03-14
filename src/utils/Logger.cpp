@@ -5,7 +5,7 @@
 #include <string.h>
 #include <fstream>
 //LMODE
-#include "../vmread/definitions.h"
+#include "vmread/definitions.h"
 
 #if (LMODE() != MODE_EXTERNAL())
 #define LOGFILE_NAME "/tmp/apex.log"
