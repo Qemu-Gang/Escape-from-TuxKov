@@ -173,11 +173,11 @@ static void* MainThread(void*) {
             //CUserCmd cmd = process->Read<CUserCmd>( userCmdsArr );
 
             if( pressedKeys & KEY_ALT && !sendpacket){// ALT pressed down
-                process->Write<float>( apexBase + 0x18B4DF0, 10.0f );
+                process->Write<float>( timescale, 10.0f );
             } else if(pressedKeys & KEY_ALT && sendpacket){
-                process->Write<float>( apexBase + 0x18B4DF0, 0.1f );
+                process->Write<float>( timescale, 0.1f );
             } else
-                process->Write<float>( apexBase + 0x18B4DF0, 1.0f );
+                process->Write<float>( timescale, 1.0f );
             /* Per Tick Operations */
             updateWrites = (globalvars.tickCount != lastTick || globalvars.framecount != lastFrame);
 
@@ -227,7 +227,7 @@ static void* MainThread(void*) {
         }
 
         process->Write<double>(nextCmdTime, 0.0); // reset sendpacket
-        process->Write<float>( apexBase + 0x18B4DF0, 1.0f ); // reset speedhack
+        process->Write<float>( timescale, 1.0f ); // reset speedhack
         Logger::Log("Main Loop Ended.\n");
     } catch (VMException &e) {
         Logger::Log("Initialization error: %d\n", e.value);
