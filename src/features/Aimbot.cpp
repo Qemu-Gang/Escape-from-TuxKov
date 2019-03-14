@@ -71,14 +71,11 @@ void Aimbot::Aimbot() {
 
     uintptr_t weapon = GetActiveWeapon(localPlayer);
 
-    if (!weapon) { // TODO: this gun check doesn't work
-        return;
-    }
-
     NoSpread(weapon);
 
     float bulletVel = process->Read<float>(weapon + 0x1bac);
-    if (bulletVel == 0.0f)
+
+    if (bulletVel == 1.0f) // 1.0f is fists.
         return;
 
     Vector enemyVelocity = closestEnt->velocity;
