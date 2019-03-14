@@ -5,6 +5,7 @@
 #include "utils/Memutils.h"
 #include "features/Aimbot.h"
 #include "features/Glow.h"
+#include "features/DumbExploits.h"
 #include "sdk/CBaseEntity.h"
 #include "sdk/CGlobalVars.h"
 #include "utils/Memutils.h"
@@ -22,6 +23,8 @@
 #include <numeric>
 #include <thread>
 #include <chrono>
+
+#define USE_EAC_LAUNCHER
 
 #ifdef USE_EAC_LAUNCHER
 #define PROCNAME "EasyAntiCheat_"
@@ -169,11 +172,6 @@ static void* MainThread(void*) {
         while (running) {
             globalVars = process->Read<CGlobalVars>(globalVarsAddr);
 
-            if( inputSystem->Read<bool>(inputBase + 0xc7009) ){// mouse3 pressed down
-                process->Write<float>( apexBase + 0x18B4DF0, 10.0f );
-            } else {
-                process->Write<float>( apexBase + 0x18B4DF0, 1.0f );
-            }
             /* Per Tick Operations */
             updateWrites = (globalVars.tickCount > lastTick || globalVars.framecount != lastFrame);
 
@@ -191,17 +189,24 @@ static void* MainThread(void*) {
                     entities[ent].Update(entity);
                 }
                 localPlayer.Update(GetLocalPlayer());
-                Aimbot::Aimbot();
+
+                //Aimbot::Aimbot();
             }
+
             /* Per Frame Operations */
             if (globalVars.framecount != lastFrame) {
                 MTR_SCOPED_TRACE("MainLoop", "Frame");
+
+                pressedKeys = inputSystem->Read<int>(inputBase + 0x4388);
 
                 // read first 0x344 bytes of clienstate (next member we want after 0x344 is over 100k bytes away)
                 VMemRead(&process->ctx->process, process->proc.dirBase, (uint64_t)&clientState, clientStateAddr, 0x344); 
                 netChan = process->Read<CNetChan>((uint64_t)clientState.m_netChan);
 
-                if (clientState.m_signonState == SIGNONSTATE_INGAMEAPEX) {
+                Exploits::ServerCrasher();
+
+/*
+                if (clientState.m_signonState == SIGNONSTATE_INGAMEAPEX && pressedKeys & KEY_MOUSE4) {
                     if (netChan.m_chokedCommands < 1) {
                         process->Write<double>(clientStateAddr + OFFSET_OF(&CClientState::m_nextCmdTime), std::numeric_limits<double>::max());
                     }
@@ -224,7 +229,7 @@ static void* MainThread(void*) {
                 }
                 else
                     process->Write<double>(clientStateAddr + OFFSET_OF(&CClientState::m_nextCmdTime), 0.0);
-
+*/
 
                 lastFrame = globalVars.framecount;
             }
@@ -238,14 +243,14 @@ static void* MainThread(void*) {
                 localPlayer.WriteBack(writeList);
 
                 writeList.Commit();
-
             } 
 
             std::this_thread::sleep_for(std::chrono::microseconds(2000));
         }
 
         process->Write<double>(clientStateAddr + OFFSET_OF(&CClientState::m_nextCmdTime), 0.0);
-        process->Write<float>( apexBase + 0x18B4DF0, 1.0f ); // reset speedhack
+        process->Write<float>( timescale, 1.0f ); // reset speedhack // reset speedhack
+
         Logger::Log("Main Loop Ended.\n");
     } catch (VMException &e) {
         Logger::Log("Initialization error: %d\n", e.value);

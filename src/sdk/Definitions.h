@@ -42,3 +42,7 @@
 #define IN_GRENADE1		(1 << 23)	// grenade 1
 #define IN_GRENADE2		(1 << 24)	// grenade 2
 */
+
+#define KEY_ALT (1 << 0)
+#define KEY_MOUSE4 (1 << 1)
+#define KEY_MOUSE5 (1 << 2)

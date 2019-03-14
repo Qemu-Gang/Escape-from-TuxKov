@@ -29,8 +29,9 @@ void Aimbot::Aimbot() {
     if (!localPlayer)
         return;
 
-    if( !inputSystem->Read<bool>(inputBase + 0xc7008) ) // mouse4 pressed down
+    if (!(pressedKeys & KEY_MOUSE4)) {
         return;
+    }
 
     QAngle viewAngle = localPlayer.viewAngles;
 
