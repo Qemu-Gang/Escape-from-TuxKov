@@ -12,7 +12,7 @@ endforeach(COMP_ARG)
 
 message("Supported warning args: ${WARNING_ARGS}")
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${WARNING_ARGS} -pedantic -ldl -fpic -isystemmodules -DMVERBOSE=0 -DNUM_THREADS=4 -DMEMUTILS_CUSTOM_RW -DPATTERN_SCAN_PAGE_SCAN")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${WARNING_ARGS} -pedantic -ldl -fpic -isystem${CMAKE_SOURCE_DIR}/modules -DMVERBOSE=0 -DNUM_THREADS=4 -DMEMUTILS_CUSTOM_RW -DPATTERN_SCAN_PAGE_SCAN")
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -g")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -s -fvisibility=hidden -fvisibility-inlines-hidden")
 
