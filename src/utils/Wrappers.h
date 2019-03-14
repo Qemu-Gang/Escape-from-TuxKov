@@ -16,7 +16,7 @@ struct BoneMatrix {
     float z;//0x2c
 };
 
-inline Vector GetBonePos(CBaseEntity &entity, int bone, Vector rootpos) {
+inline Vector GetBonePos(CBaseEntity &entity, int bone, const Vector &rootpos) {
     uintptr_t p_matrix = entity.boneMatrix;
 
     if (!p_matrix)

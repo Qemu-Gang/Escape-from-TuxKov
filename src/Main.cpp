@@ -178,30 +178,25 @@ static void* MainThread(void*) {
                 process->Write<float>( timescale, 0.1f );
             } else
                 process->Write<float>( timescale, 1.0f );
-            /* Per Tick Operations */
+
             updateWrites = (globalvars.tickCount != lastTick || globalvars.framecount != lastFrame);
 
+            /* Per Tick Operations */
             if (globalvars.tickCount != lastTick) {
                 MTR_SCOPED_TRACE("MainLoop", "Tick");
-                //if (globalvars.tickCount != lastTick + 1) {
-                //Logger::Log("Missed a Tick!: [%d->%d]\n", lastTick, globalvars.tickCount);
-                //}
+                pressedKeys = inputSystem->Read<int>(inputBase + 0x4388); // Update pressed keys
 
-                // Update pressed keys
-                pressedKeys = inputSystem->Read<int>(inputBase + 0x4388);
-
-                lastTick = globalvars.tickCount;
-
-                sortedEntities.clear();
-
+                validEntities.clear();
                 for (int ent = 1; ent < 100; ent++) {
                     uintptr_t entity = GetEntityById(ent);
                     if (!entity) continue;
-                    sortedEntities.push_back(ent);
+                    validEntities.push_back(ent);
                     entities[ent].Update(entity);
                 }
                 localPlayer.Update(GetLocalPlayer());
                 Aimbot::Aimbot();
+
+                lastTick = globalvars.tickCount;
             }
             /* Per Frame Operations */
             if (globalvars.framecount != lastFrame) {
@@ -213,7 +208,7 @@ static void* MainThread(void*) {
                 MTR_SCOPED_TRACE("MainLoop", "WriteBack");
                 WriteList writeList(process);
 
-                for (size_t i : sortedEntities)
+                for (size_t i : validEntities)
                     entities[i].WriteBack(writeList);
 
                 localPlayer.WriteBack(writeList);

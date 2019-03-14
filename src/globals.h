@@ -7,7 +7,7 @@
 #include <vector>
 #include <cstdint>
 
-inline std::vector<size_t> sortedEntities;
+inline std::vector<size_t> validEntities;
 inline CBaseEntity entities[100];
 
 inline CBaseEntity localPlayer;
