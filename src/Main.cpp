@@ -172,11 +172,12 @@ static void* MainThread(void*) {
             sendpacket = (process->Read<int>(netChannel + 0x10) > 12);
             //CUserCmd cmd = process->Read<CUserCmd>( userCmdsArr );
 
-            if( pressedKeys & KEY_ALT ){// ALT pressed down
-                process->Write<float>( apexBase + 0x18B4DF0, 30.0f );
-            } else {
+            if( pressedKeys & KEY_ALT && !sendpacket){// ALT pressed down
+                process->Write<float>( apexBase + 0x18B4DF0, 10.0f );
+            } else if(pressedKeys & KEY_ALT && sendpacket){
+                process->Write<float>( apexBase + 0x18B4DF0, 0.1f );
+            } else
                 process->Write<float>( apexBase + 0x18B4DF0, 1.0f );
-            }
             /* Per Tick Operations */
             updateWrites = (globalvars.tickCount != lastTick || globalvars.framecount != lastFrame);
 
@@ -222,7 +223,7 @@ static void* MainThread(void*) {
             } else {
                 std::this_thread::sleep_for(std::chrono::microseconds(2000));
             }
-            //process->Write<double>(nextCmdTime, sendpacket ? 0.0 : std::numeric_limits<double>::max());
+            process->Write<double>(nextCmdTime, sendpacket ? 0.0 : std::numeric_limits<double>::max());
         }
 
         process->Write<double>(nextCmdTime, 0.0); // reset sendpacket
