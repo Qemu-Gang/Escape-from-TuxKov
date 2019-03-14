@@ -6,10 +6,10 @@
 
 
 static Vector teamColors[] = {
+        {150, 0,   0}, // red
         {0,   150, 0}, // green
         {0,   100, 0}, // dark green
-        {100, 0,   0}, // dark red
-        {150, 0,   0}, // red
+        {130, 0,   0}, // dark red
         {0,   0,   125}, // dark blue
         {0,   0,   150}, // blue
         {120, 0,   120}, // purpleish
@@ -37,13 +37,14 @@ static void WriteGlow(CBaseEntity &entity, Vector &colors, float distance) {
     entity.bGlowEnable = true; // Enabling the Glow
     entity.iGlowEnable = 1; // Enabling the Glow
 
-    if (distance < 100.0f) {
+    /*if (distance < 100.0f) {
         distance *= 2.55f;
         distance = 255.0f - distance;
-        std::clamp(distance, 1.0f, 1.5f);
+        std::clamp(distance, 1.0f, 1.15f);
         //colors /= distance;
-        entity.glowCol = colors / distance; // Setting a value for the Color Red between 0 and 255
-    } else
+
+        entity.glowCol = colors; // Setting a value for the Color Red between 0 and 255
+    } else*/
         entity.glowCol = colors;
 
     //process->Write<float>(entity + OFFSET_OF(&CBaseEntity::glowG), colors[1] / 100.0f); // Setting a value for the Color Red between 0 and 255
@@ -71,7 +72,8 @@ void Glow::Glow() {
         }
 
         if (entity.teamNum != localTeam) {
-            WriteGlow(entity, teamColors[std::min((int) entity.teamNum, 20)], localPos.DistTo(entity.origin));
+            //WriteGlow(entity, teamColors[std::min((int) entity.teamNum, 20)], localPos.DistTo(entity.origin));
+            WriteGlow(entity, teamColors[0], localPos.DistTo(entity.origin));
         }
     }
 }

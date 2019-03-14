@@ -169,18 +169,29 @@ static void* MainThread(void*) {
         uintptr_t verifiedCmdsArr = process->Read<uintptr_t>( input + OFFSET_OF(&CInput::m_verifiedCommands) );
         while (running) {
             CGlobalVars globalvars = process->Read<CGlobalVars>(globalVars);
-            sendpacket = (process->Read<int>(netChannel + 0x10) > 12);
-            //CUserCmd cmd = process->Read<CUserCmd>( userCmdsArr );
+            int choked = process->Read<int>(netChannel + 0x10);
+            sendpacket = choked > 15;
+            CUserCmd cmd = process->Read<CUserCmd>( userCmdsArr );
 
-            if( pressedKeys & KEY_ALT && !sendpacket){// ALT pressed down
-                process->Write<float>( timescale, 10.0f );
-            } else if(pressedKeys & KEY_ALT && sendpacket){
-                process->Write<float>( timescale, 0.1f );
-            } else
-                process->Write<float>( timescale, 1.0f );
+            if (pressedKeys & KEY_ALT) { // This definitely needs more work
+                if(localPlayer)
+                    process->Write<float>(localPlayer + 0x2C44, 10.0f);
+                switch (choked) {
+                    case 1 ... 12:
+                        process->Write<float>(timescale, 10.0f);
+                        cmd.m_tickcount = globalvars.tickCount;
+                        break;
 
+                    default:
+                        process->Write<float>( timescale, 0.1f );
+                }
+            } else {
+                if(localPlayer)
+                    process->Write<float>(localPlayer + 0x2C44, 1.0f);
+                process->Write<float>(timescale, 1.0f);
+            }
+            process->Write<CUserCmd>(userCmdsArr, cmd);
             updateWrites = (globalvars.tickCount != lastTick || globalvars.framecount != lastFrame);
-
             /* Per Tick Operations */
             if (globalvars.tickCount != lastTick) {
                 MTR_SCOPED_TRACE("MainLoop", "Tick");

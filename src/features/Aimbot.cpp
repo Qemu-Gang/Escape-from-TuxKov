@@ -11,7 +11,7 @@ static void RecoilCompensation(QAngle &angle) {
 }
 
 static void SwayCompensation(const QAngle &viewAngle, QAngle &angle) {
-    QAngle dynamic = localPlayer.viewAngles;
+    QAngle dynamic = localPlayer.swayAngles;
     QAngle sway = dynamic - viewAngle;
 
     angle -= sway;
@@ -35,6 +35,7 @@ void Aimbot::Aimbot() {
     sendpacket = true; // want to send packets when aiming
 
     QAngle localAngles = localPlayer.viewAngles;
+
     Vector localOrigin = localPlayer.origin;
     Vector localEye = localPlayer.eyePos;
     localEye->x = localOrigin->x;
@@ -99,15 +100,9 @@ void Aimbot::Aimbot() {
     }
 
     SwayCompensation(localAngles, aimAngle);
-    RecoilCompensation(aimAngle);
+
     aimAngle.Normalize();
     Math::Clamp(aimAngle);
 
-    localPlayer.swayAngles = aimAngle;
-    //process->Write(localPlayer + 0x20A8, aimAngle);
-    //process->Write(localPlayer + 0x20BC, aimAngle.y);
-
-    //Unused at the moment
-    //static float col[3] = {0.0f, 0.0f, 255.0f};
-    //Glow::GlowPlayer(finalEntity, col);
+    localPlayer.viewAngles = aimAngle;
 }
