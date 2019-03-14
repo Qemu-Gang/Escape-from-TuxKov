@@ -57,3 +57,4 @@ public:
     CUserCmd* m_commands; //0x00F0 // Does not change or go null
     CVerifiedUserCmd* m_verifiedCommands; //0x00F8 // Does not change or go null
 }; //Size: 0x0100
+

@@ -63,9 +63,9 @@ void Glow::Glow() {
     int localTeam = localPlayer.teamNum;
     Vector localPos = localPlayer.origin;
 
-    for (size_t entID = 0; entID < sortedEntities.size(); entID++) {
+    for (size_t entID = 0; entID < validEntities.size(); entID++) {
 
-        CBaseEntity &entity = entities[sortedEntities[entID]];
+        CBaseEntity &entity = entities[validEntities[entID]];
         if (entity.GetBaseClass().address == localPlayer) {
             continue;
         }

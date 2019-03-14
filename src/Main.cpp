@@ -180,17 +180,27 @@ static void* MainThread(void*) {
 
                 lastTick = globalVars.tickCount;
 
-                sortedEntities.clear();
+                if( pressedKeys & KEY_ALT && !sendpacket){// ALT pressed down
+                    process->Write<float>( timescale, 10.0f );
+                } else if(pressedKeys & KEY_ALT && sendpacket){
+                    process->Write<float>( timescale, 0.1f );
+                } else
+                    process->Write<float>( timescale, 1.0f );
 
+
+                validEntities.clear();
                 for (int ent = 1; ent < 100; ent++) {
                     uintptr_t entity = GetEntityById(ent);
                     if (!entity) continue;
-                    sortedEntities.push_back(ent);
+                    validEntities.push_back(ent);
                     entities[ent].Update(entity);
                 }
                 localPlayer.Update(GetLocalPlayer());
 
-                //Aimbot::Aimbot();
+                Aimbot::Aimbot();
+
+                lastTick = globalVars.tickCount;
+
             }
 
             /* Per Frame Operations */
@@ -237,7 +247,7 @@ static void* MainThread(void*) {
                 MTR_SCOPED_TRACE("MainLoop", "WriteBack");
                 WriteList writeList(process);
 
-                for (size_t i : sortedEntities)
+                for (size_t i : validEntities)
                     entities[i].WriteBack(writeList);
 
                 localPlayer.WriteBack(writeList);

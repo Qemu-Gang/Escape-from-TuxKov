@@ -1,6 +1,6 @@
 [submodule "src/vmread"]
-	path = src/vmread
+	path = modules/vmread
 	url = https://github.com/Heep042/vmread
 [submodule "src/m0dular"]
-	path = src/m0dular
+	path = modules/m0dular
 	url = https://github.com/Heep042/m0dular
