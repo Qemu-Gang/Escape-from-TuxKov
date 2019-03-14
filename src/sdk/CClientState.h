@@ -35,7 +35,7 @@ public:
 	char pad_0344[100752]; //0x0344
 	int32_t m_lastOutGoingCommand; //0x18CD4
 	char pad_18CD8[64]; //0x18CD8
-	vec3 m_viewangles; //0x18D18
+	Vector m_viewangles; //0x18D18
 }; //Size: 0x18D24
 
 class CNetChan

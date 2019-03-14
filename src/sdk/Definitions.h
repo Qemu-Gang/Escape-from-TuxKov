@@ -1,5 +1,7 @@
 #pragma once
 
+#define MULTIPLAYER_BACKUP 300
+
 // Just for random Source engine things that don't need their own file.
 
 #define SIGNONSTATE_NONE		0	// no state yet, about to connect

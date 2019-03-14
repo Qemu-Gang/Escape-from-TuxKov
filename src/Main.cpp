@@ -2,6 +2,7 @@
 #include "utils/Logger.h"
 #include "Interfaces.h"
 #include "Netvars.h"
+#include "utils/Memutils.h"
 #include "features/Aimbot.h"
 #include "features/Glow.h"
 #include "sdk/CBaseEntity.h"
@@ -149,12 +150,9 @@ static void* MainThread(void*) {
         }
         Logger::Log("Localplayer: %p\n", (void *) GetLocalPlayer());
         Logger::Log("Entlist: %p\n", (void *) entList);
-        Logger::Log("GlobalVars: %p\n", (void *) globalVars);
-        Logger::Log("nextCmdTime: %p\n", (void *) nextCmdTime);
-        Logger::Log("netTime: %p\n", (void *) netTime);
-        Logger::Log("SignonState: %p\n", (void *) signonState);
-        Logger::Log("netChannel: %p\n", (void *) netChannel);
-        Logger::Log("input: %p\n", (void *)input);
+        Logger::Log("GlobalVars: %p\n", (void *) globalVarsAddr);
+        Logger::Log("input: %p\n", (void *)inputAddr);
+        Logger::Log("clientstate: %p\n", (void*)clientStateAddr);
 
         auto t2 = Clock::now();
         printf("Initialization time: %lld ms\n", (long long)std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count());
@@ -165,12 +163,11 @@ static void* MainThread(void*) {
         static int lastTick = 0;
         static bool updateWrites = false;
 
-        uintptr_t userCmdsArr = process->Read<uintptr_t>( input + OFFSET_OF(&CInput::m_commands) );
-        uintptr_t verifiedCmdsArr = process->Read<uintptr_t>( input + OFFSET_OF(&CInput::m_verifiedCommands) );
+        userCmdArr = process->Read<uintptr_t>( inputAddr + OFFSET_OF(&CInput::m_commands) );
+        verifiedUserCmdArr = process->Read<uintptr_t>( inputAddr + OFFSET_OF(&CInput::m_verifiedCommands) );
+
         while (running) {
-            CGlobalVars globalvars = process->Read<CGlobalVars>(globalVars);
-            sendpacket = (process->Read<int>(netChannel + 0x10) > 12);
-            //CUserCmd cmd = process->Read<CUserCmd>( userCmdsArr );
+            globalVars = process->Read<CGlobalVars>(globalVarsAddr);
 
             if( inputSystem->Read<bool>(inputBase + 0xc7009) ){// mouse3 pressed down
                 process->Write<float>( apexBase + 0x18B4DF0, 10.0f );
@@ -178,14 +175,12 @@ static void* MainThread(void*) {
                 process->Write<float>( apexBase + 0x18B4DF0, 1.0f );
             }
             /* Per Tick Operations */
-            updateWrites = (globalvars.tickCount > lastTick || globalvars.framecount != lastFrame);
+            updateWrites = (globalVars.tickCount > lastTick || globalVars.framecount != lastFrame);
 
-            if (globalvars.tickCount > lastTick) {
+            if (globalVars.tickCount > lastTick) {
                 MTR_SCOPED_TRACE("MainLoop", "Tick");
-                //if (globalvars.tickCount != lastTick + 1) {
-                //Logger::Log("Missed a Tick!: [%d->%d]\n", lastTick, globalvars.tickCount);
-                //}
-                lastTick = globalvars.tickCount;
+
+                lastTick = globalVars.tickCount;
 
                 sortedEntities.clear();
 
@@ -199,10 +194,39 @@ static void* MainThread(void*) {
                 Aimbot::Aimbot();
             }
             /* Per Frame Operations */
-            if (globalvars.framecount != lastFrame) {
+            if (globalVars.framecount != lastFrame) {
                 MTR_SCOPED_TRACE("MainLoop", "Frame");
-                Glow::Glow();
-                lastFrame = globalvars.framecount;
+
+                // read first 0x344 bytes of clienstate (next member we want after 0x344 is over 100k bytes away)
+                VMemRead(&process->ctx->process, process->proc.dirBase, (uint64_t)&clientState, clientStateAddr, 0x344); 
+                netChan = process->Read<CNetChan>((uint64_t)clientState.m_netChan);
+
+                if (clientState.m_signonState == SIGNONSTATE_INGAMEAPEX) {
+                    if (netChan.m_chokedCommands < 1) {
+                        process->Write<double>(clientStateAddr + OFFSET_OF(&CClientState::m_nextCmdTime), std::numeric_limits<double>::max());
+                    }
+                    else {
+                        int32_t commandNr= process->Read<int32_t>(clientStateAddr + OFFSET_OF(&CClientState::m_lastOutGoingCommand));
+                        int32_t targetCommand = (commandNr - 1) % 300;
+
+                        CUserCmd userCmd = process->Read<CUserCmd>(userCmdArr + targetCommand * sizeof(CUserCmd));
+
+                        userCmd.m_buttons |= IN_ATTACK;
+                        userCmd.m_viewangles->y += 90.f;
+
+                        process->Write<CUserCmd>(userCmdArr + targetCommand * sizeof(CUserCmd), userCmd);
+                        process->Write<CUserCmd>(verifiedUserCmdArr + targetCommand * sizeof(CVerifiedUserCmd), userCmd);
+
+                        process->Write<double>(clientStateAddr + OFFSET_OF(&CClientState::m_nextCmdTime), 0.0);
+                    }
+
+                    Glow::Glow();
+                }
+                else
+                    process->Write<double>(clientStateAddr + OFFSET_OF(&CClientState::m_nextCmdTime), 0.0);
+
+
+                lastFrame = globalVars.framecount;
             }
             if (updateWrites) {
                 MTR_SCOPED_TRACE("MainLoop", "WriteBack");
@@ -215,13 +239,12 @@ static void* MainThread(void*) {
 
                 writeList.Commit();
 
-            } else {
-                std::this_thread::sleep_for(std::chrono::microseconds(2000));
-            }
-            //process->Write<double>(nextCmdTime, sendpacket ? 0.0 : std::numeric_limits<double>::max());
+            } 
+
+            std::this_thread::sleep_for(std::chrono::microseconds(2000));
         }
 
-        process->Write<double>(nextCmdTime, 0.0); // reset sendpacket
+        process->Write<double>(clientStateAddr + OFFSET_OF(&CClientState::m_nextCmdTime), 0.0);
         process->Write<float>( apexBase + 0x18B4DF0, 1.0f ); // reset speedhack
         Logger::Log("Main Loop Ended.\n");
     } catch (VMException &e) {

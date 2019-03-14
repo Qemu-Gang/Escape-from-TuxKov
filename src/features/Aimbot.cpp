@@ -32,30 +32,16 @@ void Aimbot::Aimbot() {
     if( !inputSystem->Read<bool>(inputBase + 0xc7008) ) // mouse4 pressed down
         return;
 
-    sendpacket = true; // want to send packets when aiming
     QAngle viewAngle = localPlayer.viewAngles;
 
     CBaseEntity* finalEntity = nullptr;
 
     Vector localOrigin = localPlayer.origin;
-    /*Vector localOrigin = process->Read<Vector>(localPlayer + 0x50);
-    Vector abslocalOrigin = process->Read<Vector>(localPlayer + 0x4);
-    Vector viewOffset = process->Read<Vector>(localPlayer + 0x30);
-    Vector localAngles = process->Read<Vector>(localPlayer + 0x414);
-    Vector pusherOrigin = process->Read<Vector>(localPlayer + 0x24);*/
+
     Vector eyepos = localPlayer.eyePos;
     eyepos->x = localOrigin->x;
     eyepos->y = localOrigin->y;
 
-    /*Logger::Log("Origin: (%f, %f, %f)\n", localOrigin.x, localOrigin.y, localOrigin.z);
-    Logger::Log("absOrigin: (%f, %f, %f)\n", abslocalOrigin.x, abslocalOrigin.y, abslocalOrigin.z);
-    Logger::Log("Offset: (%f, %f, %f)\n", viewOffset.x, viewOffset.y, viewOffset.z);
-    Logger::Log("localAngles: (%f, %f, %f)\n", localAngles.x, localAngles.y, localAngles.z);
-    Logger::Log("pusher: (%f, %f, %f)\n", pusherOrigin.x, pusherOrigin.y, pusherOrigin.z);
-    Logger::Log("eyepos: (%f, %f, %f)\n", eyepos.x, eyepos.y, eyepos.z);*/
-    //Vector pos = process->Read<Vector>(localPlayer + 0x3AA0);
-    //Vector pos = GetBonePos(localPlayer, 12, localOrigin);
-    //Vector pos = process->Read<Vector>(localPlayer + 0x3AA0);
     Vector pos = eyepos;
 
     int localTeam = localPlayer.teamNum;
@@ -98,7 +84,7 @@ void Aimbot::Aimbot() {
         return;
     }
 
-    NoSpread(weapon);
+    //NoSpread(weapon);
 
     float bulletVel = process->Read<float>(weapon + 0x1bac);
     if (bulletVel == 0.0f)
@@ -108,11 +94,6 @@ void Aimbot::Aimbot() {
 
     Vector enemyVelocity = finalEntity->velocity;
     Vector targetVelocity = enemyVelocity;
-    //targetVelocity *= 0.01905f;
-
-    //float interval_per_tick = process->Read<float>(0x1713CA8 + 0x44);
-
-
 
     float xTime = dist / bulletVel;
     float yTime = xTime;
@@ -132,17 +113,10 @@ void Aimbot::Aimbot() {
         return;
     }
 
-
     SwayCompensation(viewAngle, aimAngle);
     RecoilCompensation(aimAngle);
     aimAngle.Normalize();
     Math::Clamp(aimAngle);
 
     localPlayer.swayAngles = aimAngle;
-    //process->Write(localPlayer + 0x20A8, aimAngle);
-    //process->Write(localPlayer + 0x20BC, aimAngle.y);
-
-    //Unused at the moment
-    //static float col[3] = {0.0f, 0.0f, 255.0f};
-    //Glow::GlowPlayer(finalEntity, col);
 }
