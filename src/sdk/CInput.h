@@ -9,10 +9,10 @@ class CUserCmd
 {
 public:
 	uint32_t m_commandNumber; //0x0000
-	uint32_t m_tickcount; //0x0004
+	uint32_t m_tickCount; //0x0004
 	float m_curtime; //0x0008
-	vec3 m_viewangles; //0x000C
-	vec3 m_aimDirection; //0x0018
+	QAngle m_viewAngles; //0x000C
+	QAngle m_aimDirection; //0x0018
 	float m_forwardmove; //0x0024
 	float m_sidemove; //0x0028
 	float m_upmove; //0x002C
@@ -21,7 +21,7 @@ public:
 	char pad_0038[332]; //0x0038
 	uint32_t m_randomSeed; //0x0184
 	char pad_0188[8]; //0x0188
-	vec3 m_origin; //0x0190
+	vec3 m_eyePos; //0x0190
 	char pad_019C[60]; //0x019C
 	uint32_t m_prevTickcount; //0x01D8
 	uint32_t m_nextTickcount; //0x01DC

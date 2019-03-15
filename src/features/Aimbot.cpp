@@ -6,22 +6,18 @@
 #include "../utils/Wrappers.h"
 #include "../utils/minitrace.h"
 
+//#define SILENT_AIM
+
 static void RecoilCompensation(QAngle &angle) {
     angle -= localPlayer.aimPunch;
 }
 
 static void SwayCompensation(const QAngle &viewAngle, QAngle &angle) {
-    QAngle dynamic = localPlayer.viewAngles;
+    QAngle dynamic = localPlayer.swayAngles;
     QAngle sway = dynamic - viewAngle;
 
     angle -= sway;
 }
-
-static void NoSpread(uintptr_t weapon) {
-    process->Write<float>(weapon + 0x1330, 0.0f);
-    process->Write<float>(weapon + 0x1340, 0.0f);
-}
-
 
 void Aimbot::Aimbot() {
     MTR_SCOPED_TRACE("Aimbot", "Run");
@@ -29,12 +25,16 @@ void Aimbot::Aimbot() {
     if (!localPlayer)
         return;
 
-    if (!(pressedKeys & KEY_MOUSE4))
-        return;
+    if (!(pressedKeys & KEY_MOUSE4) && clientState.m_signonState == SIGNONSTATE_INGAMEAPEX) {
+        // if we cannot run aimbot and we arent speedhacking reset fakelag
+        if (!(pressedKeys & KEY_ALT))
+            process->Write<double>(clientStateAddr + OFFSET_OF(&CClientState::m_nextCmdTime), 0.0);
 
-    sendpacket = true; // want to send packets when aiming
+        return;
+    }
 
     QAngle localAngles = localPlayer.viewAngles;
+
     Vector localOrigin = localPlayer.origin;
     Vector localEye = localPlayer.eyePos;
     localEye->x = localOrigin->x;
@@ -70,14 +70,11 @@ void Aimbot::Aimbot() {
 
     uintptr_t weapon = GetActiveWeapon(localPlayer);
 
-    if (!weapon) { // TODO: this gun check doesn't work
+    if (!weapon)
         return;
-    }
-
-    //NoSpread(weapon);
 
     float bulletVel = process->Read<float>(weapon + 0x1bac);
-    if (bulletVel == 0.0f)
+    if (bulletVel <= 1.0f)
         return;
 
     Vector enemyVelocity = closestEnt->velocity;
@@ -89,19 +86,58 @@ void Aimbot::Aimbot() {
     closestHeadPos->y += yTime * enemyVelocity->y;
     closestHeadPos->z += yTime * enemyVelocity->z + 375.0f * powf(xTime, 2.0f);
 
-    QAngle aimAngle(closestHeadPos - localEye);
+#ifdef SILENT_AIM
+    // if we can not fire, dont try to do silent aim (since the shot will be delayed, and aimbot will not work correctly - maybe account for tihs later?)
+    if (process->Read<float>(weapon + 0x7B0) > globalVars.curtime)
+        return;
 
-    aimAngle.Normalize();
-    Math::Clamp(aimAngle);
+    if (netChan.m_chokedCommands < 2) {
+        process->Write<double>(clientStateAddr + OFFSET_OF(&CClientState::m_nextCmdTime), std::numeric_limits<double>::max());
+    }
+    else {
+        int32_t commandNr= process->Read<int32_t>(clientStateAddr + OFFSET_OF(&CClientState::m_lastOutGoingCommand));
+        int32_t targetCommand = (commandNr - 1) % 300;
+
+        CUserCmd userCmd = process->Read<CUserCmd>(userCmdArr + targetCommand * sizeof(CUserCmd));
+
+        // manipulate usercmd here
+        QAngle oldAngle = userCmd.m_viewAngles;
+
+        QAngle aimAngle(closestHeadPos - userCmd.m_eyePos);
+        if (aimAngle.IsZero() || !aimAngle.IsValid())
+            return;
+
+        SwayCompensation(oldAngle, aimAngle);
+
+        aimAngle.Normalize();
+        Math::Clamp(aimAngle);
+
+        Math::CorrectMovement(&userCmd, oldAngle, userCmd.m_forwardmove, userCmd.m_sidemove);
+
+        userCmd.m_viewAngles = aimAngle;
+        userCmd.m_tickCount = globalVars.tickCount;
+        userCmd.m_buttons |= IN_ATTACK;
+
+        process->Write<CUserCmd>(userCmdArr + targetCommand * sizeof(CUserCmd), userCmd);
+        process->Write<CUserCmd>(verifiedUserCmdArr + targetCommand * sizeof(CVerifiedUserCmd), userCmd);
+
+        process->Write<double>(clientStateAddr + OFFSET_OF(&CClientState::m_nextCmdTime), 0.0);
+    }
+
+#else
+    QAngle aimAngle(closestHeadPos - localEye);
 
     if ((aimAngle->x == 0 && aimAngle->y == 0 && aimAngle->z == 0) || !aimAngle.IsValid()) {
         return;
     }
 
     SwayCompensation(localAngles, aimAngle);
-    RecoilCompensation(aimAngle);
+
     aimAngle.Normalize();
     Math::Clamp(aimAngle);
 
-    localPlayer.swayAngles = aimAngle;
+    localPlayer.viewAngles = aimAngle;
+#endif
+
+
 }

@@ -24,7 +24,7 @@
 #include <thread>
 #include <chrono>
 
-#define USE_EAC_LAUNCHER
+//#define USE_EAC_LAUNCHER
 
 #ifdef USE_EAC_LAUNCHER
 #define PROCNAME "EasyAntiCheat_"
@@ -73,6 +73,7 @@ static void* ThreadSignature(const Signature* sig)
 static void* MainThread(void*) {
     Logger::Log("Main Loaded.\n");
     pid_t pid;
+
 #if (LMODE() == MODE_EXTERNAL())
     FILE* pipe = popen("pidof qemu-system-x86_64", "r");
     fscanf(pipe, "%d", &pid);
@@ -93,6 +94,7 @@ static void* MainThread(void*) {
         MTR_BEGIN("Initialization", "InitCTX");
         WinContext ctx(pid);
         MTR_END("Initialization", "InitCTX");
+
         MTR_BEGIN("Initialization", "FindProcesses");
         ctx.processList.Refresh();
         for (auto &i : ctx.processList) {
@@ -151,6 +153,8 @@ static void* MainThread(void*) {
             Logger::Log("One of the sigs failed. Stopping.\n");
             goto quit;
         }
+
+        // Print some sig stuff - useful for reclass analysis etc
         Logger::Log("Localplayer: %p\n", (void *) GetLocalPlayer());
         Logger::Log("Entlist: %p\n", (void *) entList);
         Logger::Log("GlobalVars: %p\n", (void *) globalVarsAddr);
@@ -166,27 +170,28 @@ static void* MainThread(void*) {
         static int lastTick = 0;
         static bool updateWrites = false;
 
+        // these buffers wont get re-allocated, getting the address of em' here is fine.
         userCmdArr = process->Read<uintptr_t>( inputAddr + OFFSET_OF(&CInput::m_commands) );
         verifiedUserCmdArr = process->Read<uintptr_t>( inputAddr + OFFSET_OF(&CInput::m_verifiedCommands) );
 
         while (running) {
             globalVars = process->Read<CGlobalVars>(globalVarsAddr);
 
+            // read first 0x344 bytes of clienstate (next member we want after 0x344 is over 100k bytes away)
+            VMemRead(&process->ctx->process, process->proc.dirBase, (uint64_t)&clientState, clientStateAddr, 0x344); 
+            netChan = process->Read<CNetChan>((uint64_t)clientState.m_netChan);
+
+            pressedKeys = inputSystem->Read<int>(inputBase + 0x4388);
+
             /* Per Tick Operations */
-            updateWrites = (globalVars.tickCount > lastTick || globalVars.framecount != lastFrame);
+            updateWrites = (globalVars.tickCount != lastTick || globalVars.framecount != lastFrame);
 
-            if (globalVars.tickCount > lastTick) {
+            // reset fakelag if we arent ingame
+            if (clientState.m_signonState != SIGNONSTATE_INGAMEAPEX)
+                process->Write<double>(clientStateAddr + OFFSET_OF(&CClientState::m_nextCmdTime), 0.0);
+
+            if (globalVars.tickCount != lastTick) {
                 MTR_SCOPED_TRACE("MainLoop", "Tick");
-
-                lastTick = globalVars.tickCount;
-
-                if( pressedKeys & KEY_ALT && !sendpacket){// ALT pressed down
-                    process->Write<float>( timescale, 10.0f );
-                } else if(pressedKeys & KEY_ALT && sendpacket){
-                    process->Write<float>( timescale, 0.1f );
-                } else
-                    process->Write<float>( timescale, 1.0f );
-
 
                 validEntities.clear();
                 for (int ent = 1; ent < 100; ent++) {
@@ -200,49 +205,19 @@ static void* MainThread(void*) {
                 Aimbot::Aimbot();
 
                 lastTick = globalVars.tickCount;
-
             }
 
             /* Per Frame Operations */
             if (globalVars.framecount != lastFrame) {
                 MTR_SCOPED_TRACE("MainLoop", "Frame");
 
-                pressedKeys = inputSystem->Read<int>(inputBase + 0x4388);
-
-                // read first 0x344 bytes of clienstate (next member we want after 0x344 is over 100k bytes away)
-                VMemRead(&process->ctx->process, process->proc.dirBase, (uint64_t)&clientState, clientStateAddr, 0x344); 
-                netChan = process->Read<CNetChan>((uint64_t)clientState.m_netChan);
-
+                Glow::Glow();
                 Exploits::ServerCrasher();
-
-/*
-                if (clientState.m_signonState == SIGNONSTATE_INGAMEAPEX && pressedKeys & KEY_MOUSE4) {
-                    if (netChan.m_chokedCommands < 1) {
-                        process->Write<double>(clientStateAddr + OFFSET_OF(&CClientState::m_nextCmdTime), std::numeric_limits<double>::max());
-                    }
-                    else {
-                        int32_t commandNr= process->Read<int32_t>(clientStateAddr + OFFSET_OF(&CClientState::m_lastOutGoingCommand));
-                        int32_t targetCommand = (commandNr - 1) % 300;
-
-                        CUserCmd userCmd = process->Read<CUserCmd>(userCmdArr + targetCommand * sizeof(CUserCmd));
-
-                        userCmd.m_buttons |= IN_ATTACK;
-                        userCmd.m_viewangles->y += 90.f;
-
-                        process->Write<CUserCmd>(userCmdArr + targetCommand * sizeof(CUserCmd), userCmd);
-                        process->Write<CUserCmd>(verifiedUserCmdArr + targetCommand * sizeof(CVerifiedUserCmd), userCmd);
-
-                        process->Write<double>(clientStateAddr + OFFSET_OF(&CClientState::m_nextCmdTime), 0.0);
-                    }
-
-                    Glow::Glow();
-                }
-                else
-                    process->Write<double>(clientStateAddr + OFFSET_OF(&CClientState::m_nextCmdTime), 0.0);
-*/
+                Exploits::Speedhack();
 
                 lastFrame = globalVars.framecount;
             }
+
             if (updateWrites) {
                 MTR_SCOPED_TRACE("MainLoop", "WriteBack");
                 WriteList writeList(process);
@@ -258,6 +233,7 @@ static void* MainThread(void*) {
             std::this_thread::sleep_for(std::chrono::microseconds(2000));
         }
 
+        // reset these values to properly reset after exiting the cheat
         process->Write<double>(clientStateAddr + OFFSET_OF(&CClientState::m_nextCmdTime), 0.0);
         process->Write<float>( timescale, 1.0f ); // reset speedhack // reset speedhack
 

@@ -21,8 +21,8 @@
     HANDLER(uintptr_t, 0xed8, boneMatrix)       \
     HANDLER(uintptr_t, 0x1634, activeWeapon)    \
     HANDLER(QAngle, 0x2014, aimPunch)           \
-    HANDLER(QAngle, 0x20A8, viewAngles)         \
-    HANDLER(QAngle, 0x20B8, swayAngles)         \
+    HANDLER(QAngle, 0x20A8, swayAngles)         \
+    HANDLER(QAngle, 0x20B8, viewAngles)         \
     HANDLER(int, 0x2368, lifeState)             \
     HANDLER(Vector, 0x3aa0, eyePos)             \
 

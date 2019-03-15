@@ -1,6 +1,8 @@
 #include "../sdk/Vector.h"
 #include "../sdk/QAngle.h"
 #include "../utils/Logger.h"
+#include "../sdk/CInput.h"
+#include "../sdk/Definitions.h"
 
 namespace Math {
 
@@ -40,4 +42,29 @@ namespace Math {
         return distanceFOV;
     }
 
+    inline void CorrectMovement(CUserCmd* cmd, QAngle oldAngles, float oldForward, float oldSide) {
+        float deltaAngles;
+        float f1;
+        float f2;
+
+        if (oldAngles->y < 0.f)
+            f1 = 360.0f + oldAngles->y;
+        else
+            f1 = oldAngles->y;
+
+        if (cmd->m_viewAngles->y < 0.0f)
+            f2 = 360.0f + cmd->m_viewAngles->y;
+        else
+            f2 = cmd->m_viewAngles->y;
+
+        if (f2 < f1)
+            deltaAngles = abs(f2 - f1);
+        else
+            deltaAngles = 360.0f - abs(f1 - f2);
+
+        deltaAngles = 360.0f - deltaAngles;
+
+        cmd->m_forwardmove = cos(DEG2RAD(deltaAngles)) * oldForward + cos(DEG2RAD(deltaAngles + 90.f)) * oldSide;
+        cmd->m_sidemove = sin(DEG2RAD(deltaAngles)) * oldForward + sin(DEG2RAD(deltaAngles + 90.f)) * oldSide;        
+    }
 }

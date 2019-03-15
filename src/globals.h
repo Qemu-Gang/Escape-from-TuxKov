@@ -32,4 +32,6 @@ inline WinProcess *inputSystem;
 inline uintptr_t inputBase;
 inline uintptr_t apexBase;
 
+inline uintptr_t EACGameClient;
+
 inline int pressedKeys;

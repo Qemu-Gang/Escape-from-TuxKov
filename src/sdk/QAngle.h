@@ -48,6 +48,10 @@ public:
         return !isnan(v[0]) && !isnan(v[1]) && !isnan(v[2]);
     }
 
+    inline bool IsZero() const {
+        return v->x == v->y == v->z == 0.f;
+    }
+
     inline auto operator+(const QAngle& o) const {
         QAngle ret = *this;
         ret.v += o.v;
