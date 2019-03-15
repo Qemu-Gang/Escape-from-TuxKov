@@ -1,6 +1,7 @@
 #pragma once
 #include <cstdint>
 #include "../sdk/Vector.h"
+#include "../sdk/CBaseEntity.h"
 
 class CBaseEntity;
 

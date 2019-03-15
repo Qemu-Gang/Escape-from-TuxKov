@@ -1,4 +1,5 @@
 #pragma once
+#include "../../modules/vmread/hlapi/hlapi.h" // WinProcess
 
 extern WinProcess* process;
 

@@ -4,6 +4,7 @@
 #include "Netvars.h"
 #include "utils/Memutils.h"
 #include "features/Aimbot.h"
+#include "features/Bhop.h"
 #include "features/Glow.h"
 #include "features/DumbExploits.h"
 #include "sdk/CBaseEntity.h"
@@ -160,6 +161,7 @@ static void* MainThread(void*) {
         Logger::Log("GlobalVars: %p\n", (void *) globalVarsAddr);
         Logger::Log("input: %p\n", (void *)inputAddr);
         Logger::Log("clientstate: %p\n", (void*)clientStateAddr);
+        Logger::Log("forcejump: %p\n", (void*)forceJump);
 
         auto t2 = Clock::now();
         printf("Initialization time: %lld ms\n", (long long)std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count());
@@ -203,6 +205,7 @@ static void* MainThread(void*) {
                 localPlayer.Update(GetLocalPlayer());
 
                 Aimbot::Aimbot();
+                Bhop::Bhop( localPlayer );
 
                 lastTick = globalVars.tickCount;
             }

@@ -3,9 +3,7 @@
 #define MULTIPLAYER_BACKUP 300
 
 #define M_PI		3.14159265358979323846	// matches value in gcc v2 math.h
-
 #define M_PI_F		((float)(M_PI))	// Shouldn't collide with anything.
-
 #define M_PHI		1.61803398874989484820 // golden ratio
 
 // NJS: Inlined to prevent floats from being autopromoted to doubles, as with the old system.
@@ -21,7 +19,6 @@
 #define TIME_TO_TICKS( dt )		( (int)( 0.5f + (float)(dt) / TICK_INTERVAL ) )
 #define TICKS_TO_TIME( t )		( TICK_INTERVAL *( t ) )
 
-// Just for random Source engine things that don't need their own file.
 // Keypresses for our inputsystem meme
 #define KEY_ALT (1 << 0)
 #define KEY_MOUSE4 (1 << 1)
