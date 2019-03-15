@@ -40,6 +40,12 @@ void Aimbot::Aimbot() {
     localEye->x = localOrigin->x;
     localEye->y = localOrigin->y;
 
+    uintptr_t weapon = GetActiveWeapon(localPlayer);
+    float bulletVel = process->Read<float>(weapon + 0x1bac);
+
+    if (bulletVel == 1.0f) // 1.0f is fists.
+        return;
+
     CBaseEntity* closestEnt = nullptr;
     float closest = __FLT_MAX__;
     float closestDist = __FLT_MAX__;
@@ -49,8 +55,8 @@ void Aimbot::Aimbot() {
         CBaseEntity &entity = entities[validEntities[entID]];
         if( !entity
             || entity == localPlayer
-            || entity.teamNum == localPlayer.teamNum
-            || entity.lifeState != 0 ) {
+            || entity.GetTeamNum() == localPlayer.GetTeamNum()
+            || entity.GetBleedoutState() != 0 ) {
             continue;
         }
 
@@ -66,15 +72,6 @@ void Aimbot::Aimbot() {
     }
 
     if (!closestEnt)
-        return;
-
-    uintptr_t weapon = GetActiveWeapon(localPlayer);
-
-    if (!weapon)
-        return;
-
-    float bulletVel = process->Read<float>(weapon + 0x1bac);
-    if (bulletVel <= 1.0f)
         return;
 
     Vector enemyVelocity = closestEnt->velocity;
@@ -95,7 +92,7 @@ void Aimbot::Aimbot() {
         process->Write<double>(clientStateAddr + OFFSET_OF(&CClientState::m_nextCmdTime), std::numeric_limits<double>::max());
     }
     else {
-        int32_t commandNr= process->Read<int32_t>(clientStateAddr + OFFSET_OF(&CClientState::m_lastOutGoingCommand));
+        int32_t commandNr= process->Read<int32_t>(clientStateAddr + OFFSET_OF(&CClientState::m_lastUsedCommandNr));
         int32_t targetCommand = (commandNr - 1) % 300;
 
         CUserCmd userCmd = process->Read<CUserCmd>(userCmdArr + targetCommand * sizeof(CUserCmd));

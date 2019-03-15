@@ -2,6 +2,8 @@
 #include "BaseStruct.h"
 #include "OffPtr.h"
 #include "QAngle.h"
+#include "../Netvars.h"
+#include "Definitions.h" // so u can use flags
 
 #define CBASE_ENTITY_OFFSETS(HANDLER)           \
     HANDLER(Vector, 0x120, velocity)            \
@@ -16,14 +18,14 @@
     HANDLER(float, 0x2dc, glowDistance)         \
     HANDLER(int, 0x2f0, iGlowEnable)            \
     HANDLER(bool, 0x380, bGlowEnable)           \
-    HANDLER(int, 0x3e4, teamNum)                \
+    /*HANDLER(int, 0x3e4, teamNum)*/            \
     HANDLER(Vector, 0x414, localAngles)         \
     HANDLER(uintptr_t, 0xed8, boneMatrix)       \
     HANDLER(uintptr_t, 0x1634, activeWeapon)    \
     HANDLER(QAngle, 0x2014, aimPunch)           \
     HANDLER(QAngle, 0x20A8, swayAngles)         \
     HANDLER(QAngle, 0x20B8, viewAngles)         \
-    HANDLER(int, 0x2368, lifeState)             \
+    /*HANDLER(int, 0x2368, lifeState)*/         \
     HANDLER(Vector, 0x3aa0, eyePos)             \
 
 #define CONSTRUCTOR_HANDLER(type, offset, name) , name(baseClass)
@@ -72,6 +74,27 @@ class CBaseEntity
     inline operator bool() const
     {
         return baseClass.address;
+    }
+
+    inline int GetBleedoutState() {
+        static uint32_t offset = Netvars::netvars["CPlayer"]["m_bleedoutState"];
+        if( !offset )
+            return -1;
+        return process->Read<int>( baseClass.address + offset );
+    }
+
+    inline int GetTeamNum() {
+        static uint32_t offset = Netvars::netvars["CBaseEntity"]["m_iTeamNum"];
+        if( !offset )
+            return -1;
+        return process->Read<int>( baseClass.address + offset );
+    }
+
+    inline int GetFlags() {
+        static uint32_t offset = Netvars::netvars["CPlayer"]["m_fFlags"];
+        if( !offset )
+            return -1;
+        return process->Read<int>( baseClass.address + offset );
     }
 
     CBASE_ENTITY_OFFSETS(DEFINE_HANDLER)
