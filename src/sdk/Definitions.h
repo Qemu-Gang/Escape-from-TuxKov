@@ -1,6 +1,12 @@
 #pragma once
 
-// Just for random Source engine things that don't need their own file.
+// Keypresses for our inputsystem meme
+#define KEY_ALT (1 << 0)
+#define KEY_MOUSE4 (1 << 1)
+#define KEY_MOUSE5 (1 << 2)
+
+
+// random Source engine things that don't need their own file.
 
 #define SIGNONSTATE_NONE		0	// no state yet, about to connect
 #define SIGNONSTATE_CHALLENGE	1	// client challenging server, all OOB packets
@@ -41,6 +47,16 @@
 #define IN_GRENADE2		(1 << 24)	// grenade 2
 */
 
-#define KEY_ALT (1 << 0)
-#define KEY_MOUSE4 (1 << 1)
-#define KEY_MOUSE5 (1 << 2)
+#define FL_ONGROUND				(1<<0)	// At rest / on the ground
+/*
+#define FL_DUCKING				(1<<1)	// Player flag -- Player is fully crouched
+#define FL_WATERJUMP			(1<<2)	// player jumping out of water
+#define FL_ONTRAIN				(1<<3)	// Player is _controlling_ a train, so movement commands should be ignored on client during prediction.
+#define FL_INRAIN				(1<<4)	// Indicates the entity is standing in rain
+#define FL_FROZEN				(1<<5)	// Player is frozen for 3rd person camera
+#define FL_ATCONTROLS			(1<<6)	// Player can't move, but keeps key inputs for controlling another entity
+#define FL_CLIENT				(1<<7)	// Is a player
+#define FL_FAKECLIENT			(1<<8)	// Fake client, simulated server side; don't send network messages to them
+// NON-PLAYER SPECIFIC (i.e., not used by GameMovement or the client .dll ) -- Can still be applied to players, though
+#define FL_INWATER				(1<<9)	// In water
+*/

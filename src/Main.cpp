@@ -135,7 +135,7 @@ static void* MainThread(void*) {
 
         MTR_BEGIN("Initialization", "FindOffsets");
         Threading::QueueJobRef(Interfaces::FindInterfaces, MODNAME);
-        //Netvars::FindNetvars( *process, MODNAME );
+        Threading::QueueJobRef(Netvars::CacheNetvars, MODNAME);
 
         for (const Signature& sig : signatures)
             Threading::QueueJobRef(ThreadSignature, &sig);

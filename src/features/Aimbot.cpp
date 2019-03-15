@@ -41,6 +41,12 @@ void Aimbot::Aimbot() {
     localEye->x = localOrigin->x;
     localEye->y = localOrigin->y;
 
+    uintptr_t weapon = GetActiveWeapon(localPlayer);
+    float bulletVel = process->Read<float>(weapon + 0x1bac);
+
+    if (bulletVel == 1.0f) // 1.0f is fists.
+        return;
+
     CBaseEntity* closestEnt = nullptr;
     float closest = __FLT_MAX__;
     float closestDist = __FLT_MAX__;
@@ -50,8 +56,8 @@ void Aimbot::Aimbot() {
         CBaseEntity &entity = entities[validEntities[entID]];
         if( !entity
             || entity == localPlayer
-            || entity.teamNum == localPlayer.teamNum
-            || entity.lifeState != 0 ) {
+            || entity.GetTeamNum() == localPlayer.GetTeamNum()
+            || entity.GetBleedoutState() != 0 ) {
             continue;
         }
 
@@ -69,14 +75,7 @@ void Aimbot::Aimbot() {
     if (!closestEnt)
         return;
 
-    uintptr_t weapon = GetActiveWeapon(localPlayer);
-
     NoSpread(weapon);
-
-    float bulletVel = process->Read<float>(weapon + 0x1bac);
-
-    if (bulletVel == 1.0f) // 1.0f is fists.
-        return;
 
     Vector enemyVelocity = closestEnt->velocity;
 
