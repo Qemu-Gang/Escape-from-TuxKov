@@ -157,7 +157,7 @@ static void* MainThread(void*) {
         }
 
         // Print some sig stuff - useful for reclass analysis etc
-        Logger::Log("Localplayer: %p - TeamNum(%d)\n", (void *) GetLocalPlayer(), localPlayer.GetTeamNum());
+        Logger::Log("Localplayer: %p\n", (void *) GetLocalPlayer());
         Logger::Log("Entlist: %p\n", (void *) entList);
         Logger::Log("GlobalVars: %p\n", (void *) globalVarsAddr);
         Logger::Log("input: %p\n", (void *)inputAddr);
