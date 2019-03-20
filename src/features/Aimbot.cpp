@@ -41,7 +41,7 @@ void Aimbot::Aimbot() {
     localEye->y = localOrigin->y;
 
     uintptr_t weapon = GetActiveWeapon(localPlayer);
-    float bulletVel = process->Read<float>(weapon + 0x1bac);
+    float bulletVel = process->Read<float>(weapon + 0x1BB4);
 
     if (bulletVel == 1.0f) // 1.0f is fists.
         return;
@@ -71,8 +71,10 @@ void Aimbot::Aimbot() {
         }
     }
 
-    if (!closestEnt)
+    if (!closestEnt){
+        Logger::Log("Couldn't find an ent to shoot\n");
         return;
+    }
 
     Vector enemyVelocity = closestEnt->velocity;
 

@@ -143,6 +143,7 @@ static void* MainThread(void*) {
         MTR_BEGIN("Initialization", "FindOffsets");
         Threading::QueueJobRef(Interfaces::FindInterfaces, MODNAME);
         Threading::QueueJobRef(Netvars::CacheNetvars, MODNAME);
+        //Netvars::PrintNetvars(*process, MODNAME);
 
         for (const Signature& sig : signatures)
             Threading::QueueJobRef(ThreadSignature, &sig);
@@ -156,7 +157,7 @@ static void* MainThread(void*) {
         }
 
         // Print some sig stuff - useful for reclass analysis etc
-        Logger::Log("Localplayer: %p\n", (void *) GetLocalPlayer());
+        Logger::Log("Localplayer: %p - TeamNum(%d)\n", (void *) GetLocalPlayer(), localPlayer.GetTeamNum());
         Logger::Log("Entlist: %p\n", (void *) entList);
         Logger::Log("GlobalVars: %p\n", (void *) globalVarsAddr);
         Logger::Log("input: %p\n", (void *)inputAddr);
@@ -179,7 +180,7 @@ static void* MainThread(void*) {
         while (running) {
             globalVars = process->Read<CGlobalVars>(globalVarsAddr);
 
-            // read first 0x344 bytes of clienstate (next member we want after 0x344 is over 100k bytes away)
+            // read first 0x344 bytes of clientstate (next member we want after 0x344 is over 100k bytes away)
             VMemRead(&process->ctx->process, process->proc.dirBase, (uint64_t)&clientState, clientStateAddr, 0x344); 
             netChan = process->Read<CNetChan>((uint64_t)clientState.m_netChan);
 

@@ -4,6 +4,7 @@
 #include "QAngle.h"
 #include "../Netvars.h"
 #include "Definitions.h" // so u can use flags
+#include "../utils/Logger.h"
 
 #define CBASE_ENTITY_OFFSETS(HANDLER)           \
     HANDLER(Vector, 0x120, velocity)            \
@@ -21,12 +22,12 @@
     /*HANDLER(int, 0x3e4, teamNum)*/            \
     HANDLER(Vector, 0x414, localAngles)         \
     HANDLER(uintptr_t, 0xed8, boneMatrix)       \
-    HANDLER(uintptr_t, 0x1634, activeWeapon)    \
+    HANDLER(uintptr_t, 0x163C, activeWeapon)    \
     HANDLER(QAngle, 0x2014, aimPunch)           \
     HANDLER(QAngle, 0x20A8, swayAngles)         \
     HANDLER(QAngle, 0x20B8, viewAngles)         \
     /*HANDLER(int, 0x2368, lifeState)*/         \
-    HANDLER(Vector, 0x3aa0, eyePos)             \
+    HANDLER(Vector, 0x3af0, eyePos)             \
 
 #define CONSTRUCTOR_HANDLER(type, offset, name) , name(baseClass)
 #define DEFINE_HANDLER(type, offset, name) OffPtr<type, offset> name;
@@ -78,22 +79,29 @@ class CBaseEntity
 
     inline int GetBleedoutState() {
         static uint32_t offset = Netvars::netvars["CPlayer"]["m_bleedoutState"];
-        if( !offset )
+        if( !offset ) {
+            Logger::Log("Can't find Netvar [\"CPlayer\"][\"m_bleedoutState\"]!\n");
             return -1;
+        }
         return process->Read<int>( baseClass.address + offset );
     }
 
     inline int GetTeamNum() {
         static uint32_t offset = Netvars::netvars["CBaseEntity"]["m_iTeamNum"];
-        if( !offset )
+        if( !offset ){
+            Logger::Log("Can't find Netvar [\"CBaseEntity\"][\"m_iTeamNum\"]!\n");
             return -1;
+        }
+
         return process->Read<int>( baseClass.address + offset );
     }
 
     inline int GetFlags() {
         static uint32_t offset = Netvars::netvars["CPlayer"]["m_fFlags"];
-        if( !offset )
+        if( !offset ) {
+            Logger::Log("Can't find Netvar [\"CPlayer\"][\"m_fFlags\"]!\n");
             return -1;
+        }
         return process->Read<int>( baseClass.address + offset );
     }
 

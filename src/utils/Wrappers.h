@@ -56,7 +56,7 @@ inline uintptr_t GetActiveWeapon(CBaseEntity &entity) {
 }
 
 inline uintptr_t GetLocalPlayer() {
-    int add = process->Read<int>(apexBase + 0x172263C);
+    int add = process->Read<int>(apexBase + 0x1747EFC);
 
     for (int ent = 1; ent < 100; ent++) {
         uintptr_t entity = GetEntityById(ent);
