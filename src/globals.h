@@ -8,6 +8,8 @@
 #include "sdk/CClientState.h"
 #include <vector>
 #include <cstdint>
+#include <deque>
+#include <map>
 
 inline std::vector<size_t> validEntities;
 inline CBaseEntity entities[100];
@@ -36,3 +38,5 @@ inline uintptr_t apexBase;
 inline uintptr_t EACGameClient;
 
 inline int pressedKeys;
+
+inline std::map<int, QAngle> sway_history;

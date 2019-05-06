@@ -24,6 +24,7 @@
 #include <numeric>
 #include <thread>
 #include <chrono>
+//#include <tclDecls.h>
 
 //#define USE_EAC_LAUNCHER
 
@@ -207,6 +208,12 @@ static void* MainThread(void*) {
 
                 Aimbot::Aimbot();
                 Bhop::Bhop( localPlayer );
+                int32_t commandNr= process->Read<int32_t>(clientStateAddr + OFFSET_OF(&CClientState::m_lastUsedCommandNr));
+                int32_t targetCommand = (commandNr - 1) % 300;
+                CUserCmd userCmd = process->Read<CUserCmd>(userCmdArr + targetCommand * sizeof(CUserCmd));
+                QAngle recoil = Aimbot::RecoilCompensation();
+
+                sway_history.insert({commandNr, recoil});
 
                 lastTick = globalVars.tickCount;
             }
