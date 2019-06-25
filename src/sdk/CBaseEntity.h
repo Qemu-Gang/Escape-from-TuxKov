@@ -23,11 +23,11 @@
     HANDLER(Vector, 0x414, localAngles)         \
     HANDLER(uintptr_t, 0xed8, boneMatrix)       \
     HANDLER(uintptr_t, 0x163C, activeWeapon)    \
-    HANDLER(QAngle, 0x2014, aimPunch)           \
-    HANDLER(QAngle, 0x20A8, swayAngles)         \
-    HANDLER(QAngle, 0x20B8, viewAngles)         \
+    HANDLER(QAngle, 0x2094, aimPunch)           \
+    HANDLER(QAngle, 0x2128, swayAngles)         \
+    HANDLER(QAngle, 0x2138 , viewAngles)        \
     /*HANDLER(int, 0x2368, lifeState)*/         \
-    HANDLER(Vector, 0x3af0, eyePos)             \
+    HANDLER(Vector, 0x3AF4, eyePos)             \
 
 #define CONSTRUCTOR_HANDLER(type, offset, name) , name(baseClass)
 #define DEFINE_HANDLER(type, offset, name) OffPtr<type, offset> name;

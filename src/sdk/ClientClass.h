@@ -60,8 +60,7 @@ public:
     char pad_0008[24]; //0x0008
     class recvTable* dataRecvTable; //0x0020
     char* name; //0x0028
-    char pad_0030[32]; //0x0030
-    void* proxyFn; //0x0050
+    char pad_0030[56];
 };
 
 class propArray
@@ -88,4 +87,5 @@ public:
     class RecvTable* recvTable; //0x0018
     class ClientClass* next; //0x0020
     char pad_0028[8]; //0x0028
+    char* name;
 };
