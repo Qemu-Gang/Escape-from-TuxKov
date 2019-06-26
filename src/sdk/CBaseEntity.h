@@ -28,6 +28,7 @@
     HANDLER(QAngle, 0x20B8, viewAngles)         \
     /*HANDLER(int, 0x2368, lifeState)*/         \
     HANDLER(Vector, 0x3af0, eyePos)             \
+    HANDLER(int, 0x3D4, health)             \
 
 #define CONSTRUCTOR_HANDLER(type, offset, name) , name(baseClass)
 #define DEFINE_HANDLER(type, offset, name) OffPtr<type, offset> name;

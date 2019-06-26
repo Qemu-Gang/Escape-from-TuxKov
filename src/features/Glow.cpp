@@ -30,7 +30,23 @@ static Vector teamColors[] = {
         {255, 0,   255}, // hot pink - 20
 };
 
+Vector getHealthColor(CBaseEntity Entity)
+{
+    Vector result;
+    const float  multiplier = 1.00; //number we multiply our health by to get our colors(multiply our health by 2.55 to give a number we then use for the color. since 255 is the max of any color for our esp ie. 100 full health * 2.55 = 255 or max color)
 
+    int red, green, blue, alpha;	//colors we will solve for based on our entities health
+    int health = Entity.health;	//get entities health
+
+    red = 100 - (health * multiplier);	//find red value (no health = max red, full health = no red)
+    green = health * multiplier;	//find green value (full health = max green, no health = no green)
+    blue = 0;	//no blue on color scale red to green
+    alpha = 255;	//max alpha
+
+    Vector Color(red, green, blue);	//create color and fill it with values
+    return Color;	//return color
+
+}
 static void WriteGlow(CBaseEntity &entity, Vector &colors, float distance) {
     distance *= 0.01905f; // metric
 
@@ -72,10 +88,30 @@ void Glow::Glow() {
             continue;
 
         //WriteGlow(entity, teamColors[std::min((int) entity.teamNum, 20)], localPos.DistTo(entity.origin));
-        WriteGlow(entity, teamColors[0], localPos.DistTo(entity.origin));
+        //WriteGlow(entity, teamColors[0], localPos.DistTo(entity.origin));
+        Vector color = getHealthColor(entity);
+        WriteGlow(entity, color, localPos.DistTo(entity.origin));
     }
 }
 
 void Glow::GlowPlayer(CBaseEntity &entity, Vector &colors) {
     WriteGlow(entity, colors, 100);
 }
+
+/*void Glow::GlowEntities() {
+    Vector localPos = localPlayer.origin;
+
+    for (size_t entID = 0; entID < validEntities.size(); entID++) {
+
+        CBaseEntity &entity = entities[validEntities[entID]];
+        if (entity.GetBaseClass().address == localPlayer)
+            continue;
+        if (entity.GetTeamNum() == localPlayer.GetTeamNum())
+            continue;
+
+        //WriteGlow(entity, teamColors[std::min((int) entity.teamNum, 20)], localPos.DistTo(entity.origin));
+        //WriteGlow(entity, teamColors[0], localPos.DistTo(entity.origin));
+        Vector color = getHealthColor(entity);
+        WriteGlow(entity, color, localPos.DistTo(entity.origin));
+    }
+}*/

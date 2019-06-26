@@ -58,6 +58,12 @@ typedef std::chrono::high_resolution_clock Clock;
 
 static bool sigscanFailed = false;
 
+static void SpreadCompensation() {
+    uintptr_t weapon = GetActiveWeapon(localPlayer);
+    process->Write<float>(weapon + 0x1330, -1.0f);
+    process->Write<float>(weapon + 0x1340, -1.0f);
+}
+
 static void* ThreadSignature(const Signature* sig)
 {
     MTR_SCOPED_TRACE("Initialization", "ThreadedSignature");
@@ -193,7 +199,7 @@ static void* MainThread(void*) {
             // reset fakelag if we arent ingame
             if (clientState.m_signonState != SIGNONSTATE_INGAMEAPEX)
                 process->Write<double>(clientStateAddr + OFFSET_OF(&CClientState::m_nextCmdTime), 0.0);
-
+            //SpreadCompensation();
             if (globalVars.tickCount != lastTick) {
                 MTR_SCOPED_TRACE("MainLoop", "Tick");
 

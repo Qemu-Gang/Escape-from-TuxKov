@@ -28,10 +28,6 @@ static void SwayCompensation(const QAngle &viewAngle, QAngle &angle, int command
     angle -= sway;
 }
 
-static void SpreadCompensation(uintptr_t weapon) {
-    process->Write<float>(weapon + 0x1330, -1.0f);
-    process->Write<float>(weapon + 0x1340, -1.0f);
-}
 
 void Aimbot::Aimbot() {
     MTR_SCOPED_TRACE("Aimbot", "Run");
@@ -53,9 +49,7 @@ void Aimbot::Aimbot() {
     Vector localEye = localPlayer.eyePos;
     localEye->x = localOrigin->x;
     localEye->y = localOrigin->y;
-
     uintptr_t weapon = GetActiveWeapon(localPlayer);
-    SpreadCompensation(weapon);
 
     float bulletVel = process->Read<float>(weapon + 0x1BBC);
 
@@ -93,13 +87,14 @@ void Aimbot::Aimbot() {
     }
 
     Vector enemyVelocity = closestEnt->velocity;
-
+    closestDist *= 1.1f;
     float xTime = closestDist / bulletVel;
     float yTime = xTime;
 
     closestHeadPos->x += xTime * enemyVelocity->x;
     closestHeadPos->y += yTime * enemyVelocity->y;
-    closestHeadPos->z += (yTime * enemyVelocity->z + 375.0f * powf(xTime, 2.0f)) -1.0f;
+    closestHeadPos->z += (yTime * enemyVelocity->z + 375.0f * powf(xTime, 2.0f));
+    //closestHeadPos->z -= 0.5f;
 
 //#define SILENT_AIM
 
