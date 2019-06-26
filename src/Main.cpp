@@ -58,12 +58,6 @@ typedef std::chrono::high_resolution_clock Clock;
 
 static bool sigscanFailed = false;
 
-static void SpreadCompensation() {
-    uintptr_t weapon = GetActiveWeapon(localPlayer);
-    process->Write<float>(weapon + 0x1330, -1.0f);
-    process->Write<float>(weapon + 0x1340, -1.0f);
-}
-
 static void* ThreadSignature(const Signature* sig)
 {
     MTR_SCOPED_TRACE("Initialization", "ThreadedSignature");
@@ -165,6 +159,7 @@ static void* MainThread(void*) {
 
         // Print some sig stuff - useful for reclass analysis etc
         Logger::Log("Localplayer: %p\n", (void *) GetLocalPlayer());
+        Logger::Log("(Linux)Localplayer: %p\n", (void *)&localPlayer);
         Logger::Log("Entlist: %p\n", (void *) entList);
         Logger::Log("GlobalVars: %p\n", (void *) globalVarsAddr);
         Logger::Log("input: %p\n", (void *)inputAddr);
@@ -199,7 +194,7 @@ static void* MainThread(void*) {
             // reset fakelag if we arent ingame
             if (clientState.m_signonState != SIGNONSTATE_INGAMEAPEX)
                 process->Write<double>(clientStateAddr + OFFSET_OF(&CClientState::m_nextCmdTime), 0.0);
-            //SpreadCompensation();
+
             if (globalVars.tickCount != lastTick) {
                 MTR_SCOPED_TRACE("MainLoop", "Tick");
 
@@ -212,6 +207,8 @@ static void* MainThread(void*) {
                 }
                 localPlayer.Update(GetLocalPlayer());
 
+                Vector localPos = localPlayer.eyePos;
+                Logger::Log("Local eyepos: (%f/%f/%f)\n", localPos[0], localPos[1], localPos[2]);
                 Aimbot::Aimbot();
                 Bhop::Bhop( localPlayer );
                 int32_t commandNr= process->Read<int32_t>(clientStateAddr + OFFSET_OF(&CClientState::m_lastUsedCommandNr));

@@ -6,10 +6,11 @@
 #include "globals.h"
 
 bool Netvars::PrintNetvars( WinProcess &process, const char *moduleName ) {
-    uintptr_t clientHeadAddr = PatternScan::FindPattern("[48 8B 1D *?? ?? ?? ??] 48 8B AC 24", moduleName);
+    uintptr_t clientHeadAddr = PatternScan::FindPattern("[48 8B 1D *?? ?? ?? ??] 48 85 DB 74 32 48 8B", moduleName); // xref "ClientDLL_InitRecvTableMgr: overflowed"
     if( !clientHeadAddr ){
         return false;
     }
+    Logger::Log("Printing Netvars...\n");
     uintptr_t recvTable;
     int32_t propNum;
     uint32_t offset;
@@ -41,10 +42,13 @@ bool Netvars::PrintNetvars( WinProcess &process, const char *moduleName ) {
 }
 
 void Netvars::CacheNetvars( const char *moduleName ) {
-    uintptr_t clientHeadAddr = PatternScan::FindPattern("[48 8B 1D *?? ?? ?? ??] 48 8B AC 24", moduleName);
+    //uintptr_t clientHeadAddr = PatternScan::FindPattern("[48 8B 1D *?? ?? ?? ??] 48 8B AC 24", moduleName);
+    uintptr_t clientHeadAddr = PatternScan::FindPattern("[48 8B 1D *?? ?? ?? ??] 48 85 DB 74 32 48 8B", moduleName); // xref "ClientDLL_InitRecvTableMgr: overflowed"
     if( !clientHeadAddr ){
-        Logger::Log("Failed to get clientHeadAddr");
+        Logger::Log("Failed to get clientHeadAddr\n");
         return;
+    } else {
+        Logger::Log("Clienthead @ %p\n", (void*)clientHeadAddr);
     }
     uintptr_t recvTable;
     int32_t propNum;

@@ -28,20 +28,24 @@ static void SwayCompensation(const QAngle &viewAngle, QAngle &angle, int command
     angle -= sway;
 }
 
+static void SpreadCompensation(uintptr_t weapon) {
+    process->Write<float>(weapon + 0x1370, -1.0f);
+    process->Write<float>(weapon + 0x1380, -1.0f);
+}
 
 void Aimbot::Aimbot() {
     MTR_SCOPED_TRACE("Aimbot", "Run");
 
     if (!localPlayer)
         return;
-
-    if (!(pressedKeys & KEY_ALT) && clientState.m_signonState == SIGNONSTATE_INGAMEAPEX) {
+    if (!(pressedKeys & KEY_MOUSE4) && clientState.m_signonState == SIGNONSTATE_INGAMEAPEX) {
         // if we cannot run aimbot and we arent speedhacking reset fakelag
         //if (!(pressedKeys & KEY_ALT))
         process->Write<double>(clientStateAddr + OFFSET_OF(&CClientState::m_nextCmdTime), 0.0);
 
         return;
     }
+
 
     QAngle localAngles = localPlayer.viewAngles;
 
@@ -51,7 +55,7 @@ void Aimbot::Aimbot() {
     localEye->y = localOrigin->y;
     uintptr_t weapon = GetActiveWeapon(localPlayer);
 
-    float bulletVel = process->Read<float>(weapon + 0x1BBC);
+    float bulletVel = process->Read<float>(weapon + 0x1C0C);
 
     if (bulletVel == 1.0f) // 1.0f is fists.
         return;
