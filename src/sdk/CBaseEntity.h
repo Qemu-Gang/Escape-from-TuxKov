@@ -19,16 +19,16 @@
     HANDLER(float, 0x2dc, glowDistance)         \
     HANDLER(int, 0x2f0, iGlowEnable)            \
     HANDLER(bool, 0x380, bGlowEnable)           \
-    /*HANDLER(int, 0x3e4, teamNum)*/            \
+    HANDLER(int, 0x3F0, teamNum)                \
     HANDLER(Vector, 0x414, localAngles)         \
     HANDLER(uintptr_t, 0xed8, boneMatrix)       \
-    HANDLER(uintptr_t, 0x163C, activeWeapon)    \
+    HANDLER(uintptr_t, 0x1684, activeWeapon)    \
     HANDLER(QAngle, 0x2094, aimPunch)           \
     HANDLER(QAngle, 0x2128, swayAngles)         \
-    HANDLER(QAngle, 0x2138 , viewAngles)        \
+    HANDLER(QAngle, 0x2138, viewAngles)         \
     /*HANDLER(int, 0x2368, lifeState)*/         \
     HANDLER(int, 0x3E0, health)                 \
-    HANDLER(Vector, 0x3AF4, eyePos)             \
+    HANDLER(Vector, 0x1B44, eyePos)             \
 
 #define CONSTRUCTOR_HANDLER(type, offset, name) , name(baseClass)
 #define DEFINE_HANDLER(type, offset, name) OffPtr<type, offset> name;
@@ -37,7 +37,7 @@
 class CBaseEntity
 {
   private:
-    char rBuf[0x4000];
+    char rBuf[0x5000];
     ProcessBaseClass baseClass;
   public:
 
