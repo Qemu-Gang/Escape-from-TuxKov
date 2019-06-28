@@ -50,8 +50,7 @@ void Aimbot::Aimbot() {
     QAngle localAngles = localPlayer.viewAngles;
 
     Vector localEye = localPlayer.eyePos;
-    //localEye->x = localOrigin->x;
-    //localEye->y = localOrigin->y;
+
     uintptr_t weapon = GetActiveWeapon(localPlayer);
 
     float bulletVel = process->Read<float>(weapon + 0x1C0C);
@@ -90,13 +89,12 @@ void Aimbot::Aimbot() {
     }
 
     Vector enemyVelocity = closestEnt->velocity;
-    float xTime = closestDist / bulletVel;
-    float yTime = xTime;
     Vector localVelocity = localPlayer.velocity;
+    float time = closestDist / bulletVel;
 
-    closestHeadPos->x += xTime * enemyVelocity->x - xTime * localVelocity->x; // velocity delta, fixes aim being off while moving
-    closestHeadPos->y += yTime * enemyVelocity->y - xTime * localVelocity->y;
-    closestHeadPos->z += (yTime * enemyVelocity->z + 375.0f * powf(xTime, 2.0f));
+    closestHeadPos->x += time * enemyVelocity->x /*- time * localVelocity->x*/; // velocity delta, fixes aim being off while moving
+    closestHeadPos->y += time * enemyVelocity->y /*- time * localVelocity->y*/;
+    closestHeadPos->z += time * enemyVelocity->z + 375.0f * powf(time, 2.0f);
     closestHeadPos->z -= 1.0f;
 
 //#define SILENT_AIM
@@ -145,7 +143,7 @@ void Aimbot::Aimbot() {
     if ((aimAngle->x == 0 && aimAngle->y == 0 && aimAngle->z == 0) || !aimAngle.IsValid()) {
         return;
     }
-    SpreadCompensation(weapon);
+    //SpreadCompensation(weapon);
     SwayCompensation(localAngles, aimAngle);
 
     aimAngle.Normalize();
