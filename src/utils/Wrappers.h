@@ -16,18 +16,18 @@ struct BoneMatrix {
     float z;//0x2c
 };
 
-inline Vector GetBonePos(CBaseEntity &entity, int bone, const Vector &rootpos) {
+inline Vector GetBonePos(CBaseEntity &entity, int bone, const Vector &origin) {
     uintptr_t p_matrix = entity.boneMatrix;
 
     if (!p_matrix)
         return Vector();
 
     BoneMatrix matrix = process->Read<BoneMatrix>(p_matrix + bone * sizeof(BoneMatrix));
-    Vector returnW = Vector(matrix.x, matrix.y, matrix.z);
-    returnW += rootpos;
+    Vector bonePos = Vector(matrix.x, matrix.y, matrix.z);
+    bonePos += origin;
     //fprintf(out, "Bone: (%f, %f, %f)\n", returnW.x, returnW.y, returnW.z);
 
-    return returnW;
+    return bonePos;
 }
 
 inline uintptr_t GetEntityById(ssize_t ent) {

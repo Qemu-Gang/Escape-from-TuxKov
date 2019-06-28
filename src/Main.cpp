@@ -208,7 +208,7 @@ static void* MainThread(void*) {
                 localPlayer.Update(GetLocalPlayer());
 
                 Vector localPos = localPlayer.eyePos;
-                Logger::Log("Local eyepos: (%f/%f/%f)\n", localPos[0], localPos[1], localPos[2]);
+                //Logger::Log("Local eyepos: (%f/%f/%f)\n", localPos[0], localPos[1], localPos[2]);
                 Aimbot::Aimbot();
                 Bhop::Bhop( localPlayer );
                 int32_t commandNr= process->Read<int32_t>(clientStateAddr + OFFSET_OF(&CClientState::m_lastUsedCommandNr));
