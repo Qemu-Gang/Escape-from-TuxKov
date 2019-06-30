@@ -197,18 +197,9 @@ static void* MainThread(void*) {
                 process->Write<double>(clientStateAddr + OFFSET_OF(&CClientState::m_nextCmdTime), 0.0);
 
             if (updateWrites) {
-                /* -=-=-=-=-=-=-=-=-= Frame Operations -=-=-=-=-=-=-=-=-=-=-= */
-
-                MTR_SCOPED_TRACE("MainLoop", "Frame");
-
-                Glow::Glow();
-                Exploits::ServerCrasher();
-                Exploits::Speedhack();
-                lastFrame = globalVars.framecount;
-
                 /* -=-=-=-=-=-=-=-=-= Tick Operations -=-=-=-=-=-=-=-=-=-=-= */
 
-                MTR_SCOPED_TRACE("MainLoop", "Tick");
+                //MTR_SCOPED_TRACE("MainLoop", "Tick");
 
                 validEntities.clear();
                 for (int ent = 1; ent < 100; ent++) {
@@ -232,6 +223,14 @@ static void* MainThread(void*) {
                 sway_history.insert({commandNr, recoil});
                 */
                 lastTick = globalVars.tickCount;
+
+                /* -=-=-=-=-=-=-=-=-= Frame Operations -=-=-=-=-=-=-=-=-=-=-= */
+                //MTR_SCOPED_TRACE("MainLoop", "Frame");
+
+                Glow::Glow();
+                Exploits::ServerCrasher();
+                Exploits::Speedhack();
+                lastFrame = globalVars.framecount;
 
                 /* -=-=-=-=-=-=-=-=-= Memory Operations -=-=-=-=-=-=-=-=-=-=-= */
 
