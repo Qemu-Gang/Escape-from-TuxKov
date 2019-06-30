@@ -72,6 +72,7 @@ static void* ThreadSignature(const Signature* sig)
     return nullptr;
 }
 
+
 static void* MainThread(void*) {
     Logger::Log("Main Loaded.\n");
     pid_t pid;
@@ -207,17 +208,18 @@ static void* MainThread(void*) {
                 }
                 localPlayer.Update(GetLocalPlayer());
 
-                Vector localPos = localPlayer.eyePos;
+                //Vector localPos = localPlayer.eyePos;
                 //Logger::Log("Local eyepos: (%f/%f/%f)\n", localPos[0], localPos[1], localPos[2]);
+
                 Aimbot::Aimbot();
                 Bhop::Bhop( localPlayer );
-                int32_t commandNr= process->Read<int32_t>(clientStateAddr + OFFSET_OF(&CClientState::m_lastUsedCommandNr));
+                /*int32_t commandNr= process->Read<int32_t>(clientStateAddr + OFFSET_OF(&CClientState::m_lastUsedCommandNr));
                 int32_t targetCommand = (commandNr - 1) % 300;
                 CUserCmd userCmd = process->Read<CUserCmd>(userCmdArr + targetCommand * sizeof(CUserCmd));
                 QAngle recoil = Aimbot::RecoilCompensation();
 
                 sway_history.insert({commandNr, recoil});
-
+                */
                 lastTick = globalVars.tickCount;
             }
 
@@ -228,7 +230,6 @@ static void* MainThread(void*) {
                 Glow::Glow();
                 Exploits::ServerCrasher();
                 Exploits::Speedhack();
-
                 lastFrame = globalVars.framecount;
             }
 
@@ -242,9 +243,9 @@ static void* MainThread(void*) {
                 localPlayer.WriteBack(writeList);
 
                 writeList.Commit();
-            } 
+            }
 
-            std::this_thread::sleep_for(std::chrono::microseconds(2000));
+            std::this_thread::sleep_for(std::chrono::microseconds(1000));
         }
 
         // reset these values to properly reset after exiting the cheat

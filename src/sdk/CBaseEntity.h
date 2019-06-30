@@ -29,6 +29,7 @@
     /*HANDLER(int, 0x2368, lifeState)*/         \
     HANDLER(int, 0x3E0, health)                 \
     HANDLER(Vector, 0x1B44, eyePos)             \
+    /*HANDLER(Vector, 0x4264, eyePos)             \*/
 
 #define CONSTRUCTOR_HANDLER(type, offset, name) , name(baseClass)
 #define DEFINE_HANDLER(type, offset, name) OffPtr<type, offset> name;
@@ -37,7 +38,7 @@
 class CBaseEntity
 {
   private:
-    char rBuf[0x5000];
+    char rBuf[0x4000];
     ProcessBaseClass baseClass;
   public:
 
