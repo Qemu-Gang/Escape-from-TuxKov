@@ -196,7 +196,18 @@ static void* MainThread(void*) {
             if (clientState.m_signonState != SIGNONSTATE_INGAMEAPEX)
                 process->Write<double>(clientStateAddr + OFFSET_OF(&CClientState::m_nextCmdTime), 0.0);
 
-            if (globalVars.tickCount != lastTick) {
+            if (updateWrites) {
+                /* -=-=-=-=-=-=-=-=-= Frame Operations -=-=-=-=-=-=-=-=-=-=-= */
+
+                MTR_SCOPED_TRACE("MainLoop", "Frame");
+
+                Glow::Glow();
+                Exploits::ServerCrasher();
+                Exploits::Speedhack();
+                lastFrame = globalVars.framecount;
+
+                /* -=-=-=-=-=-=-=-=-= Tick Operations -=-=-=-=-=-=-=-=-=-=-= */
+
                 MTR_SCOPED_TRACE("MainLoop", "Tick");
 
                 validEntities.clear();
@@ -221,19 +232,9 @@ static void* MainThread(void*) {
                 sway_history.insert({commandNr, recoil});
                 */
                 lastTick = globalVars.tickCount;
-            }
 
-            /* Per Frame Operations */
-            if (globalVars.framecount != lastFrame) {
-                MTR_SCOPED_TRACE("MainLoop", "Frame");
+                /* -=-=-=-=-=-=-=-=-= Memory Operations -=-=-=-=-=-=-=-=-=-=-= */
 
-                Glow::Glow();
-                Exploits::ServerCrasher();
-                Exploits::Speedhack();
-                lastFrame = globalVars.framecount;
-            }
-
-            if (updateWrites) {
                 MTR_SCOPED_TRACE("MainLoop", "WriteBack");
                 WriteList writeList(process);
 
@@ -243,8 +244,8 @@ static void* MainThread(void*) {
                 localPlayer.WriteBack(writeList);
 
                 writeList.Commit();
-            }
 
+            }
             std::this_thread::sleep_for(std::chrono::microseconds(1000));
         }
 
