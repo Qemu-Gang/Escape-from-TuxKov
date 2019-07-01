@@ -38,14 +38,13 @@ void Aimbot::Aimbot() {
 
     if (!localPlayer)
         return;
-    if (!(pressedKeys & KEY_MOUSE4) && clientState.m_signonState == SIGNONSTATE_INGAMEAPEX) {
+
+    if (!(pressedKeys[KEY_LEFTALT]) && clientState.m_signonState == SIGNONSTATE_INGAMEAPEX) {
         // if we cannot run aimbot and we arent speedhacking reset fakelag
         //if (!(pressedKeys & KEY_ALT))
         process->Write<double>(clientStateAddr + OFFSET_OF(&CClientState::m_nextCmdTime), 0.0);
-
         return;
     }
-
 
     QAngle localAngles = localPlayer.viewAngles;
 
@@ -89,12 +88,11 @@ void Aimbot::Aimbot() {
     }
 
     Vector enemyVelocity = closestEnt->velocity;
-    Vector localVelocity = localPlayer.velocity;
     float time = closestDist / bulletVel;
 
-    closestHeadPos->x += time * enemyVelocity->x /*- time * localVelocity->x*/; // velocity delta, fixes aim being off while moving
-    closestHeadPos->y += time * enemyVelocity->y /*- time * localVelocity->y*/;
-    closestHeadPos->z += time * enemyVelocity->z + 375.0f * powf(time, 2.0f);
+    closestHeadPos->x += time * enemyVelocity->x;
+    closestHeadPos->y += time * enemyVelocity->y;
+    closestHeadPos->z += /*time * enemyVelocity->z +*/ 375.0f * powf(time, 2.0f);
     closestHeadPos->z -= 1.0f;
 
 //#define SILENT_AIM
@@ -143,7 +141,8 @@ void Aimbot::Aimbot() {
     if ((aimAngle->x == 0 && aimAngle->y == 0 && aimAngle->z == 0) || !aimAngle.IsValid()) {
         return;
     }
-    //SpreadCompensation(weapon);
+
+    SpreadCompensation(weapon); // $wag
     SwayCompensation(localAngles, aimAngle);
 
     aimAngle.Normalize();

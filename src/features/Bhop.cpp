@@ -3,7 +3,7 @@
 #include "../sdk/CBaseEntity.h"
 
 void Bhop::Bhop( CBaseEntity &localplayer ) {
-    if( !(pressedKeys & KEY_MOUSE5) ){
+    if( !(pressedKeys[KEY_SPACE]) ){
         return;
     }
 

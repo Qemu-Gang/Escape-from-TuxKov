@@ -10,6 +10,7 @@
 #include <cstdint>
 #include <deque>
 #include <map>
+#include <linux/input-event-codes.h>
 
 inline std::vector<size_t> validEntities;
 inline CBaseEntity entities[100];
@@ -30,13 +31,13 @@ inline CNetChan netChan;
 inline CClientState clientState;
 
 inline WinProcess *process;
-inline WinProcess *inputSystem;
 
-inline uintptr_t inputBase;
 inline uintptr_t apexBase;
 
 inline uintptr_t EACGameClient;
 
-inline int pressedKeys;
+inline bool pressedKeys[500]; // keyboard is 0-256 and mouse is > 256, so let's make the array unreasonably big to avoid overwriting other data
+
+static bool running = true;
 
 inline std::map<int, QAngle> sway_history;

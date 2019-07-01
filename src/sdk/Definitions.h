@@ -19,11 +19,6 @@
 #define TIME_TO_TICKS( dt )		( (int)( 0.5f + (float)(dt) / TICK_INTERVAL ) )
 #define TICKS_TO_TIME( t )		( TICK_INTERVAL *( t ) )
 
-// Keypresses for our inputsystem meme
-#define KEY_ALT (1 << 0)
-#define KEY_MOUSE4 (1 << 1)
-#define KEY_MOUSE5 (1 << 2)
-
 
 // random Source engine things that don't need their own file.
 

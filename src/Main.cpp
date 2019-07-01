@@ -13,6 +13,7 @@
 #include "globals.h"
 #include "utils/Wrappers.h"
 #include "utils/minitrace.h"
+#include "utils/InputSystem.h"
 
 #include "m0dular/utils/threading.h"
 #include "m0dular/utils/pattern_scan.h"
@@ -24,6 +25,7 @@
 #include <numeric>
 #include <thread>
 #include <chrono>
+#include <iostream>
 //#include <tclDecls.h>
 
 //#define USE_EAC_LAUNCHER
@@ -38,8 +40,8 @@
 
 #include "Signatures.h"
 
-static bool running = true;
 static thread_t mainThread;
+static thread_t inputSystemThread;
 
 #if (LMODE() == MODE_EXTERNAL())
 int main() {
@@ -101,18 +103,6 @@ static void* MainThread(void*) {
         MTR_BEGIN("Initialization", "FindProcesses");
         ctx.processList.Refresh();
         for (auto &i : ctx.processList) {
-            if (!inputSystem && !strcasecmp("inputsystem.ex", i.proc.name)) {
-                inputSystem = &i;
-
-                for (auto &o : i.modules) {
-                    //Logger::Log("%s\n", o.info.name);
-                    if (!strcasecmp("inputsystem.exe", o.info.name)) {
-                        Logger::Log("Found InputSystem Base: %p\n", (void *) o.info.baseAddress);
-                        inputBase = o.info.baseAddress;
-                    }
-                }
-            }
-
             if (!strcasecmp(PROCNAME, i.proc.name)) {
                 Logger::Log("\nFound Apex Process %s(PID:%ld)", i.proc.name, i.proc.pid);
                 PEB peb = i.GetPeb();
@@ -135,8 +125,8 @@ static void* MainThread(void*) {
         }
         MTR_END("Initialization", "FindProcesses");
 
-        if (!process || !inputSystem) {
-            Logger::Log("Could not Find Apex/InputSystem Process/Base. Exiting...\n");
+        if (!process) {
+            Logger::Log("Could not Find Apex Process/Base. Exiting...\n");
             goto quit;
         }
 
@@ -187,8 +177,6 @@ static void* MainThread(void*) {
             VMemRead(&process->ctx->process, process->proc.dirBase, (uint64_t)&clientState, clientStateAddr, 0x344); 
             netChan = process->Read<CNetChan>((uint64_t)clientState.m_netChan);
 
-            pressedKeys = inputSystem->Read<int>(inputBase + 0x4388);
-
             /* Per Tick Operations */
             updateWrites = (globalVars.tickCount != lastTick || globalVars.framecount != lastFrame);
 
@@ -199,7 +187,7 @@ static void* MainThread(void*) {
             if (updateWrites) {
                 /* -=-=-=-=-=-=-=-=-= Tick Operations -=-=-=-=-=-=-=-=-=-=-= */
 
-                //MTR_SCOPED_TRACE("MainLoop", "Tick");
+                MTR_SCOPED_TRACE("MainLoop", "Tick");
 
                 validEntities.clear();
                 for (int ent = 1; ent < 100; ent++) {
@@ -225,7 +213,7 @@ static void* MainThread(void*) {
                 lastTick = globalVars.tickCount;
 
                 /* -=-=-=-=-=-=-=-=-= Frame Operations -=-=-=-=-=-=-=-=-=-=-= */
-                //MTR_SCOPED_TRACE("MainLoop", "Frame");
+                MTR_SCOPED_TRACE("MainLoop", "Frame");
 
                 Glow::Glow();
                 Exploits::ServerCrasher();
@@ -274,6 +262,7 @@ static void* MainThread(void*) {
 }
 
 static void __attribute__((constructor)) Startup() {
+    inputSystemThread = Threading::StartThread(InputSystem::InputSystem, nullptr, false);
     mainThread = Threading::StartThread(MainThread, nullptr, false);
 }
 
@@ -282,6 +271,7 @@ static void __attribute__((destructor)) Shutdown() {
 
     running = false;
 
+    Threading::JoinThread(inputSystemThread, nullptr);
     Threading::JoinThread(mainThread, nullptr);
 
     Logger::Log("Done\n");
