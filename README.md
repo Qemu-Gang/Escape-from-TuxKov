@@ -5,7 +5,7 @@ DMA cheat
 For QEMU/vfio use.
 
 
-
+Requires evdev-mirror kernel module for input.
 
 
 

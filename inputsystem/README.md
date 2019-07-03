@@ -1,1 +1,0 @@
-# Please check [this](https://github.com/LWSS/evdev-mirror) for setup instructions
