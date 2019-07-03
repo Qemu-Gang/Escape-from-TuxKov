@@ -16,7 +16,6 @@ static void SwayCompensation(const QAngle &viewAngle, QAngle &angle) {
     QAngle dynamic = localPlayer.swayAngles;
     QAngle sway = dynamic - viewAngle;
 
-    Logger::Log("Delta Sway(%f/%f/%f)\n", sway[0], sway[1], sway[2]);
     angle -= sway;
 }
 
