@@ -6,7 +6,7 @@
 struct input_value {
     uint16_t type;
     uint16_t code;
-    uint32_t value;
+    int32_t value;
 };
 
 void *InputSystem::InputSystem(void *) {
@@ -22,13 +22,15 @@ void *InputSystem::InputSystem(void *) {
     while (running) {
         // if zero bytes, keep goin...
         if (!read(fd, &input, sizeof(struct input_value))) {
-            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+            std::this_thread::sleep_for(std::chrono::milliseconds(1));
             continue;
         }
-
+        if( input.type != EV_KEY ){
+            continue;
+        }
         pressedKeys[input.code] = input.value > 0;
         //Logger::Log("Key: %d - state: %d\n", input.code, input.value);
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
     return nullptr;
 }

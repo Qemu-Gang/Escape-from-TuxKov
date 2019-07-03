@@ -6,8 +6,6 @@
 #include "../utils/Wrappers.h"
 #include "../utils/minitrace.h"
 
-//#define SILENT_AIM
-
 QAngle Aimbot::RecoilCompensation() {
     QAngle dynamic = localPlayer.swayAngles;
 
@@ -18,13 +16,7 @@ static void SwayCompensation(const QAngle &viewAngle, QAngle &angle) {
     QAngle dynamic = localPlayer.swayAngles;
     QAngle sway = dynamic - viewAngle;
 
-    angle -= sway;
-}
-
-static void SwayCompensation(const QAngle &viewAngle, QAngle &angle, int commandNr) {
-    QAngle dynamic = sway_history[commandNr];
-    QAngle sway = dynamic - viewAngle;
-
+    Logger::Log("Delta Sway(%f/%f/%f)\n", sway[0], sway[1], sway[2]);
     angle -= sway;
 }
 
@@ -52,10 +44,12 @@ void Aimbot::Aimbot() {
 
     uintptr_t weapon = GetActiveWeapon(localPlayer);
 
-    float bulletVel = process->Read<float>(weapon + 0x1C0C);
+    float bulletVel = process->Read<float>(weapon + 0x1C24);
 
-    if (bulletVel == 1.0f) // 1.0f is fists.
+    if (bulletVel == 1.0f) { // 1.0f is fists.
+        Logger::Log("Not aimbotting on fists\n");
         return;
+    }
 
     CBaseEntity *closestEnt = nullptr;
     float closest = __FLT_MAX__;

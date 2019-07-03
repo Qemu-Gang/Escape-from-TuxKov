@@ -7,28 +7,28 @@
 #include "../utils/Logger.h"
 
 #define CBASE_ENTITY_OFFSETS(HANDLER)           \
-    HANDLER(Vector, 0x120, velocity)            \
-    HANDLER(Vector, 0x12c, origin)              \
-    HANDLER(Vector, 0x1b0, glowCol)             \
-    HANDLER(float, 0x2b0, glowTimes1)           \
-    HANDLER(float, 0x2b4, glowTimes2)           \
-    HANDLER(float, 0x2b8, glowTimes3)           \
-    HANDLER(float, 0x2bc, glowTimes4)           \
-    HANDLER(float, 0x2c0, glowTimes5)           \
-    HANDLER(float, 0x2c4, glowTimes6)           \
-    HANDLER(float, 0x2dc, glowDistance)         \
-    HANDLER(int, 0x2f0, iGlowEnable)            \
+    HANDLER(Vector, 0x130, velocity)            \
+    HANDLER(Vector, 0x13c, origin)              \
+    HANDLER(Vector, 0x1c0, glowCol)             \
+    HANDLER(float, 0x2c0, glowTimes1)           \
+    HANDLER(float, 0x2c4, glowTimes2)           \
+    HANDLER(float, 0x2c8, glowTimes3)           \
+    HANDLER(float, 0x2cc, glowTimes4)           \
+    HANDLER(float, 0x2d0, glowTimes5)           \
+    HANDLER(float, 0x2d4, glowTimes6)           \
+    HANDLER(float, 0x2ec, glowDistance)         \
+    HANDLER(int, 0x300, iGlowEnable)            \
     HANDLER(bool, 0x380, bGlowEnable)           \
     HANDLER(int, 0x3F0, teamNum)                \
-    HANDLER(Vector, 0x414, localAngles)         \
+            HANDLER(Vector, 0x414, localAngles)         \
     HANDLER(uintptr_t, 0xed8, boneMatrix)       \
-    HANDLER(uintptr_t, 0x1684, activeWeapon)    \
-    HANDLER(QAngle, 0x2094, aimPunch)           \
-    HANDLER(QAngle, 0x2128, swayAngles)         \
-    HANDLER(QAngle, 0x2138, viewAngles)         \
+    HANDLER(uintptr_t, 0x1704, activeWeapon)    \
+    HANDLER(QAngle, 0x2114 , aimPunch)           \
+    HANDLER(QAngle, 0x21A8, swayAngles)         \
+    HANDLER(QAngle, 0x21B8, viewAngles)         \
     /*HANDLER(int, 0x2368, lifeState)*/         \
     HANDLER(int, 0x3E0, health)                 \
-    HANDLER(Vector, 0x1B44, eyePos)             \
+    HANDLER(Vector, 0x1BC4, eyePos)             \
     /*HANDLER(Vector, 0x4264, eyePos)             \*/
 
 #define CONSTRUCTOR_HANDLER(type, offset, name) , name(baseClass)
@@ -38,7 +38,7 @@
 class CBaseEntity
 {
   private:
-    char rBuf[0x4000];
+    char rBuf[0x2200];
     ProcessBaseClass baseClass;
   public:
 
