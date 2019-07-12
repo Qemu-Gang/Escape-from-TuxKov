@@ -87,6 +87,12 @@ void Glow::Glow() {
         if (entity.GetTeamNum() == localPlayer.GetTeamNum())
             continue;
 
+        if(entity.GetBleedoutState() != 0) {
+            Vector color = Vector(48,  48,  48);
+
+            WriteGlow(entity, color, 0.0f);
+            continue;
+        }
         //WriteGlow(entity, teamColors[std::min((int) entity.teamNum, 20)], localPos.DistTo(entity.origin));
         //WriteGlow(entity, teamColors[0], localPos.DistTo(entity.origin));
         Vector color = getHealthColor(entity);

@@ -38,6 +38,6 @@ inline uintptr_t EACGameClient;
 
 inline bool pressedKeys[500]; // keyboard is 0-256 and mouse is > 256, so let's make the array unreasonably big to avoid overwriting other data
 
-static bool running = true;
+inline bool running = true;
 
 inline std::map<int, QAngle> sway_history;
