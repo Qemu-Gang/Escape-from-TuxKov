@@ -102,10 +102,12 @@ void Aimbot::Aimbot() {
 
         Vector zAngle = prevPosition[closestID] - enemyPosition;
 
-        if (zAngle->x != 0 || zAngle->y != 0) { // hacky
-            closestHeadPos->z += enemyVelocity->z * time * std::sin(flyAngle) - 375.0f * powf(time, 2.0f);
-        } else { // vertical movement aka moving to a baloon
+        if (zAngle->x == 0 && zAngle->y == 0 && enemyVelocity.Length() > 500.0f) { // ziplining vertically
             closestHeadPos->z += enemyVelocity->z * time + 375.0f * powf(time, 2.0f);
+        } else if (enemyVelocity.Length() > 500.0f) { // ziplining or flying
+            closestHeadPos->z += enemyVelocity->z * time * std::sin(flyAngle);
+        } else { // jumping
+            closestHeadPos->z += enemyVelocity->z * time * std::sin(flyAngle) - 375.0f * powf(time, 2.0f);
         }
     } else {
         closestHeadPos->z += enemyVelocity->z * time + 375.0f * powf(time, 2.0f);

@@ -88,6 +88,15 @@ class CBaseEntity
         return process->Read<int>( baseClass.address + offset );
     }
 
+    inline int GetFlags() {
+        static uint32_t offset = Netvars::netvars["CPlayer"]["m_fFlags"];
+        if( !offset ) {
+            Logger::Log("Can't find Netvar [\"CPlayer\"][\"m_fFlags\"]!\n");
+            return -1;
+        }
+        return process->Read<int>( baseClass.address + offset );
+    }
+
     inline int GetTeamNum() {
         static uint32_t offset = Netvars::netvars["CBaseEntity"]["m_iTeamNum"];
         if( !offset ){
@@ -95,15 +104,6 @@ class CBaseEntity
             return -1;
         }
 
-        return process->Read<int>( baseClass.address + offset );
-    }
-
-    inline int GetFlags() {
-        static uint32_t offset = Netvars::netvars["CPlayer"]["m_fFlags"];
-        if( !offset ) {
-            Logger::Log("Can't find Netvar [\"CPlayer\"][\"m_fFlags\"]!\n");
-            return -1;
-        }
         return process->Read<int>( baseClass.address + offset );
     }
 
