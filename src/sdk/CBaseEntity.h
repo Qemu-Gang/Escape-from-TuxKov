@@ -88,6 +88,15 @@ class CBaseEntity
         return process->Read<int>( baseClass.address + offset );
     }
 
+    inline int GetLifestate() {
+        static uint32_t offset = Netvars::netvars["CPlayer"]["m_lifeState"];
+        if( !offset ) {
+            Logger::Log("Can't find Netvar [\"CPlayer\"][\"m_lifeState\"]!\n");
+            return -1;
+        }
+        return process->Read<int>( baseClass.address + offset );
+    }
+
     inline int GetFlags() {
         static uint32_t offset = Netvars::netvars["CPlayer"]["m_fFlags"];
         if( !offset ) {

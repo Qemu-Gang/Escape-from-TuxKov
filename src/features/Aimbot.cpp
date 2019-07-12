@@ -68,7 +68,8 @@ void Aimbot::Aimbot() {
         if (!entity
             || entity == localPlayer
             || entity.GetTeamNum() == localPlayer.GetTeamNum()
-            || entity.GetBleedoutState() != 0) {
+            || entity.GetBleedoutState() != 0
+            || entity.GetLifestate() != 0) {
             continue;
         }
 
@@ -117,7 +118,8 @@ void Aimbot::Aimbot() {
         if (!entity
             || entity == localPlayer
             || entity.GetTeamNum() == localPlayer.GetTeamNum()
-            || entity.GetBleedoutState() != 0) {
+            || entity.GetBleedoutState() != 0
+            || entity.health <= 1) {
             continue;
         }
         prevPosition[entID] = entity.origin;
