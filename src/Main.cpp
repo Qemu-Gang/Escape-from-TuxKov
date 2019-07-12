@@ -203,6 +203,7 @@ static void* MainThread(void*) {
 
                 Aimbot::Aimbot();
                 Bhop::Bhop( localPlayer );
+                Bhop::Strafe();
                 /*int32_t commandNr= process->Read<int32_t>(clientStateAddr + OFFSET_OF(&CClientState::m_lastUsedCommandNr));
                 int32_t targetCommand = (commandNr - 1) % 300;
                 CUserCmd userCmd = process->Read<CUserCmd>(userCmdArr + targetCommand * sizeof(CUserCmd));
