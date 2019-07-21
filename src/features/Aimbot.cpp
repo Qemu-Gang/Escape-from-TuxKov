@@ -37,7 +37,7 @@ void Aimbot::Aimbot() {
     if (!localPlayer)
         return;
 
-    if (!(pressedKeys[KEY_LEFTALT]) && clientState.m_signonState == SIGNONSTATE_INGAMEAPEX) {
+    if (!(pressedKeys[BTN_SIDE]) && clientState.m_signonState == SIGNONSTATE_INGAMEAPEX) {
         // if we cannot run aimbot and we arent speedhacking reset fakelag
         //if (!(pressedKeys & KEY_ALT))
         process->Write<double>(clientStateAddr + OFFSET_OF(&CClientState::m_nextCmdTime), 0.0);
