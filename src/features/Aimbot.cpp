@@ -68,7 +68,8 @@ void Aimbot::Aimbot() {
         if (!entity
             || entity == localPlayer
             || entity.GetTeamNum() == localPlayer.GetTeamNum()
-            || entity.GetBleedoutState() != 0) {
+            || entity.GetBleedoutState() != 0
+            || entity.GetLifestate() != 0) {
             continue;
         }
 
@@ -102,10 +103,8 @@ void Aimbot::Aimbot() {
 
         Vector zAngle = prevPosition[closestID] - enemyPosition;
 
-        if (zAngle->x == 0 && zAngle->y == 0 && enemyVelocity.Length() > 500.0f) { // ziplining vertically
+        if (enemyVelocity.Length() > 500.0f) { // ziplining or flying
             closestHeadPos->z += enemyVelocity->z * time + 375.0f * powf(time, 2.0f);
-        } else if (enemyVelocity.Length() > 500.0f) { // ziplining or flying
-            closestHeadPos->z += enemyVelocity->z * time * std::sin(flyAngle);
         } else { // jumping
             closestHeadPos->z += enemyVelocity->z * time * std::sin(flyAngle) - 375.0f * powf(time, 2.0f);
         }
@@ -117,7 +116,8 @@ void Aimbot::Aimbot() {
         if (!entity
             || entity == localPlayer
             || entity.GetTeamNum() == localPlayer.GetTeamNum()
-            || entity.GetBleedoutState() != 0) {
+            || entity.GetBleedoutState() != 0
+            || entity.health <= 1) {
             continue;
         }
         prevPosition[entID] = entity.origin;
