@@ -22,13 +22,13 @@ public:
 	uint32_t m_randomSeed; //0x0184
 	char pad_0188[8]; //0x0188
 	vec3 m_eyePos; //0x0190
-	char pad_019C[60]; //0x019C
-	uint32_t m_prevTickcount; //0x01D8
-	uint32_t m_nextTickcount; //0x01DC
-	char pad_01E0[8]; //0x01E0
-	float m_frametime; //0x01E8
-	char pad_01EC[12]; //0x01EC
-}; //Size: 0x01F8
+	char pad_019C[196]; //0x019C
+	uint32_t m_prevTickcount; //0x0260 -- same as curr
+	uint32_t m_nextTickcount; //0x0264
+	char pad_01E0[8];
+	float m_frametime; //0x0270
+	char pad_01EC[12];
+}; //Size: 0x0280
 
 
 class CVerifiedUserCmd : public CUserCmd
@@ -47,12 +47,12 @@ public:
     uint32_t m_buttonBits; //0x00B0
     char pad_00B4[8]; //0x00B4
     float m_pingHoldStartTime; //0x00BC
-    float m_somethingPing; //0x00C0
+    float m_somethingPing; //0x00C0 0.0 when not pinging.
     char pad_00C4[11]; //0x00C4
     bool m_cameraIsOrthographic; //0x00CF
     Vector m_previousViewAngles; //0x00D0
     char pad_00DC[12]; //0x00DC
-    float m_lastForwardMove; //0x00E8
+    float m_lastForwardMove; //0x00E8 -1.0 -> 1.0
     int32_t m_clearInputState; //0x00EC
     CUserCmd* m_commands; //0x00F0 // Does not change or go null
     CVerifiedUserCmd* m_verifiedCommands; //0x00F8 // Does not change or go null

@@ -32,10 +32,11 @@ public:
 	int32_t m_highestClientIndex; //0x02FC
 	char pad_0300[64]; //0x0300
 	int32_t m_maxClients; //0x0340
-	char pad_0344[100752]; //0x0344
-	int32_t m_lastUsedCommandNr; //0x18CD4
-	char pad_18CD8[64]; //0x18CD8
+	char pad_0344[100748]; //0x0344
+	int32_t m_lastUsedCommandNr; //0x18CD0
+	char pad_18CD8[60]; //0x18CD8
 	Vector m_viewAngles; //0x18D18
+	char gimmeMore[0x1000];
 }; //Size: 0x18D24
 
 class CNetChan
