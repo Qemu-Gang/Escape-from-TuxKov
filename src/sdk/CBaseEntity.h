@@ -7,28 +7,34 @@
 #include "../utils/Logger.h"
 
 #define CBASE_ENTITY_OFFSETS(HANDLER)           \
-    HANDLER(Vector, 0x130, velocity)            \
-    HANDLER(Vector, 0x13c, origin)              \
-    HANDLER(Vector, 0x1c0, glowCol)             \
-    HANDLER(float, 0x2c0, glowTimes1)           \
-    HANDLER(float, 0x2c4, glowTimes2)           \
-    HANDLER(float, 0x2c8, glowTimes3)           \
-    HANDLER(float, 0x2cc, glowTimes4)           \
-    HANDLER(float, 0x2d0, glowTimes5)           \
-    HANDLER(float, 0x2d4, glowTimes6)           \
-    HANDLER(float, 0x2ec, glowDistance)         \
-    HANDLER(int, 0x300, iGlowEnable)            \
-    HANDLER(bool, 0x380, bGlowEnable)           \
+    HANDLER(int, 0x8, index)                    \
+    HANDLER(Vector, 0x130, absvelocity)         \
+    HANDLER(Vector, 0x41C, velocity)            \
+    HANDLER(Vector, 0x144, origin)              \
+    HANDLER(Vector, 0x1c8, glowCol)             \
+    HANDLER(float, 0x2c8, glowTimes1)           \
+    HANDLER(float, 0x2cc, glowTimes2)           \
+    HANDLER(float, 0x2d0, glowTimes3)           \
+    HANDLER(float, 0x2d4, glowTimes4)           \
+    HANDLER(float, 0x2d8, glowTimes5)           \
+    HANDLER(float, 0x2dc, glowTimes6)           \
+    HANDLER(float, 0x2e0, glowDistance)         \
+    HANDLER(float, 0x2F4, glowHighlight)        \
+    HANDLER(unsigned int, 0x270, glowOutline)   \
+    HANDLER(int, 0x308, iGlowEnable)            \
+    HANDLER(bool, 0x388, bGlowEnable)           \
     HANDLER(int, 0x3F0, teamNum)                \
-            HANDLER(Vector, 0x414, localAngles)         \
-    HANDLER(uintptr_t, 0xed8, boneMatrix)       \
+    HANDLER(int, 0x1308, id)                    \
+    HANDLER(Vector, 0x414, localAngles)         \
+    HANDLER(uintptr_t, 0xEE0, boneMatrix)       \
     HANDLER(uintptr_t, 0x1704, activeWeapon)    \
-    HANDLER(QAngle, 0x2114 , aimPunch)           \
-    HANDLER(QAngle, 0x21A8, swayAngles)         \
-    HANDLER(QAngle, 0x21B8, viewAngles)         \
+    HANDLER(QAngle, 0x20B4 , aimPunch)          \
+    HANDLER(QAngle, 0x2140, swayAngles)         \
+    HANDLER(QAngle, 0x2150, viewAngles)         \
     /*HANDLER(int, 0x2368, lifeState)*/         \
     HANDLER(int, 0x3E0, health)                 \
-    HANDLER(Vector, 0x1BC4, eyePos)             \
+    HANDLER(Vector, 0x1B64, eyePos)             \
+    //HANDLER(Vector, 0x1C04, eyePos)             \ OLD
     /*HANDLER(Vector, 0x4264, eyePos)             \*/
 
 #define CONSTRUCTOR_HANDLER(type, offset, name) , name(baseClass)
@@ -38,8 +44,9 @@
 class CBaseEntity
 {
   private:
-    char rBuf[0x2200];
+    char rBuf[0x2400];
     ProcessBaseClass baseClass;
+    bool isPlayer = false;
   public:
 
     CBaseEntity(uintptr_t addr = 0)
@@ -57,6 +64,14 @@ class CBaseEntity
         if (newAddress)
             baseClass.address = newAddress;
         process->Read(baseClass.address, rBuf, sizeof(rBuf));
+    }
+
+    void SetPlayerState(bool state = true) {
+        isPlayer = state;
+    }
+
+    bool GetPlayerState() {
+        return isPlayer;
     }
 
     void WriteBack(WriteList& writeList)

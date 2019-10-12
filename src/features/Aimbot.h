@@ -5,5 +5,5 @@
 
 namespace Aimbot {
     void Aimbot();
-    extern QAngle RecoilCompensation();
+    //extern QAngle RecoilCompensation();
 }

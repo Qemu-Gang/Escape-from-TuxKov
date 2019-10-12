@@ -25,7 +25,6 @@ inline Vector GetBonePos(CBaseEntity &entity, int bone, const Vector &origin) {
     BoneMatrix matrix = process->Read<BoneMatrix>(p_matrix + bone * sizeof(BoneMatrix));
     Vector bonePos = Vector(matrix.x, matrix.y, matrix.z);
     bonePos += origin;
-    //fprintf(out, "Bone: (%f, %f, %f)\n", returnW.x, returnW.y, returnW.z);
 
     return bonePos;
 }
@@ -34,7 +33,7 @@ inline uintptr_t GetEntityById(ssize_t ent) {
     uintptr_t baseEntity = process->Read<uintptr_t>(entList);
 
     if (!baseEntity || !ent) {
-        return (uintptr_t)NULL;
+        return (uintptr_t) NULL;
     }
 
     return process->Read<uintptr_t>(entList + (ent << 5));
@@ -42,13 +41,13 @@ inline uintptr_t GetEntityById(ssize_t ent) {
 
 inline uintptr_t GetActiveWeapon(CBaseEntity &entity) {
     uintptr_t weapon = entity.activeWeapon;
-    if(!weapon)
+    if (!weapon)
         return 0;
     //Logger::Log("Weapon ptr: %p\n", (void*)weapon);
 
     weapon &= 0xFFFF;
 
-    if(!weapon)
+    if (!weapon)
         return 0;
     //Logger::Log("ID: %i\n", weapon);
 
@@ -56,7 +55,12 @@ inline uintptr_t GetActiveWeapon(CBaseEntity &entity) {
 }
 
 inline uintptr_t GetLocalPlayer() {
-    int add = process->Read<int>(apexBase + 0x171B384);
+    uintptr_t localPlayerPtr = process->Read<uintptr_t>(apexBase + 0x22E3078);
+    return localPlayerPtr;
+}
+
+inline uintptr_t GetLocalPlayerById() {
+    localPlayerId = process->Read<int>(apexBase + 0x172EA34);
 
     for (int ent = 1; ent < 100; ent++) {
         uintptr_t entity = GetEntityById(ent);
@@ -64,9 +68,48 @@ inline uintptr_t GetLocalPlayer() {
             continue;
 
         int tmpId = process->Read<int>(entity + 0x8);
-        if (tmpId == add) {
+        if (tmpId == localPlayerId) {
             return entity;
         }
     }
     return 0;
+}
+
+inline bool IsPlayer(uintptr_t entity) {
+    char buffer[20];
+    VMemRead(&process->ctx->process, process->proc.dirBase, (uint64_t) buffer, process->Read<uintptr_t>(entity + 0x518), 20);
+    if (buffer[0] == '\0')
+        return false;
+
+    return !strcmp(buffer, "player");
+}
+
+inline bool IsProp(uintptr_t entity) {
+    static bool doOnce = false;
+    if (!doOnce) {
+        doOnce = true;
+        int entityCount = process->Read<int>(apexBase + 0xC016EA0);
+        for (int ent = 1; ent < entityCount; ent++) {
+            char buffer[32];
+            uintptr_t p_entity = GetEntityById(ent);
+            if (!p_entity) continue;
+
+            VMemRead(&process->ctx->process, process->proc.dirBase, (uint64_t) buffer, process->Read<uintptr_t>(p_entity + 0x518), 20);
+
+            int mask = process->Read<int>(p_entity + 0x270);
+            //Logger::Log("string: %s, id: %i, mask: %i\n", buffer, ent, mask);
+        }
+
+    }
+    char buffer[20];
+
+    VMemRead(&process->ctx->process, process->proc.dirBase, (uint64_t) buffer, process->Read<uintptr_t>(entity + 0x518), 20);
+    if (buffer[0] == '\0')
+        return false;
+    bool state = !strcmp(buffer, "prop_survival");
+
+    if (state) {
+        //Logger::Log("%p is a prop\n", entity);
+    }
+    return state;
 }

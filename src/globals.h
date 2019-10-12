@@ -13,15 +13,17 @@
 #include <linux/input-event-codes.h>
 
 inline std::vector<size_t> validEntities;
-inline CBaseEntity entities[100];
+inline CBaseEntity entities[50000];
 
 inline CBaseEntity localPlayer;
+inline uintptr_t aimbotEntity;
 inline uintptr_t entList;
 inline uintptr_t globalVarsAddr;
 inline uintptr_t clientStateAddr;
 inline uintptr_t inputAddr;
 inline uintptr_t timescale;
 inline uintptr_t forceJump;
+inline int localPlayerId;
 
 inline uintptr_t userCmdArr;
 inline uintptr_t verifiedUserCmdArr;

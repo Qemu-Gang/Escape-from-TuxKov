@@ -44,9 +44,10 @@ static thread_t mainThread;
 static thread_t inputSystemThread;
 
 #if (LMODE() == MODE_EXTERNAL())
+
 int main() {
-    while (running){
-        char c = (char)getchar();
+    while (running) {
+        char c = (char) getchar();
 
         if (c == 'Q')
             break;
@@ -54,14 +55,14 @@ int main() {
 
     return 0;
 }
+
 #endif
 
 typedef std::chrono::high_resolution_clock Clock;
 
 static bool sigscanFailed = false;
 
-static void* ThreadSignature(const Signature* sig)
-{
+static void *ThreadSignature(const Signature *sig) {
     MTR_SCOPED_TRACE("Initialization", "ThreadedSignature");
 
     *sig->result = PatternScan::FindPattern(sig->pattern, sig->module);
@@ -75,12 +76,12 @@ static void* ThreadSignature(const Signature* sig)
 }
 
 
-static void* MainThread(void*) {
+static void *MainThread(void *) {
     Logger::Log("Main Loaded.\n");
     pid_t pid;
 
 #if (LMODE() == MODE_EXTERNAL())
-    FILE* pipe = popen("pidof qemu-system-x86_64", "r");
+    FILE *pipe = popen("pidof qemu-system-x86_64", "r");
     fscanf(pipe, "%d", &pid);
     pclose(pipe);
 #else
@@ -135,9 +136,9 @@ static void* MainThread(void*) {
         MTR_BEGIN("Initialization", "FindOffsets");
         Threading::QueueJobRef(Interfaces::FindInterfaces, MODNAME);
         Threading::QueueJobRef(Netvars::CacheNetvars, MODNAME);
-        //Netvars::PrintNetvars(*process, MODNAME);
+        Netvars::PrintNetvars(*process, MODNAME);
 
-        for (const Signature& sig : signatures)
+        for (const Signature &sig : signatures)
             Threading::QueueJobRef(ThreadSignature, &sig);
 
         Threading::FinishQueue(true);
@@ -150,15 +151,15 @@ static void* MainThread(void*) {
 
         // Print some sig stuff - useful for reclass analysis etc
         Logger::Log("Localplayer: %p\n", (void *) GetLocalPlayer());
-        Logger::Log("(Linux)Localplayer: %p\n", (void *)&localPlayer);
+        Logger::Log("(Linux)Localplayer: %p\n", (void *) &localPlayer);
         Logger::Log("Entlist: %p\n", (void *) entList);
         Logger::Log("GlobalVars: %p\n", (void *) globalVarsAddr);
-        Logger::Log("input: %p\n", (void *)inputAddr);
-        Logger::Log("clientstate: %p\n", (void*)clientStateAddr);
-        Logger::Log("forcejump: %p\n", (void*)forceJump);
+        Logger::Log("input: %p\n", (void *) inputAddr);
+        Logger::Log("clientstate: %p\n", (void *) clientStateAddr);
+        Logger::Log("forcejump: %p\n", (void *) forceJump);
 
         auto t2 = Clock::now();
-        printf("Initialization time: %lld ms\n", (long long)std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count());
+        printf("Initialization time: %lld ms\n", (long long) std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count());
 
         Logger::Log("Starting Main Loop.\n");
 
@@ -167,15 +168,15 @@ static void* MainThread(void*) {
         static bool updateWrites = false;
 
         // these buffers wont get re-allocated, getting the address of em' here is fine.
-        userCmdArr = process->Read<uintptr_t>( inputAddr + OFFSET_OF(&CInput::m_commands) );
-        verifiedUserCmdArr = process->Read<uintptr_t>( inputAddr + OFFSET_OF(&CInput::m_verifiedCommands) );
+        userCmdArr = process->Read<uintptr_t>(inputAddr + OFFSET_OF(&CInput::m_commands));
+        verifiedUserCmdArr = process->Read<uintptr_t>(inputAddr + OFFSET_OF(&CInput::m_verifiedCommands));
 
         while (running) {
             globalVars = process->Read<CGlobalVars>(globalVarsAddr);
 
             // read first 0x344 bytes of clientstate (next member we want after 0x344 is over 100k bytes away)
-            VMemRead(&process->ctx->process, process->proc.dirBase, (uint64_t)&clientState, clientStateAddr, 0x344); 
-            netChan = process->Read<CNetChan>((uint64_t)clientState.m_netChan);
+            VMemRead(&process->ctx->process, process->proc.dirBase, (uint64_t) &clientState, clientStateAddr, 0x344);
+            netChan = process->Read<CNetChan>((uint64_t) clientState.m_netChan);
 
             /* Per Tick Operations */
             updateWrites = (globalVars.tickCount != lastTick || globalVars.framecount != lastFrame);
@@ -186,23 +187,36 @@ static void* MainThread(void*) {
 
             if (updateWrites) {
                 /* -=-=-=-=-=-=-=-=-= Tick Operations -=-=-=-=-=-=-=-=-=-=-= */
-
                 MTR_SCOPED_TRACE("MainLoop", "Tick");
 
+                int entityCount = process->Read<int>(apexBase + 0xC016EA0);
+
+                if (!entityCount || entityCount > 50000)
+                    continue;
+
                 validEntities.clear();
-                for (int ent = 1; ent < 100; ent++) {
+
+                for (int ent = 0; ent < entityCount; ent++) {
                     uintptr_t entity = GetEntityById(ent);
                     if (!entity) continue;
+                    bool isPlayer = IsPlayer(entity);
+
+                    if (!isPlayer) {
+                        if (!IsProp(entity)) continue;
+                    }
+
                     validEntities.push_back(ent);
                     entities[ent].Update(entity);
+                    entities[ent].SetPlayerState(isPlayer);
                 }
                 localPlayer.Update(GetLocalPlayer());
 
                 //Vector localPos = localPlayer.eyePos;
                 //Logger::Log("Local eyepos: (%f/%f/%f)\n", localPos[0], localPos[1], localPos[2]);
+                Exploits::Speedhack();
 
                 Aimbot::Aimbot();
-                Bhop::Bhop( localPlayer );
+                Bhop::Bhop(localPlayer);
                 Bhop::Strafe();
                 /*int32_t commandNr= process->Read<int32_t>(clientStateAddr + OFFSET_OF(&CClientState::m_lastUsedCommandNr));
                 int32_t targetCommand = (commandNr - 1) % 300;
@@ -211,42 +225,46 @@ static void* MainThread(void*) {
 
                 sway_history.insert({commandNr, recoil});
                 */
-                lastTick = globalVars.tickCount;
+
 
                 /* -=-=-=-=-=-=-=-=-= Frame Operations -=-=-=-=-=-=-=-=-=-=-= */
                 MTR_SCOPED_TRACE("MainLoop", "Frame");
 
                 Glow::Glow();
                 Exploits::ServerCrasher();
-                Exploits::Speedhack();
                 lastFrame = globalVars.framecount;
 
                 /* -=-=-=-=-=-=-=-=-= Memory Operations -=-=-=-=-=-=-=-=-=-=-= */
 
                 MTR_SCOPED_TRACE("MainLoop", "WriteBack");
                 WriteList writeList(process);
+                for (size_t i : validEntities) {
+                    if (!entities[i].GetPlayerState()) // Do not write item structs; race condition problem
+                        continue;
 
-                for (size_t i : validEntities)
                     entities[i].WriteBack(writeList);
+                }
 
                 localPlayer.WriteBack(writeList);
 
                 writeList.Commit();
 
+                lastTick = globalVars.tickCount;
+            } else {
+                std::this_thread::sleep_for(std::chrono::microseconds(1000));
             }
-            std::this_thread::sleep_for(std::chrono::microseconds(1000));
         }
 
         // reset these values to properly reset after exiting the cheat
         process->Write<double>(clientStateAddr + OFFSET_OF(&CClientState::m_nextCmdTime), 0.0);
-        process->Write<float>( timescale, 1.0f ); // reset speedhack // reset speedhack
+        process->Write<float>(timescale, 1.0f); // reset speedhack // reset speedhack
 
         Logger::Log("Main Loop Ended.\n");
     } catch (VMException &e) {
         Logger::Log("Initialization error: %d\n", e.value);
     }
 
-  quit:
+    quit:
     running = false;
 
     Threading::FinishQueue(true);

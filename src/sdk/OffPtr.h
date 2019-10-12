@@ -52,6 +52,14 @@ struct OffPtr
         return *this;
     }
 
+    inline size_t GetOffset() {
+        return off;
+    }
+
+    inline uintptr_t GetAddress() {
+        return (uintptr_t) (baseClass.address + off);
+    }
+
     inline void WriteBack(WriteList& writeList)
     {
         if (dirty)
