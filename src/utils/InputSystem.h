@@ -1,5 +1,4 @@
-#ifndef APE_EX_INPUTSYSTEM_H
-#define APE_EX_INPUTSYSTEM_H
+#pragma once
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -16,6 +15,3 @@
 namespace InputSystem {
     extern void *InputSystem(void *);
 }
-
-
-#endif //APE_EX_INPUTSYSTEM_H

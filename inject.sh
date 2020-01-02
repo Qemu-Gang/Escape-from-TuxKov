@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 
 qemu_pid=$(pidof qemu-system-x86_64)
-filename="$(pwd)/build/libApe-ex.so"
+filename="$(pwd)/build/libHalo-ReachIn.so"
 
 if grep -q "$filename" /proc/"$qemu_pid"/maps; then
-    /bin/echo -e "\\e[33mApe-ex is already injected... Aborting...\\e[0m"
+    /bin/echo -e "\\e[33mLibrary is already injected... Aborting...\\e[0m"
     exit
 fi
 

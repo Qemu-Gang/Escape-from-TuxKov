@@ -1,4 +1,5 @@
 #include "InputSystem.h"
+#include "Logger.h"
 
 // https://github.com/LWSS/evdev-mirror
 

@@ -1,17 +1,7 @@
 #include "vmread/hlapi/hlapi.h"
 #include "utils/Logger.h"
-#include "Interfaces.h"
-#include "Netvars.h"
-#include "utils/Memutils.h"
-#include "features/Aimbot.h"
-#include "features/Bhop.h"
-#include "features/Glow.h"
-#include "features/DumbExploits.h"
-#include "sdk/CBaseEntity.h"
-#include "sdk/CGlobalVars.h"
 #include "utils/Memutils.h"
 #include "globals.h"
-#include "utils/Wrappers.h"
 #include "utils/minitrace.h"
 #include "utils/InputSystem.h"
 
@@ -26,7 +16,9 @@
 #include <thread>
 #include <chrono>
 #include <iostream>
-//#include <tclDecls.h>
+
+#include "sdk/tags/weap.h"
+#include "sdk/tags/matg.h"
 
 //#define USE_EAC_LAUNCHER
 
@@ -34,8 +26,9 @@
 #define PROCNAME "EasyAntiCheat_"
 #define MODNAME "EasyAntiCheat_launcher.exe"
 #else
-#define PROCNAME "r5apex.exe"
-#define MODNAME "R5Apex.exe"
+#define PROCNAME "MCC-Win64-Ship"
+#define PROCFULLNAME "MCC-Win64-Shipping.exe"
+#define MODNAME "haloreach.dll"
 #endif
 
 #include "Signatures.h"
@@ -49,13 +42,12 @@ int main() {
     while (running) {
         char c = (char) getchar();
 
-        if (c == 'Q')
+        if (c == 'Q' || c =='q')
             break;
     }
 
     return 0;
 }
-
 #endif
 
 typedef std::chrono::high_resolution_clock Clock;
@@ -75,6 +67,27 @@ static void *ThreadSignature(const Signature *sig) {
     return nullptr;
 }
 
+static bool ParseStringTable( const char *buffer, size_t bufferSize, std::vector<std::string> *out ) {
+    char currString[256];
+    int index = 0;
+    for( int i = 0; i < bufferSize; i++ ){
+        currString[index] = buffer[i];
+        if( currString[index] == '\0' ){
+            index = 0;
+            out->emplace_back( currString );
+            continue;
+        }
+
+
+        index++;
+        if( index >= 255 ){
+            Logger::Log("Error - string at buffer index(%d) is too long!\n", i);
+            return false;
+        }
+    }
+
+    return true;
+}
 
 static void *MainThread(void *) {
     Logger::Log("Main Loaded.\n");
@@ -90,11 +103,12 @@ static void *MainThread(void *) {
 
 #ifdef MTR_ENABLED
     Logger::Log("Initialize performance tracing...\n");
-    mtr_init("/tmp/ape-ex-trace.json");
-    MTR_META_PROCESS_NAME("Ape-ex");
+    mtr_init("/tmp/halo-reach-around.json");
+    MTR_META_PROCESS_NAME("Halo");
 #endif
 
     Threading::InitThreads();
+    auto t1 = Clock::now();
 
     try {
         MTR_BEGIN("Initialization", "InitCTX");
@@ -104,8 +118,9 @@ static void *MainThread(void *) {
         MTR_BEGIN("Initialization", "FindProcesses");
         ctx.processList.Refresh();
         for (auto &i : ctx.processList) {
+            //Logger::Log("\nFound Process %s(PID:%ld)", i.proc.name, i.proc.pid);
             if (!strcasecmp(PROCNAME, i.proc.name)) {
-                Logger::Log("\nFound Apex Process %s(PID:%ld)", i.proc.name, i.proc.pid);
+                Logger::Log("\nFound Process %s(PID:%ld)", i.proc.name, i.proc.pid);
                 PEB peb = i.GetPeb();
                 short magic = i.Read<short>(peb.ImageBaseAddress);
                 uintptr_t translatedBase = VTranslate(&i.ctx->process, i.proc.dirBase, peb.ImageBaseAddress);
@@ -116,148 +131,319 @@ static void *MainThread(void *) {
 
                 for (auto &o : i.modules) {
                     if (!strcasecmp(MODNAME, o.info.name)) {
-                        apexBase = o.info.baseAddress;
-                        for (auto &u : o.exports)
-                            Logger::Log("\t\t%lx\t%s\n", u.address, u.name);
+                        haloReachBase = o.info.baseAddress;
+                        Logger::Log("Found Module: (%s) - baseAddr(%p)\n", o.info.name, o.info.baseAddress);
+                    } else if (!strcasecmp(PROCFULLNAME, o.info.name)) {
+                        mccBase = o.info.baseAddress;
+                        Logger::Log("Found Module: (%s) - baseAddr(%p)\n", o.info.name, o.info.baseAddress);
                     }
                 }
-
             }
         }
         MTR_END("Initialization", "FindProcesses");
 
         if (!process) {
-            Logger::Log("Could not Find Apex Process/Base. Exiting...\n");
+            Logger::Log("Could not Find Process/Base. Exiting...\n");
             goto quit;
         }
 
-        auto t1 = Clock::now();
-
-        MTR_BEGIN("Initialization", "FindOffsets");
-        Threading::QueueJobRef(Interfaces::FindInterfaces, MODNAME);
-        Threading::QueueJobRef(Netvars::CacheNetvars, MODNAME);
-        Netvars::PrintNetvars(*process, MODNAME);
+        MTR_BEGIN("Initialization", "FindSignatures");
 
         for (const Signature &sig : signatures)
             Threading::QueueJobRef(ThreadSignature, &sig);
 
         Threading::FinishQueue(true);
-        MTR_END("Initialization", "FindOffsets");
 
         if (sigscanFailed) {
-            Logger::Log("One of the sigs failed. Stopping.\n");
+            Logger::Log("One of the sigs failed. Stopping. (Make sure you are in-game)\n");
             goto quit;
         }
 
-        // Print some sig stuff - useful for reclass analysis etc
-        Logger::Log("Localplayer: %p\n", (void *) GetLocalPlayer());
-        Logger::Log("(Linux)Localplayer: %p\n", (void *) &localPlayer);
-        Logger::Log("Entlist: %p\n", (void *) entList);
-        Logger::Log("GlobalVars: %p\n", (void *) globalVarsAddr);
-        Logger::Log("input: %p\n", (void *) inputAddr);
-        Logger::Log("clientstate: %p\n", (void *) clientStateAddr);
-        Logger::Log("forcejump: %p\n", (void *) forceJump);
+        Logger::Log("g_tag_addresses @ Win(%p)\n", g_tag_addresses);
+
+        MTR_END("Initialization", "FindSignatures");
+
+        MTR_BEGIN("Initialization", "Setup");
+
+
+        currentMapAddr = process->Read<uintptr_t>( currentMapAddr + 8 );
+        Logger::Log("CurrentmapAddr(%p)\n", currentMapAddr);
+        HaloMapHeader currentMap = process->Read<HaloMapHeader>( currentMapAddr );
+
+        if( currentMap.header != 0x68656164 ){ // "daeh" - 0x68656164 -- seems to be zero when not in-game
+            Logger::Log("Map header is invalid, we are not in game or shit is broke.\n");
+            goto quit;
+        }
+        Logger::Log("Valid Map Header found.\n");
+
+        // Load Map StringIDs - they normally start with nil, "default", "reload_1", "reload_2", "chamber_1".
+        // Ranges from ~30-55k strings per map
+        std::vector<std::string> stringIDs;
+        // Load Map filenameStrings - starts with nil, nil, nil, "i've got a lovely bunch of coconuts", "there they are standing in a row"
+        // About 10-15k filenames per map.
+        std::vector<std::string> filenameStrings;
+        // Basically typenames that tags can use, uses StringID.
+        std::vector<ClassTableEntry> classes;
+        // Tags are the variables/properties of the map
+        std::vector<TagTableEntry> tags;
+
+        currentMapStringIDTable = process->Read<uintptr_t>( currentMapStringIDTable );
+        currentMapStringIDTable += 0x38;
+        currentMapStringIDTable = process->Read<uintptr_t>( currentMapStringIDTable );
+
+        uint64_t value = process->Read<uint64_t>( currentMapStringIDTable + 0x8 );
+
+        Logger::Log("Virtual base addr(%p)\n", currentMap.virtualBaseAddr);
+
+        /// happens on boardwalk.. very hacky lol
+        if( value ){
+            Logger::Log("Warning: non-zero value found in stringblobs(%x)... Trying hack\n", value);
+            currentMapStringIDTable += 0x10;
+            currentMapStringIDTable = process->Read<uintptr_t>( currentMapStringIDTable );
+        }
+        currentMapStringIDTable = process->Read<uintptr_t>( currentMapStringIDTable );
+
+        char *buffer = new char[ currentMap.stringDataTableSize + 1 ];
+
+        process->Read( currentMapStringIDTable, buffer, currentMap.stringDataTableSize );
+        if( !ParseStringTable( buffer, currentMap.stringDataTableSize, &stringIDs ) ){
+            delete buffer;
+            Logger::Log("Failed to parse StringIDs!\n");
+            goto quit;
+        }
+
+        delete buffer;
+        buffer = new char[currentMap.fileNameTableSize + 1 ];
+
+        ssize_t readStatus = process->Read( currentMap.fileNameData, buffer, currentMap.fileNameTableSize );
+        if( readStatus < 0 ){
+            Logger::Log("Hmmm read failed.\n");
+            goto quit;
+        }
+        if( !ParseStringTable( buffer, currentMap.fileNameTableSize, &filenameStrings ) ){
+            delete buffer;
+            Logger::Log("Failed to parse filenames in map!\n");
+            goto quit;
+        }
+
+        delete buffer;
+
+
+        // Check for valid starting values - these are the same for all maps.
+        if( strcmp( stringIDs[1].c_str(), "default" )  != 0 ){
+            Logger::Log("Error: String parsing failed(is invalid) :(\n");
+            goto quit;
+        }
+        if( strcmp( filenameStrings[3].c_str(), "i've got a lovely bunch of coconuts" ) != 0 ){
+            Logger::Log("Error: filename parsing failed(is invalid)\n");
+            goto quit;
+        }
+
+        Logger::Log("Found %d StringIDs and %d filenameStrings\n", stringIDs.size(), filenameStrings.size());
+
+        // This "indexHeader" area of memory contains pointers to several Arrays/Tables and their sizes
+        IndexHeader indexHeader = process->Read<IndexHeader>( (uintptr_t)currentMap.indexHeader );
+        buffer = new char[ indexHeader.numClasses.value * sizeof(ClassTableEntry) ];
+        process->Read( (uintptr_t)indexHeader.classTable, buffer, indexHeader.numClasses.value * sizeof(ClassTableEntry) );
+
+        for( int i = 0; i < (indexHeader.numClasses.value * sizeof(ClassTableEntry)); i+=sizeof(ClassTableEntry) ){
+            ClassTableEntry *entry = (ClassTableEntry*)&buffer[i];
+            classes.push_back( *entry );
+        }
+
+        delete buffer;
+
+        buffer = new char[ indexHeader.numTags.value * sizeof(TagTableEntry) ];
+        process->Read( (uintptr_t)indexHeader.tagTable, buffer, indexHeader.numTags.value * sizeof(TagTableEntry) );
+
+        for( int i = 0; i < (indexHeader.numTags.value * sizeof(TagTableEntry)); i+=sizeof(TagTableEntry) ){
+            TagTableEntry *entry = (TagTableEntry*)&buffer[i];
+            tags.push_back( *entry );
+        }
+
+
+        delete buffer;
+
+        Logger::Log("Found %d classes and %d tags\n", classes.size(), tags.size());
+
+
+        /*
+        for( int i = 0; i < stringIDs.size(); i++ ){
+            Logger::Log("String [%d] - (%s)\n", i, stringIDs[i].c_str());
+        }
+
+        for( int i = 0 ; i < filenameStrings.size(); i++ ){
+            Logger::Log("Filename [%d] - (%s)\n", i, filenameStrings[i].c_str());
+        }
+
+        for( int i = 0; i < classes.size(); i++ ){
+            Logger::Log("class %d - magic(%d) - parent(%d) -gparent(%d) - stringid(%d)\n", i, classes[i].magic, classes[i].parentMagic, classes[i].grandparentMagic, classes[i].stringID);
+        }
+        */
+
+        debugPointerConverter = new SectionPointerConverter( currentMap.sections[SECTION_DEBUG], currentMap.sectionMasks[SECTION_DEBUG] );
+        resourcePointerConverter = new SectionPointerConverter( currentMap.sections[SECTION_RESOURCE], currentMap.sectionMasks[SECTION_RESOURCE] );
+        tagBufferPointerConverter = new SectionPointerConverter( currentMap.sections[SECTION_TAG], currentMap.sectionMasks[SECTION_TAG] );
+        localePointerConverter = new SectionPointerConverter( currentMap.sections[SECTION_LOCALIZATION], currentMap.sectionMasks[SECTION_LOCALIZATION] );
+
+        int sidIndexTableOff = debugPointerConverter->PointerToOffset( currentMap.stringIndexTableOffset );
+        int sidDataOff = debugPointerConverter->PointerToOffset( currentMap.stringDataTableOffset );
+
+        int nameIndexTableOff = debugPointerConverter->PointerToOffset( currentMap.fileIndexTableOffset );
+        int nameDataOff = debugPointerConverter->PointerToOffset( currentMap.fileNameTableOffset );
+
+        int tagDataOffset = tagBufferPointerConverter->PointerToOffset( currentMap.tagBufferOffset );
+        int tagDataSize = currentMap.tagBufferSize;
+
+        matg globals;
+        PlayerTraitDefaultsSubTag playerTraits;
+        ShieldsAndHealthSubTag shieldsAndHealth;
+        WeaponsAndDamageSubTag weaponsAndDamage;
+        MovementSubTag movement;
+
+        weap gun;
+        MagazineSubTag gunMag;
+        BarrelsSubTag gunBarrel;
+        TriggerSubTag gunTrigger;
+
+        Logger::Log("Tag base Addr(%p) - tag[0](%p)\n", currentMap.partitions[5].loadAddr, ExpandPointer( tags[0].memoryAddressShortPtr ) );
+
+        for( int i = 0; i < indexHeader.numTags.value; i++ ){
+
+            const char *className = nullptr;
+            ClassTableEntry *tagClass = nullptr;
+            const char *fileName = nullptr;
+
+            if( tags[i].classIndex > 0 && tags[i].classIndex < classes.size() ){
+                tagClass = &classes[tags[i].classIndex];
+                className = AllocClassMagicToString(tagClass->magic);
+                fileName = filenameStrings[i].c_str();
+
+                if( className && !strcmp("matg", className) ){
+                    Logger::Log("Tag %d - class(%s) -filename(%s)- datumValue(%x) - addr(%p) -actualAddr(%p)\n", i, className, fileName,
+                                DatumIndexToValue(tags[i].datumIndexSalt, i), ExpandPointer( tags[i].memoryAddressShortPtr ),
+                                currentMap.partitions[5].loadAddr + (ExpandPointer( tags[i].memoryAddressShortPtr ) - ExpandPointer(tags[0].memoryAddressShortPtr)));
+                    globals = process->Read<matg>( currentMap.partitions[5].loadAddr + (ExpandPointer( tags[i].memoryAddressShortPtr ) - ExpandPointer(tags[0].memoryAddressShortPtr)) );
+
+                    Logger::Log("PlayerTraitDefaults @%p\n", currentMap.partitions[5].loadAddr + ((uint64_t)globals.playerTraitDefaults.GetTagOffset() - ExpandPointer(tags[0].memoryAddressShortPtr)) );
+                    playerTraits = process->Read<PlayerTraitDefaultsSubTag>( currentMap.partitions[5].loadAddr + ((uint64_t)globals.playerTraitDefaults.GetTagOffset() - ExpandPointer(tags[0].memoryAddressShortPtr)) );
+
+
+                    /* I dont think any of these work in online multiplayer lol */
+                    shieldsAndHealth = process->Read<ShieldsAndHealthSubTag>( currentMap.partitions[5].loadAddr + ((uint64_t)playerTraits.shieldsAndHealth.GetTagOffset() - ExpandPointer(tags[0].memoryAddressShortPtr)));
+                    shieldsAndHealth.deathImmunity = DeathImmunity_t::ENABLED;
+                    shieldsAndHealth.headShotImmunity = HeadShotImmunity_t::ENABLED;
+                    shieldsAndHealth.assassinationImmunity = AssassinationImmunity_t::ENABLED;
+                    shieldsAndHealth.shieldRechargeRate = ShieldRechargeRate_t::PERCENT_200;
+                    shieldsAndHealth.shieldMultiplier = ShieldMultiplier_t::OVERSHIELD_4X;
+                    shieldsAndHealth.dmgResist = DamageResist_t::INVULNERABLE;
+                    shieldsAndHealth.hpMultiplier = HealthMultiplier_t::PERCENT_400;
+                    shieldsAndHealth.hpRechargeRate = HealthRechargeRate_t::PERCENT_200;
+                    process->Write<ShieldsAndHealthSubTag>( currentMap.partitions[5].loadAddr + ((uint64_t)playerTraits.shieldsAndHealth.GetTagOffset() - ExpandPointer(tags[0].memoryAddressShortPtr)), shieldsAndHealth );
+
+                    weaponsAndDamage = process->Read<WeaponsAndDamageSubTag>( currentMap.partitions[5].loadAddr + ((uint64_t)playerTraits.weaponsAndDamage.GetTagOffset() - ExpandPointer(tags[0].memoryAddressShortPtr)) );
+                    weaponsAndDamage.infiniteAmmo = InfiniteAmmo_t::BOTTOMLESS_CLIP;
+                    weaponsAndDamage.infiniteEquipment = InfiniteEquipment_t::ENABLED;
+                    weaponsAndDamage.dmgModifier = DamageModifier_t::INSTANT_KILL;
+                    weaponsAndDamage.dmgMeleeModifier = DamageModifier_t::INSTANT_KILL;
+                    process->Write<WeaponsAndDamageSubTag>( currentMap.partitions[5].loadAddr + ((uint64_t)playerTraits.weaponsAndDamage.GetTagOffset() - ExpandPointer(tags[0].memoryAddressShortPtr)), weaponsAndDamage );
+
+                    movement = process->Read<MovementSubTag>( currentMap.partitions[5].loadAddr + ((uint64_t)playerTraits.movement.GetTagOffset() - ExpandPointer(tags[0].memoryAddressShortPtr)) );
+                    movement.doubleJump = DoubleJump_t::ENABLED;
+                    movement.jumpHeight = 300;
+                    movement.playerSpeed = PlayerSpeed_t::PERCENT_300;
+                    process->Write<MovementSubTag>( currentMap.partitions[5].loadAddr + ((uint64_t)playerTraits.movement.GetTagOffset() - ExpandPointer(tags[0].memoryAddressShortPtr)), movement );
+                }
+
+                if( className && !strcmp("weap", className )){
+                    Logger::Log("Tag %d - class(%s) -filename(%s)- datumValue(%x) - addr(%p) -actualAddr(%p)\n", i, className, fileName,
+                                DatumIndexToValue(tags[i].datumIndexSalt, i), ExpandPointer( tags[i].memoryAddressShortPtr ),
+                                currentMap.partitions[5].loadAddr + (ExpandPointer( tags[i].memoryAddressShortPtr ) - ExpandPointer(tags[0].memoryAddressShortPtr)));
+                    gun = process->Read<weap>( currentMap.partitions[5].loadAddr + (ExpandPointer( tags[i].memoryAddressShortPtr ) - ExpandPointer(tags[0].memoryAddressShortPtr)) );
+                    gunMag = process->Read<MagazineSubTag>( currentMap.partitions[5].loadAddr + ((uint64_t)gun.magazines.GetTagOffset() - ExpandPointer(tags[0].memoryAddressShortPtr)) );
+                    gunBarrel = process->Read<BarrelsSubTag>( currentMap.partitions[5].loadAddr + ((uint64_t)gun.barrels.GetTagOffset() - ExpandPointer(tags[0].memoryAddressShortPtr)) );
+                    gunTrigger = process->Read<TriggerSubTag>( currentMap.partitions[5].loadAddr + ((uint64_t)gun.newTriggers.GetTagOffset() - ExpandPointer(tags[0].memoryAddressShortPtr)) );
+                    Logger::Log("Addr of magazine(%p)\n", currentMap.partitions[5].loadAddr + ((uint64_t)gun.magazines.GetTagOffset() - ExpandPointer(tags[0].memoryAddressShortPtr)) );
+                    Logger::Log("Addr of barrels(%p)\n", currentMap.partitions[5].loadAddr + ((uint64_t)gun.barrels.GetTagOffset() - ExpandPointer(tags[0].memoryAddressShortPtr)) );
+                    Logger::Log("Addr of trigger(%p)\n", currentMap.partitions[5].loadAddr + ((uint64_t)gun.newTriggers.GetTagOffset() - ExpandPointer(tags[0].memoryAddressShortPtr)) );
+
+                    gunMag.magazineSize = 500;
+                    gunMag.startingAmmo = 9999;
+                    gunMag.maxReserveAmmo = 9999;
+                    gunMag.maxRoundsTotal = 9999;
+                    gunMag.roundsPerReload = 500;
+                    gunMag.reloadTime = 0.05f;
+
+                    process->Write<MagazineSubTag>( currentMap.partitions[5].loadAddr + ((uint64_t)gun.magazines.GetTagOffset() - ExpandPointer(tags[0].memoryAddressShortPtr)), gunMag  );
+
+                    gunBarrel.roundsPerSecondMin = 20.0f;
+                    gunBarrel.roundsPerSecondMax = 20.0f;
+                    gunBarrel.fireRecoveryTime = 0.02f;
+                    gunBarrel.bloomRateOfDecay = 99.0f;
+                    gunBarrel.errorAngleMax = 0.0f;
+                    gunBarrel.errorAngleMaxRotation = 0.0f;
+                    gunBarrel.errorAngleMin = 0.0f;
+
+                    process->Write<BarrelsSubTag>( currentMap.partitions[5].loadAddr + ((uint64_t)gun.barrels.GetTagOffset() - ExpandPointer(tags[0].memoryAddressShortPtr)), gunBarrel );
+
+                    gun.autoaimAngle = 85.0f;
+                    gun.autoaimRangeLong = 450.0f;
+                    gun.autoaimRangeShort = 234.0f;
+                    gun.magnetismRangeLong = 234.0f;
+                    gun.magnetismRangeShort = 10.0f;
+                    gun.magnetismAngle = 450.0f;
+                    gun.weaponFlags |= (uint32_t)WeaponFlags_t::THIRD_PERSON_CAMERA;
+
+
+                    process->Write<weap>( currentMap.partitions[5].loadAddr + (ExpandPointer( tags[i].memoryAddressShortPtr ) - ExpandPointer(tags[0].memoryAddressShortPtr)), gun );
+
+                    gunTrigger.behavior = TriggerBehavior_t::SPEW;
+
+                    process->Write<TriggerSubTag>( currentMap.partitions[5].loadAddr + ((uint64_t)gun.newTriggers.GetTagOffset() - ExpandPointer(tags[0].memoryAddressShortPtr)), gunTrigger );
+                }
+
+                delete className;
+            }
+
+        }
+
+        for( int i = 0; i < 4; i++ ){
+            Logger::Log("Section (%d) - Offset(%p) - Size(%x)\n", i, (currentMap.sectionMasks[i] + currentMap.sections[i].virtualAddress), currentMap.sections[i].size);
+        }
+        for( int i = 0; i < 6; i++ ){
+            Logger::Log("Partition (%d) - @(%p)->(%p) - Size(%x)\n", i, currentMap.partitions[i].loadAddr,
+                        (uintptr_t(currentMap.partitions[i].loadAddr) + currentMap.partitions[i].size), currentMap.partitions[i].size);
+        }
+        for( int i = 0; i < 4; i++ ){
+            Logger::Log("MemoryBuffer (%d) - @(%p)\n", i, currentMap.memoryBuffers[i]);
+        }
+
+        Logger::Log("tagDataOffset -(%x) - tagDataSize(%x)\n", tagDataOffset, tagDataSize);
+        Logger::Log("sidIndexTableOff(%x) - sidDataOff(%x) - nameIndexTableOff(%x) - nameDataOff(%x)\n",
+                    sidIndexTableOff, sidDataOff, nameIndexTableOff, nameDataOff);
+
+
+        MTR_END("Initialization", "Setup");
+
+
 
         auto t2 = Clock::now();
         printf("Initialization time: %lld ms\n", (long long) std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count());
 
-        Logger::Log("Starting Main Loop.\n");
 
-        static int lastFrame = 0;
-        static int lastTick = 0;
-        static bool updateWrites = false;
+        Logger::Log("Starting Main Loop.(q to quit)\n");
 
-        // these buffers wont get re-allocated, getting the address of em' here is fine.
-        userCmdArr = process->Read<uintptr_t>(inputAddr + OFFSET_OF(&CInput::m_commands));
-        verifiedUserCmdArr = process->Read<uintptr_t>(inputAddr + OFFSET_OF(&CInput::m_verifiedCommands));
+        static bool update = false;
 
         while (running) {
-            globalVars = process->Read<CGlobalVars>(globalVarsAddr);
+            update = false;
 
-            // read first 0x344 bytes of clientstate (next member we want after 0x344 is over 100k bytes away)
-            VMemRead(&process->ctx->process, process->proc.dirBase, (uint64_t) &clientState, clientStateAddr, 0x344);
-            netChan = process->Read<CNetChan>((uint64_t) clientState.m_netChan);
+            if (update) {
 
-            /* Per Tick Operations */
-            updateWrites = (globalVars.tickCount != lastTick || globalVars.framecount != lastFrame);
-
-            // reset fakelag if we arent ingame
-            if (clientState.m_signonState != SIGNONSTATE_INGAMEAPEX)
-                process->Write<double>(clientStateAddr + OFFSET_OF(&CClientState::m_nextCmdTime), 0.0);
-
-            if (updateWrites) {
-                /* -=-=-=-=-=-=-=-=-= Tick Operations -=-=-=-=-=-=-=-=-=-=-= */
-                MTR_SCOPED_TRACE("MainLoop", "Tick");
-
-                int entityCount = process->Read<int>(apexBase + 0xC016EA0);
-
-                if (!entityCount || entityCount > 50000)
-                    continue;
-
-                validEntities.clear();
-
-                for (int ent = 0; ent < entityCount; ent++) {
-                    uintptr_t entity = GetEntityById(ent);
-                    if (!entity) continue;
-                    bool isPlayer = IsPlayer(entity);
-
-                    if (!isPlayer) {
-                        if (!IsProp(entity)) continue;
-                    }
-
-                    validEntities.push_back(ent);
-                    entities[ent].Update(entity);
-                    entities[ent].SetPlayerState(isPlayer);
-                }
-                localPlayer.Update(GetLocalPlayer());
-
-                //Vector localPos = localPlayer.eyePos;
-                //Logger::Log("Local eyepos: (%f/%f/%f)\n", localPos[0], localPos[1], localPos[2]);
-                Exploits::Speedhack();
-
-                Aimbot::Aimbot();
-                Bhop::Bhop(localPlayer);
-                Bhop::Strafe();
-                /*int32_t commandNr= process->Read<int32_t>(clientStateAddr + OFFSET_OF(&CClientState::m_lastUsedCommandNr));
-                int32_t targetCommand = (commandNr - 1) % 300;
-                CUserCmd userCmd = process->Read<CUserCmd>(userCmdArr + targetCommand * sizeof(CUserCmd));
-                QAngle recoil = Aimbot::RecoilCompensation();
-
-                sway_history.insert({commandNr, recoil});
-                */
-
-
-                /* -=-=-=-=-=-=-=-=-= Frame Operations -=-=-=-=-=-=-=-=-=-=-= */
-                MTR_SCOPED_TRACE("MainLoop", "Frame");
-
-                Glow::Glow();
-                Exploits::ServerCrasher();
-                lastFrame = globalVars.framecount;
-
-                /* -=-=-=-=-=-=-=-=-= Memory Operations -=-=-=-=-=-=-=-=-=-=-= */
-
-                MTR_SCOPED_TRACE("MainLoop", "WriteBack");
-                WriteList writeList(process);
-                for (size_t i : validEntities) {
-                    if (!entities[i].GetPlayerState()) // Do not write item structs; race condition problem
-                        continue;
-
-                    entities[i].WriteBack(writeList);
-                }
-
-                localPlayer.WriteBack(writeList);
-
-                writeList.Commit();
-
-                lastTick = globalVars.tickCount;
             } else {
                 std::this_thread::sleep_for(std::chrono::microseconds(1000));
             }
         }
-
-        // reset these values to properly reset after exiting the cheat
-        process->Write<double>(clientStateAddr + OFFSET_OF(&CClientState::m_nextCmdTime), 0.0);
-        process->Write<float>(timescale, 1.0f); // reset speedhack // reset speedhack
 
         Logger::Log("Main Loop Ended.\n");
     } catch (VMException &e) {
@@ -270,6 +456,11 @@ static void *MainThread(void *) {
     Threading::FinishQueue(true);
     Threading::EndThreads();
 
+    delete debugPointerConverter;
+    delete resourcePointerConverter;
+    delete tagBufferPointerConverter;
+    delete localePointerConverter;
+
 #ifdef MTR_ENABLED
     mtr_flush();
     mtr_shutdown();
@@ -281,7 +472,7 @@ static void *MainThread(void *) {
 }
 
 static void __attribute__((constructor)) Startup() {
-    inputSystemThread = Threading::StartThread(InputSystem::InputSystem, nullptr, false);
+    //inputSystemThread = Threading::StartThread(InputSystem::InputSystem, nullptr, false);
     mainThread = Threading::StartThread(MainThread, nullptr, false);
 }
 
@@ -290,7 +481,7 @@ static void __attribute__((destructor)) Shutdown() {
 
     running = false;
 
-    Threading::JoinThread(inputSystemThread, nullptr);
+    //Threading::JoinThread(inputSystemThread, nullptr);
     Threading::JoinThread(mainThread, nullptr);
 
     Logger::Log("Done\n");

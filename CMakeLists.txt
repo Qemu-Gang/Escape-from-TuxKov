@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8)
-project(Ape-ex)
+project(Halo-ReachAround)
 set(CMAKE_CXX_STANDARD 17)
 include(CheckCXXCompilerFlag)
 
@@ -53,6 +53,7 @@ file(GLOB_RECURSE SOURCE_FILES_C "${CMAKE_SOURCE_DIR}/modules/*.c")
 list(REMOVE_ITEM SOURCE_FILES_C "${CMAKE_SOURCE_DIR}/modules/vmread/example.c")
 list(REMOVE_ITEM SOURCE_FILES_C "${CMAKE_SOURCE_DIR}/modules/vmread/vmmem.c")
 list(REMOVE_ITEM SOURCE_FILES_C "${CMAKE_SOURCE_DIR}/modules/vmread/intmem.c")
+list(REMOVE_ITEM SOURCE_FILES_C "${CMAKE_SOURCE_DIR}/modules/vmread/kmem.c")
 list(REMOVE_ITEM SOURCE_FILES_CXX "${CMAKE_SOURCE_DIR}/modules/vmread/example.cpp")
 
 message("Source files: ${SOURCE_FILES_CXX}")
@@ -62,10 +63,10 @@ find_package(Threads)
 
 include_directories(${INCLUDE_DIRS})
 
-add_library(Ape-ex SHARED ${SOURCE_FILES_CXX} ${SOURCE_FILES_C} "${CMAKE_SOURCE_DIR}/modules/vmread/intmem.c")
-target_link_libraries(Ape-ex dl ${CMAKE_THREAD_LIBS_INIT})
-target_compile_definitions(Ape-ex PUBLIC LMODE=MODE_QEMU_INJECT)
+add_library(Halo-ReachIn SHARED ${SOURCE_FILES_CXX} ${SOURCE_FILES_C} "${CMAKE_SOURCE_DIR}/modules/vmread/intmem.c")
+target_link_libraries(Halo-ReachIn dl ${CMAKE_THREAD_LIBS_INIT})
+target_compile_definitions(Halo-ReachIn PUBLIC LMODE=MODE_QEMU_INJECT)
 
-add_executable(Ape-ex-ex ${SOURCE_FILES_CXX} ${SOURCE_FILES_C} "${CMAKE_SOURCE_DIR}/modules/vmread/vmmem.c")
-target_link_libraries(Ape-ex-ex dl ${CMAKE_THREAD_LIBS_INIT})
-target_compile_definitions(Ape-ex-ex PUBLIC LMODE=MODE_EXTERNAL)
+add_executable(Halo-ReachAround ${SOURCE_FILES_CXX} ${SOURCE_FILES_C} "${CMAKE_SOURCE_DIR}/modules/vmread/vmmem.c")
+target_link_libraries(Halo-ReachAround dl ${CMAKE_THREAD_LIBS_INIT})
+target_compile_definitions(Halo-ReachAround PUBLIC LMODE=MODE_EXTERNAL)

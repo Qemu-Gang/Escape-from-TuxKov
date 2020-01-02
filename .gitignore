@@ -10,7 +10,8 @@ CMakeCache.txt
 *.so
 .ninja_deps
 .ninja_log
-Ape-ex-ex
 build.ninja
 cmake_install.cmake
 rules.ninja
+
+Halo-ReachAround

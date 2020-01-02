@@ -1,45 +1,28 @@
 #pragma once
 
 #include "vmread/hlapi/hlapi.h"
-#include "sdk/CBaseEntity.h"
-#include "sdk/CInput.h"
-#include "sdk/Definitions.h"
-#include "sdk/CGlobalVars.h"
-#include "sdk/CClientState.h"
 #include <vector>
 #include <cstdint>
 #include <deque>
 #include <map>
 #include <linux/input-event-codes.h>
 
-inline std::vector<size_t> validEntities;
-inline CBaseEntity entities[50000];
-
-inline CBaseEntity localPlayer;
-inline uintptr_t aimbotEntity;
-inline uintptr_t entList;
-inline uintptr_t globalVarsAddr;
-inline uintptr_t clientStateAddr;
-inline uintptr_t inputAddr;
-inline uintptr_t timescale;
-inline uintptr_t forceJump;
-inline int localPlayerId;
-
-inline uintptr_t userCmdArr;
-inline uintptr_t verifiedUserCmdArr;
-
-inline CGlobalVars globalVars;
-inline CNetChan netChan;
-inline CClientState clientState;
+#include "sdk/MapHeader.h"
 
 inline WinProcess *process;
+inline uintptr_t mccBase;
+inline uintptr_t haloReachBase;
+inline uintptr_t metaMagic;
+inline uintptr_t g_tag_addresses;
+inline uintptr_t currentMapAddr;
+inline uintptr_t currentMapStringIDTable;
 
-inline uintptr_t apexBase;
-
-inline uintptr_t EACGameClient;
+inline SectionPointerConverter *debugPointerConverter;
+inline SectionPointerConverter *resourcePointerConverter;
+inline SectionPointerConverter *tagBufferPointerConverter;
+inline SectionPointerConverter *localePointerConverter;
+inline MetaAddressConverter *metaArea;
 
 inline bool pressedKeys[500]; // keyboard is 0-256 and mouse is > 256, so let's make the array unreasonably big to avoid overwriting other data
 
 inline bool running = true;
-
-inline std::map<int, QAngle> sway_history;

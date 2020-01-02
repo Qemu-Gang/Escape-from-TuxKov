@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 qemu_pid=$(pidof qemu-system-x86_64)
-filename="$(pwd)/build/libApe-ex.so"
+filename="$(pwd)/build/libHalo-ReachIn.so"
 
 if grep -q "$filename" /proc/"$qemu_pid"/maps; then
     sudo gdb -n -q -batch \
@@ -16,6 +16,6 @@ if grep -q "$filename" /proc/"$qemu_pid"/maps; then
 	-ex "call \$dlclose(\$library)" \
     -ex "quit"
 else
-	echo "Ape-ex is not injected!"
+	echo "Library is not injected!"
 fi
 
