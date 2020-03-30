@@ -19,3 +19,7 @@ make
 
 # Screenshot
 ![woods](https://i.imgur.com/jiT7atn.png)
+
+# Credits
+- https://github.com/frankie-11/eft-external
+- various members of the UC reversing thread( respecter, ichbinkrass, more.. )
