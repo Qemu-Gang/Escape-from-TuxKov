@@ -1,7 +1,8 @@
 # Escape-from-TuxKov
-
 # Build
 ```
+git clone --recursive https://github.com/Qemu-Gang/Escape-from-TuxKov
+cd Escap*
 mkdir build
 cd build
 cmake ..
