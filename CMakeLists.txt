@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8)
-project(Halo-ReachAround)
+project(Escape-from-TuxKov)
 set(CMAKE_CXX_STANDARD 17)
 include(CheckCXXCompilerFlag)
 
@@ -13,8 +13,8 @@ endforeach(COMP_ARG)
 message("Supported warning args: ${WARNING_ARGS}")
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${WARNING_ARGS} -pedantic -ldl -fpic -isystem${CMAKE_SOURCE_DIR}/modules -DMVERBOSE=0 -DNUM_THREADS=4 -DMEMUTILS_CUSTOM_RW -DPATTERN_SCAN_PAGE_SCAN")
-set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -g")
-set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -s -fvisibility=hidden -fvisibility-inlines-hidden")
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O3 -g")
+set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -s -fvisibility=hidden -fvisibility-inlines-hidden")
 
 set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS}")
 
@@ -43,13 +43,14 @@ foreach(SFILE "threading.cpp" "semaphores.cpp" "atomic_lock.cpp" "mutex.cpp" "pa
   list(APPEND SOURCE_FILES_CXX "${CMAKE_SOURCE_DIR}/modules/m0dular/utils/${SFILE}")
 endforeach(SFILE)
 
-foreach(SFILE "src/*.cpp" "src/utils/*.cpp" "src/sdk/*.cpp" "src/features/*.cpp" "modules/vmread/hlapi/*.cpp")
+foreach(SFILE "src/*.cpp" "src/utils/*.cpp" "src/sdk/*.cpp" "src/features/*.cpp" "modules/vmread/hlapi/*.cpp" "modules/peeper/client/peeper.cpp" "src/hacks/*.cpp")
   file(GLOB GLOB_FILES "${CMAKE_SOURCE_DIR}/${SFILE}")
   list(APPEND SOURCE_FILES_CXX ${GLOB_FILES})
 endforeach(SFILE)
 
 file(GLOB_RECURSE SOURCE_FILES_C "${CMAKE_SOURCE_DIR}/modules/*.c")
 
+list(REMOVE_ITEM SOURCE_FILES_C "${CMAKE_SOURCE_DIR}/modules/peeper/ext/imgui/examples/libs/gl3w/GL/gl3w.c")
 list(REMOVE_ITEM SOURCE_FILES_C "${CMAKE_SOURCE_DIR}/modules/vmread/example.c")
 list(REMOVE_ITEM SOURCE_FILES_C "${CMAKE_SOURCE_DIR}/modules/vmread/vmmem.c")
 list(REMOVE_ITEM SOURCE_FILES_C "${CMAKE_SOURCE_DIR}/modules/vmread/intmem.c")
@@ -63,10 +64,10 @@ find_package(Threads)
 
 include_directories(${INCLUDE_DIRS})
 
-add_library(Halo-ReachIn SHARED ${SOURCE_FILES_CXX} ${SOURCE_FILES_C} "${CMAKE_SOURCE_DIR}/modules/vmread/intmem.c")
-target_link_libraries(Halo-ReachIn dl ${CMAKE_THREAD_LIBS_INIT})
-target_compile_definitions(Halo-ReachIn PUBLIC LMODE=MODE_QEMU_INJECT)
+add_library(TuxKov SHARED ${SOURCE_FILES_CXX} ${SOURCE_FILES_C} "${CMAKE_SOURCE_DIR}/modules/vmread/intmem.c")
+target_link_libraries(TuxKov dl rt ${CMAKE_THREAD_LIBS_INIT})
+target_compile_definitions(TuxKov PUBLIC LMODE=MODE_QEMU_INJECT)
 
-add_executable(Halo-ReachAround ${SOURCE_FILES_CXX} ${SOURCE_FILES_C} "${CMAKE_SOURCE_DIR}/modules/vmread/vmmem.c")
-target_link_libraries(Halo-ReachAround dl ${CMAKE_THREAD_LIBS_INIT})
-target_compile_definitions(Halo-ReachAround PUBLIC LMODE=MODE_EXTERNAL)
+add_executable(TuxKovExternal ${SOURCE_FILES_CXX} ${SOURCE_FILES_C} "${CMAKE_SOURCE_DIR}/modules/vmread/vmmem.c")
+target_link_libraries(TuxKovExternal dl rt ${CMAKE_THREAD_LIBS_INIT})
+target_compile_definitions(TuxKovExternal PUBLIC LMODE=MODE_EXTERNAL)

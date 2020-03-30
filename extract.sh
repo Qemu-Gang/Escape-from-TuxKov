@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 qemu_pid=$(pidof qemu-system-x86_64)
-filename="$(pwd)/build/libHalo-ReachIn.so"
+filename="$(pwd)/build/libTuxKov.so"
 
 if grep -q "$filename" /proc/"$qemu_pid"/maps; then
     sudo gdb -n -q -batch \

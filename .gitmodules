@@ -7,3 +7,6 @@
 [submodule "evdev-mirror"]
 	path = evdev-mirror
 	url = https://github.com/LWSS/evdev-mirror
+[submodule "modules/peeper"]
+	path = modules/peeper
+	url = https://github.com/LWSS/peeper
