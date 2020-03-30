@@ -10,8 +10,9 @@ make
 ```
 
 # Run
-Make sure peeper is running
-`sudo ./TuxKovExternal`
+- Make sure peeper is running
+
+- `sudo ./TuxKovExternal`
 
 # Notes
 - janky between games, restart if it glitches out or stops working.
