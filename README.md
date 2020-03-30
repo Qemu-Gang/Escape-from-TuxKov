@@ -10,6 +10,7 @@ make
 ```
 
 # Run
+Make sure peeper is running
 `sudo ./TuxKovExternal`
 
 # Notes
