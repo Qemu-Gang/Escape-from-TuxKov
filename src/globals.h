@@ -16,6 +16,10 @@ inline GlobalObjectManager gom;
 inline uintptr_t gameWorldAddr;
 inline uintptr_t cameraAddr;
 inline uintptr_t localPlayerAddr;
+inline Vector3D localPlayerHead;
+inline bool localPlayerIsAiming;
+inline bool localPlayerIsOpticCamera;
+inline CameraEntity cameraEntity;
 
 inline bool pressedKeys[500]; // keyboard is 0-256 and mouse is > 256, so let's make the array unreasonably big to avoid overwriting other data
 inline std::atomic<bool> running = true;

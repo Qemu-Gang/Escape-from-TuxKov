@@ -40,7 +40,24 @@ struct Vector3D
     {
         return ( *this - input ).Length2D();
     }
+
+    void NormalizeAngles()
+    {
+        while (y > 89.0f)
+            y -= 180.0f;
+
+        while (y < -89.0f)
+            y += 180.0f;
+
+        while (x > 360.0f)
+            x -= 720.0f;
+
+        while (x < 0.0f)
+            x += 720.0f;
+    }
 };
+
+typedef Vector3D QAngle;
 
 struct Matrix4x4
 {

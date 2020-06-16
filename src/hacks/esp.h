@@ -5,4 +5,5 @@
 namespace ESP
 {
     void DrawPlayers();
+    void DrawItems();
 }

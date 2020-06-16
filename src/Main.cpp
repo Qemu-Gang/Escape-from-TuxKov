@@ -21,6 +21,7 @@
 #include "peeper/client/peeper.h"
 #include "hacks/esp.h"
 #include "hacks/norecoil.h"
+#include "hacks/aimbot.h"
 
 #define PROCNAME "EscapeFromTark"
 #define MODNAME "UnityPlayer.dll"
@@ -61,6 +62,24 @@ static void *ThreadSignature(const Signature *sig) {
     return nullptr;
 }
 
+static void UpdateData()
+{
+    if( localPlayerAddr )
+    {
+        Player localPlayer = process->Read<Player>( localPlayerAddr );
+        ProceduralWeaponAnimation localWeaponAnim = process->Read<ProceduralWeaponAnimation>( (uintptr_t)localPlayer.m_pProceduralWeaponAnimation );
+        BreathEffector breathEffector = process->Read<BreathEffector>( (uintptr_t)localWeaponAnim.m_pBreath );
+        localPlayerIsAiming = breathEffector.IsAiming;
+
+        OpticSight sight = process->Read<OpticSight>( (uintptr_t) localWeaponAnim.m_pOpticSightArray );
+        localPlayerIsOpticCamera = (bool)sight.m_pCamera;
+
+    }
+    if( cameraAddr )
+    {
+        cameraEntity = process->Read<CameraEntity>( cameraAddr );
+    }
+}
 static void *MainThread(void *) {
     Logger::Log("Main Loaded.\n");
     pid_t pid;
@@ -117,7 +136,6 @@ static void *MainThread(void *) {
         }
 
         MTR_BEGIN("Initialization", "FindSignatures");
-
         for (const Signature &sig : signatures)
             Threading::QueueJobRef(ThreadSignature, &sig);
 
@@ -127,7 +145,6 @@ static void *MainThread(void *) {
             Logger::Log("One of the sigs failed. Stopping. (Make sure you are in-game)\n");
             goto quit;
         }
-
         MTR_END("Initialization", "FindSignatures");
 
         MTR_BEGIN("Initialization", "Setup");
@@ -137,11 +154,7 @@ static void *MainThread(void *) {
         cameraAddr = Unity::GetObjectPtrByName( "FPS Camera", true );
         Logger::Log("Camera(%p)\n", cameraAddr );
 
-        uintptr_t gameWorldWrapperAddr = Unity::GetObjectPtrByName("GameWorld", false );
-        if( gameWorldWrapperAddr ){
-            GameWorldWrapper gameWorldWrapper = process->Read<GameWorldWrapper>( gameWorldWrapperAddr );
-            gameWorldAddr = (uintptr_t)gameWorldWrapper.localgameworld;
-        }
+        gameWorldAddr = Unity::GetWorldPtr();
         Logger::Log("Gameworld(%p)\n", gameWorldAddr);
 
 
@@ -153,6 +166,7 @@ static void *MainThread(void *) {
         //Logger::Log("------------------------\n");
 
         Unity::PrintPlayerList();
+        //Unity::PrintItemStats();
 
         MTR_END("Initialization", "Setup");
 
@@ -164,19 +178,23 @@ static void *MainThread(void *) {
 
         mainLoopDone = false;
         while (running) {
-            cameraAddr = Unity::GetObjectPtrByName( "FPS Camera", true );
-
-            // Not in-game
-            if( !cameraAddr ){
-                Peeper::StopDraws();
-                goto sleep;
+            static uint64_t callCount = 0;
+            static std::time_t t = 0;
+            std::time_t currentTime = std::time(0);
+            callCount++;
+            if( (currentTime - t) >= 1 ){
+                Logger::Log("Hz in last second: %lld\n", callCount);
+                callCount = 0;
+                t = currentTime;
             }
 
+            UpdateData();
             ESP::DrawPlayers();
-            NoRecoil::ApplyNoRecoil();
+            //NoRecoil::ApplyNoRecoil();
+            //Aimbot::Aim();
 
-            sleep:
-            std::this_thread::sleep_for(std::chrono::microseconds(1500));
+            //sleep:
+            //std::this_thread::sleep_for(std::chrono::microseconds(1000));
         }
         mainLoopDone = true;
         Logger::Log("Main Loop Ended.\n");
@@ -206,7 +224,7 @@ static void __attribute__((constructor)) Startup() {
         Logger::Log("Couldn't start peeper! Code: %d \n", peeperCode);
         return;
     }
-    //inputSystemThread = Threading::StartThread(InputSystem::InputSystem, nullptr, false);
+    inputSystemThread = Threading::StartThread(InputSystem::InputSystem, nullptr, false);
     mainThread = Threading::StartThread(MainThread, nullptr, false);
 }
 
@@ -222,7 +240,8 @@ static void __attribute__((destructor)) Shutdown() {
     Peeper::StopDraws();
     Peeper::Close();
 
-    //Threading::JoinThread(inputSystemThread, nullptr);
+    if( inputSystemThread )
+        Threading::JoinThread(inputSystemThread, nullptr);
     if( mainThread )
         Threading::JoinThread(mainThread, nullptr);
 

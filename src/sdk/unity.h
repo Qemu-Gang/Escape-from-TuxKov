@@ -55,8 +55,10 @@ namespace Unity
 {
     void PrintGOMObjects( bool tagged );
     void PrintPlayerList();
+    void PrintItemStats();
     Vector3D GetBonePosition( uintptr_t playerAddr, int boneID );
     uintptr_t GetObjectPtrByName( const char *objname, bool tagged );
+    uintptr_t GetWorldPtr();
     bool World2Screen( const Vector3D &world, Vector2D *screen );
 }
 

@@ -64,7 +64,7 @@ find_package(Threads)
 
 include_directories(${INCLUDE_DIRS})
 
-add_library(TuxKov SHARED ${SOURCE_FILES_CXX} ${SOURCE_FILES_C} "${CMAKE_SOURCE_DIR}/modules/vmread/intmem.c")
+add_library(TuxKov SHARED ${SOURCE_FILES_CXX} ${SOURCE_FILES_C} "${CMAKE_SOURCE_DIR}/modules/vmread/intmem.c" src/hacks/aimbot.cpp src/hacks/aimbot.h)
 target_link_libraries(TuxKov dl rt ${CMAKE_THREAD_LIBS_INIT})
 target_compile_definitions(TuxKov PUBLIC LMODE=MODE_QEMU_INJECT)
 

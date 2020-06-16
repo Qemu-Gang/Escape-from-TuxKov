@@ -40,6 +40,7 @@ void Unity::PrintPlayerList() {
 
     Array playerList = process->Read<Array>( (uintptr_t)gameworld.m_pPlayerList );
 
+    Logger::Log("Printing %d players..\n", playerList.Count);
     for( int i = 0; i < playerList.Count; i++ ){
         uintptr_t playerAddr = process->Read<uintptr_t>((uintptr_t)playerList.m_pList + (0x20 + (i * 8)));
 
@@ -53,6 +54,39 @@ void Unity::PrintPlayerList() {
         } else {
             Logger::Log("Player(%f,%f,%f)\n", headPos.x, headPos.y, headPos.z);
         }
+    }
+}
+
+void Unity::PrintItemStats() {
+    LOCALGAMEWORLD gameworld = process->Read<LOCALGAMEWORLD>( gameWorldAddr );
+
+    ArrayItems itemList = process->Read<ArrayItems>( (uintptr_t)gameworld.m_pItemList );
+
+    Logger::Log("This map has %d Items\n", itemList.Count);
+
+    for( int i = 0; i < itemList.Count; i++ )
+    {
+        uintptr_t itemAddr = process->Read<uintptr_t>((uintptr_t)itemList.m_pItemList + (0x32 + (i * 8)) );
+
+        if( !itemAddr )
+            continue;
+
+        Item item = process->Read<Item>( itemAddr );
+        ItemProfile itemProfile = process->Read<ItemProfile>( (uintptr_t)item.m_pItemProfile );
+
+        // Get Item Name..
+        ItemStats itemStats = process->Read<ItemStats>( (uintptr_t)itemProfile.m_pItemStats );
+        GameItem gameItem = process->Read<GameItem>( (uintptr_t)itemStats.m_pGameItem );
+        ItemTemplate itemTemplate = process->Read<ItemTemplate>( (uintptr_t)gameItem.m_pItemTemplate );
+        UnityEngineString itemName = process->Read<UnityEngineString>( (uintptr_t)itemTemplate.m_pName );
+
+        // Get Item Location..
+        ItemBasicInformation itemBasicInformation = process->Read<ItemBasicInformation>( (uintptr_t)itemProfile.m_pItemInformation );
+        ItemLocalization itemLocalization = process->Read<ItemLocalization>( (uintptr_t)itemBasicInformation.m_pItemLocalization );
+        ItemCoordinates itemCoordinates = process->Read<ItemCoordinates>( (uintptr_t)itemLocalization.m_pItemCoordinates );
+        ItemLocationContainer itemLocationContainer = process->Read<ItemLocationContainer>( (uintptr_t)itemCoordinates.m_pItemLocationContainer );
+
+        Logger::Log("Item Name: (%s) - position(%f/%f/%f)\n", itemName.name, itemLocationContainer.ItemPosition.x, itemLocationContainer.ItemPosition.y, itemLocationContainer.ItemPosition.z );
     }
 }
 
@@ -204,8 +238,42 @@ uintptr_t Unity::GetObjectPtrByName(const char *objname, bool tagged) {
     return 0;
 }
 
+uintptr_t Unity::GetWorldPtr() {
+    uintptr_t firstObjectPtr;
+    uintptr_t lastObjectPtr;
+
+    firstObjectPtr = (uintptr_t)gom.activeFirst;
+    lastObjectPtr = (uintptr_t)gom.activeLast;
+
+    uintptr_t itr = firstObjectPtr;
+
+    while( itr ){
+        mono_object_wrapper wrapper = process->Read<mono_object_wrapper>( itr );
+        mono_object object = process->Read<mono_object>( (uintptr_t)wrapper.object );
+        char name[256] = {0};
+        process->Read( (uint64_t)object.objectname, name, 256 );
+
+        if( !strcmp( "GameWorld", name ) ){
+            game_object_wrapper gameobjWrapper = process->Read<game_object_wrapper>( (uintptr_t)object.pObjectClass );
+            GameWorldWrapper gameWorldWrapper = process->Read<GameWorldWrapper>( (uintptr_t)gameobjWrapper.gameObject );
+            LOCALGAMEWORLD world = process->Read<LOCALGAMEWORLD>( (uintptr_t)gameWorldWrapper.localgameworld );
+            Array playerList = process->Read<Array>( (uintptr_t)world.m_pPlayerList );
+            if( playerList.Count == 0 )
+                goto next;
+
+            return (uintptr_t)gameWorldWrapper.localgameworld;
+        }
+        if( itr == lastObjectPtr )
+            break;
+
+        next:
+        itr = (uintptr_t)wrapper.next;
+    }
+
+    return 0;
+}
+
 bool Unity::World2Screen(const Vector3D &world, Vector2D *screen) {
-    const CameraEntity cameraEntity = process->Read<CameraEntity>( cameraAddr );
     Matrix4x4 matrix = cameraEntity.ViewMatrix.Transpose();
 
     const Vector3D translation = { matrix.m[3][0], matrix.m[3][1], matrix.m[3][2] };
@@ -218,8 +286,13 @@ bool Unity::World2Screen(const Vector3D &world, Vector2D *screen) {
     if( w < 0.1f )
         return false;
 
-    const float x = right.DotProduct( world ) + matrix.m[0][3];
-    const float y = up.DotProduct( world ) + matrix.m[1][3];
+    float x = right.DotProduct( world ) + matrix.m[0][3];
+    float y = up.DotProduct( world ) + matrix.m[1][3];
+
+    if (localPlayerIsAiming && localPlayerIsOpticCamera)
+    {
+        //TODO: scope scale
+    }
 
     screen->x = (1920 / 2) * (1.f + x / w);
     screen->y = (1080 / 2) * (1.f - y / w);

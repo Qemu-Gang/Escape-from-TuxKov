@@ -16,10 +16,10 @@ void *InputSystem::InputSystem(void *) {
 
     fd = open("/dev/input/evdev-mirror", O_RDONLY | O_NONBLOCK);
     if (fd < 0) {
-        Logger::Log("Error opening evdev-mirror! (%d), %d\n", fd, errno);
-        return 0;
+        Logger::Log("Error opening evdev-mirror! (%d), %d\nInput will be disabled.\n", fd, errno);
+        return nullptr;
     }
-    //Logger::Log("Started input loop\n");
+    Logger::Log("Started input loop\n");
     while (running) {
         // if zero bytes, keep goin...
         if (!read(fd, &input, sizeof(struct input_value))) {

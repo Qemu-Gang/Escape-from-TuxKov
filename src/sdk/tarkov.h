@@ -7,20 +7,23 @@
 class LOCALGAMEWORLD // Aka LocalGameWorld
 {
 public:
+    /*
     char pad_0000[24]; //0x0000
     class ExitController* m_pExitController; //0x0018
-    char pad_0020[16]; //0x0020
-    class UnityEngineString* m_LocalPlayerID; //0x0030
-    char pad_0038[24]; //0x0038
-    class ArrayItems* m_pItemList; //0x0050
-    char pad_0058[24]; //0x0058
-    class Array* m_pPlayerList; //0x0070
+    char pad_0020[24]; //0x0020
+    class UnityEngineString* m_LocalPlayerID; //0x0038
+    char pad_0038[24]; //0x0040
+     */
+    char pad58[0x58];
+    class ArrayItems* m_pItemList; //0x0058
+    char pad_18[0x18]; //0x0060
+    class Array* m_pPlayerList; //0x0078
 }; //Size: 0x0078
 
 class Array
 {
 public:
-    char pad_0000[16]; //0x0000
+    char pad_0000[0x10]; //0x0000
     class List* m_pList; //0x0010
     int32_t Count; //0x0018
     int32_t MaxCount; //0x001C
@@ -29,16 +32,17 @@ public:
 class List
 {
 public:
-    char pad_0000[32]; //0x0000
+    char pad_0000[0x20]; //0x0000
     class Player* m_pFirstEntity; //0x0020
     class Player* m_pSecondPlayer; //0x0028
 }; //Size: 0x0030
 
-class PlayerPosition
+class HandsController
 {
-    char pad_24[24];
-    int64_t length; // 0x18
-    Vector3D position; // 0x20
+public:
+    char pad_d0[0xD0];
+    void *fireport;
+    char extra[0x100];
 };
 class Player
 {
@@ -47,15 +51,17 @@ public:
     class LocalPlayerChecker *m_pLocalPlayerChecker; //0x0018
     char pad_0020[24]; //0x0020
     class MovementContext *m_pMovementContext; //0x0038
-    char pad_0040[48]; //0x0040
-    class ProceduralWeaponAnimation *m_pProceduralWeaponAnimation; //0x0070
-    char pad_0078[16]; //0x0078
-    class PlayerBody *m_pPlayerBody; //0x0088
-    char pad_0090[800]; //0x0090
-    class PlayerProfile *m_pPlayerProfile; //0x03B0
-    char pad_03B0[40]; //0x03B8
-    class HealthController *m_pHealthController; //0x03E0
-}; //Size: 0x03E8
+    char pad_60[0x60];
+    class PlayerBody *m_pPlayerBody; //0x00A0
+    char pad_c0[0xC0];
+    class ProceduralWeaponAnimation *m_pProceduralWeaponAnimation; //0x0168
+    char pad_270[0x270];
+    class PlayerProfile *m_pPlayerProfile; //0x03E0
+    char pad_028[0x28];
+    class HealthController *m_pHealthController; //0x0410
+    char _paderino[16];
+    class HandsController *m_pHandsController; // 0x0428
+};
 
 class MovementContext
 {
@@ -80,6 +86,8 @@ public:
     class CameraObject* m_pCameraObject; //0x0030
     char pad_0038[40]; //0x0038
     char* ObjectName; //0x0060
+    char pad_0068[8]; //0x0068
+    class OpticCameraManager* m_pOpticCameraManager; // 0x0070
 }; //Size: 0x0068
 
 class CameraObject
@@ -91,6 +99,22 @@ public:
     class CameraEntity* m_pCameraEntity; //0x0018
 }; //Size: 0x0020
 
+class OpticCameraManager
+{
+public:
+    char pad_0000[16]; //0x0000
+    class TemplateCamera* m_pTemplateCamera; // 0x0010 aka ScopeCamera
+    char pad_0001[16]; //0x0018
+    class OpticSight* m_pOpticSight; // 0x0028
+};
+
+class TemplateCamera
+{
+public:
+    char pad_0000[48]; //0x0000
+    class CameraObject* m_pCameraObject; //0x0030
+};
+
 class CameraEntity
 {
 public:
@@ -98,6 +122,10 @@ public:
     Matrix4x4 ViewMatrix0; //0x0058
     char pad_0098[64]; //0x0098
     Matrix4x4 ViewMatrix; //0x00D8
+    char pad_00E0[64]; //0x00E0
+    float FOVY; // 0x0098
+    char pad_009C[20]; //0x009C
+    float FOVX; // 0x00AC
 }; //Size: 0x0118
 
 class PlayerBody
@@ -243,7 +271,7 @@ public:
     char pad_0000[16]; //0x0000
     class ItemList* m_pItemList; //0x0010
     int32_t Count; //0x0018
-    int32_t MaxCout; //0x001C
+    int32_t MaxCount; //0x001C
 }; //Size: 0x0020
 
 class ItemList
@@ -400,7 +428,7 @@ public:
 class OpticSight
 {
 public:
-    char pad_0000[32]; //0x0000
+    char pad_0000[40]; //0x0000
     class UnityCamera* m_pCamera; //0x0020
 }; //Size: 0x0028
 
@@ -414,7 +442,7 @@ public:
 class BreathEffector
 {
 public:
-    char pad_0000[160]; //0x0000
+    char pad_0000[0xA0]; //0x0000
     bool IsAiming; //0x00A0
     char pad_0091[3];
     float Intensity; //0x00A4
