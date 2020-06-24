@@ -166,7 +166,7 @@ static void *MainThread(void *) {
         //Logger::Log("------------------------\n");
 
         Unity::PrintPlayerList();
-        //Unity::PrintItemStats();
+        Unity::PrintItemStats();
 
         MTR_END("Initialization", "Setup");
 
@@ -190,6 +190,7 @@ static void *MainThread(void *) {
 
             UpdateData();
             ESP::DrawPlayers();
+            ESP::DrawItems();
             //NoRecoil::ApplyNoRecoil();
             //Aimbot::Aim();
 

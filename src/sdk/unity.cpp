@@ -63,31 +63,6 @@ void Unity::PrintItemStats() {
     ArrayItems itemList = process->Read<ArrayItems>( (uintptr_t)gameworld.m_pItemList );
 
     Logger::Log("This map has %d Items\n", itemList.Count);
-
-    for( int i = 0; i < itemList.Count; i++ )
-    {
-        uintptr_t itemAddr = process->Read<uintptr_t>((uintptr_t)itemList.m_pItemList + (0x32 + (i * 8)) );
-
-        if( !itemAddr )
-            continue;
-
-        Item item = process->Read<Item>( itemAddr );
-        ItemProfile itemProfile = process->Read<ItemProfile>( (uintptr_t)item.m_pItemProfile );
-
-        // Get Item Name..
-        ItemStats itemStats = process->Read<ItemStats>( (uintptr_t)itemProfile.m_pItemStats );
-        GameItem gameItem = process->Read<GameItem>( (uintptr_t)itemStats.m_pGameItem );
-        ItemTemplate itemTemplate = process->Read<ItemTemplate>( (uintptr_t)gameItem.m_pItemTemplate );
-        UnityEngineString itemName = process->Read<UnityEngineString>( (uintptr_t)itemTemplate.m_pName );
-
-        // Get Item Location..
-        ItemBasicInformation itemBasicInformation = process->Read<ItemBasicInformation>( (uintptr_t)itemProfile.m_pItemInformation );
-        ItemLocalization itemLocalization = process->Read<ItemLocalization>( (uintptr_t)itemBasicInformation.m_pItemLocalization );
-        ItemCoordinates itemCoordinates = process->Read<ItemCoordinates>( (uintptr_t)itemLocalization.m_pItemCoordinates );
-        ItemLocationContainer itemLocationContainer = process->Read<ItemLocationContainer>( (uintptr_t)itemCoordinates.m_pItemLocationContainer );
-
-        Logger::Log("Item Name: (%s) - position(%f/%f/%f)\n", itemName.name, itemLocationContainer.ItemPosition.x, itemLocationContainer.ItemPosition.y, itemLocationContainer.ItemPosition.z );
-    }
 }
 
 uint64_t matrix_list_base;

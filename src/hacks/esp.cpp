@@ -1,4 +1,5 @@
 #include "esp.h"
+#include "esp_loot.h"
 
 #include "../globals.h"
 #include "../sdk/unity.h"
@@ -143,29 +144,55 @@ void ESP::DrawPlayers( ) {
     Peeper::SubmitDraws();
 }
 
-void ESP::DrawItems()
-{
+void ESP::DrawItems() {
+    char nameBuffer[128];
+    float distance;
+    Vector2D item2D;
+    bool queueFull = false;
+
+    static const Color defaultItemColor = Color( 169, 169, 169, 175 );
+    static const Color corpseColor = Color( 255, 182, 193, 200 );
+
     LOCALGAMEWORLD gameworld = process->Read<LOCALGAMEWORLD>( gameWorldAddr );
 
     ArrayItems itemList = process->Read<ArrayItems>( (uintptr_t)gameworld.m_pItemList );
 
-    for( int i = 0; i < itemList.Count; i++ )
-    {
-        uintptr_t itemAddr = process->Read<uintptr_t>((uintptr_t)itemList.m_pItemList + (0x32 + (i * 8)) );
+    for( int i = 0; i < itemList.Count; i++ ){
+        uintptr_t itemAddr = process->Read<uintptr_t>((uintptr_t)itemList.m_pItemList + (0x20 + (i * 8)) );
 
         if( !itemAddr )
             continue;
 
+        const Color *itemColoring = &defaultItemColor;
+
+        // Get Item Location and name
         Item item = process->Read<Item>( itemAddr );
         ItemProfile itemProfile = process->Read<ItemProfile>( (uintptr_t)item.m_pItemProfile );
+        ItemBasicInformation itemBasicInformation = process->Read<ItemBasicInformation>( (uintptr_t)itemProfile.m_pItemInformation );
+        ItemLocalization itemLocalization = process->Read<ItemLocalization>( (uintptr_t)itemBasicInformation.m_pItemLocalization );
+        ItemCoordinates itemCoordinates = process->Read<ItemCoordinates>( (uintptr_t)itemLocalization.m_pItemCoordinates );
+        ItemLocationContainer itemLocationContainer = process->Read<ItemLocationContainer>( (uintptr_t)itemCoordinates.m_pItemLocationContainer );
 
-        // Get Item Name..
-        ItemStats itemStats = process->Read<ItemStats>( (uintptr_t)itemProfile.m_pItemStats );
-        GameItem gameItem = process->Read<GameItem>( (uintptr_t)itemStats.m_pGameItem );
-        ItemTemplate itemTemplate = process->Read<ItemTemplate>( (uintptr_t)gameItem.m_pItemTemplate );
-        UnityEngineString itemName = process->Read<UnityEngineString>( (uintptr_t)itemTemplate.m_pName );
+        if( !Unity::World2Screen( itemLocationContainer.ItemPosition, &item2D ) )
+            continue;
 
-        Logger::Log("Item Name: (%s)\n", itemName.name );
+        distance = localPlayerHead.Distance( itemLocationContainer.ItemPosition );
+        process->Read( (uintptr_t)itemBasicInformation.ItemPatName, nameBuffer, 128 );
+        nameBuffer[127] = '\0';
 
+        if( IsPlayerCorpse( nameBuffer ) ){
+            itemColoring = &corpseColor;
+        } else {
+            if( distance > 50.0f )
+                continue;
+        }
+
+        queueFull |= !Peeper::AddCircle( item2D.x, item2D.y, *itemColoring, std::min(distance / 6, 8.0f), 16, 1.0f );
+        queueFull |= !Peeper::AddText( item2D.x, item2D.y, *itemColoring, nameBuffer );
+
+        //Logger::Log("Item Name: (%s)\n", nameBuffer );
     }
+
+    if( queueFull )
+        Logger::Log("Warning! Draw queue full!\n");
 }

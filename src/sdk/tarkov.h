@@ -182,8 +182,8 @@ class UnityEngineString
 public:
     char pad_0000[16]; //0x0000
     int32_t size; //0x0010
-    //wchar_t name[10]; //0x0014
-    char16_t name[10]; //0x0014
+    wchar_t name[24]; //0x0014
+    //char16_t name[10]; //0x0014
 }; //Size: 0x0028
 
 class HealthController // _healthController
@@ -277,7 +277,7 @@ public:
 class ItemList
 {
 public:
-    char pad_0000[32]; //0x0000
+    char pad_0000[0x20]; //0x0000
     class Item* m_pFirstItem; //0x0020
     class Item* m_pSecondItem; //0x0028
 }; //Size: 0x0030
@@ -285,14 +285,14 @@ public:
 class Item
 {
 public:
-    char pad_0000[16]; //0x0000
+    char pad_0000[0x10]; //0x0000
     class ItemProfile* m_pItemProfile; //0x0010
 }; //Size: 0x0018
 
 class ItemProfile
 {
 public:
-    char pad_0000[40]; //0x0000
+    char pad_0000[0x28]; //0x0000
     class ItemStats* m_pItemStats; //0x0028
     class ItemBasicInformation* m_pItemInformation; //0x0030
 }; //Size: 0x0038
@@ -316,14 +316,14 @@ public:
 class ItemCoordinates
 {
 public:
-    char pad_0000[56]; //0x0000
+    char pad_0000[0x38]; //0x0000
     class ItemLocationContainer* m_pItemLocationContainer; //0x0038
 }; //Size: 0x0040
 
 class ItemLocationContainer
 {
 public:
-    char pad_0000[176]; //0x0000
+    char pad_0000[0xB0]; //0x0000
     Vector3D ItemPosition; //0x00B0
 }; //Size: 0x00BC
 
@@ -412,8 +412,8 @@ public:
 class StatsNames
 {
 public:
-    char pad_0000[32]; //0x0000
-    class ItemNames* m_pItemNames; //0x0020
+    char pad_0000[0x40]; //0x0000
+    class ItemNames* m_pItemNames; //0x0040
 }; //Size: 0x0028
 
 class ItemNames
