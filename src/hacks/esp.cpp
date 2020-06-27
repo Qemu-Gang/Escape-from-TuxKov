@@ -151,6 +151,7 @@ void ESP::DrawItems() {
     bool queueFull = false;
 
     static const Color defaultItemColor = Color( 169, 169, 169, 175 );
+    static const Color goodItemColor = Color( 255, 0, 255, 200 );
     static const Color corpseColor = Color( 255, 182, 193, 200 );
 
     LOCALGAMEWORLD gameworld = process->Read<LOCALGAMEWORLD>( gameWorldAddr );
@@ -176,15 +177,19 @@ void ESP::DrawItems() {
         if( !Unity::World2Screen( itemLocationContainer.ItemPosition, &item2D ) )
             continue;
 
-        distance = localPlayerHead.Distance( itemLocationContainer.ItemPosition );
         process->Read( (uintptr_t)itemBasicInformation.ItemPatName, nameBuffer, 128 );
-        nameBuffer[127] = '\0';
 
         if( IsPlayerCorpse( nameBuffer ) ){
             itemColoring = &corpseColor;
+            strcpy(nameBuffer, "body");
+        } else if( IsGoodLoot( nameBuffer ) ){
+            itemColoring = &goodItemColor;
+            strcpy(nameBuffer, "goodie");
         } else {
+            distance = localPlayerHead.Distance( itemLocationContainer.ItemPosition );
             if( distance > 50.0f )
                 continue;
+            nameBuffer[127] = '\0';
         }
 
         queueFull |= !Peeper::AddCircle( item2D.x, item2D.y, *itemColoring, std::min(distance / 6, 8.0f), 16, 1.0f );
