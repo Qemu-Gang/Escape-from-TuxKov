@@ -238,7 +238,7 @@ static void __attribute__((destructor)) Shutdown() {
         std::this_thread::sleep_for(std::chrono::microseconds(2000));
     }
 
-    Peeper::StopDraws();
+    Peeper::ClearDraws();
     Peeper::Close();
 
     if( inputSystemThread )
