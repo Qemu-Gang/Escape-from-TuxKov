@@ -55,12 +55,12 @@ public:
     class PlayerBody *m_pPlayerBody; //0x00A0
     char pad_c0[0xC0];
     class ProceduralWeaponAnimation *m_pProceduralWeaponAnimation; //0x0168
-    char pad_270[0x270];
-    class PlayerProfile *m_pPlayerProfile; //0x03E0
+    char pad_270[0x260];
+    class PlayerProfile *m_pPlayerProfile; //0x03D0
     char pad_028[0x28];
-    class HealthController *m_pHealthController; //0x0410
+    class HealthController *m_pHealthController; //0x0400
     char _paderino[16];
-    class HandsController *m_pHandsController; // 0x0428
+    class HandsController *m_pHandsController; // 0x0418
 };
 
 class MovementContext
