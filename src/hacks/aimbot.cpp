@@ -24,7 +24,7 @@ static MovementContext movement;
 static HandsController hands;
 static char data[0x500];
 void Aimbot::Aim() {
-    if( !pressedKeys[KEY_LEFTALT] )
+    if( !pressedKeys[KEY_1] )
         return;
 
     LOCALGAMEWORLD gameworld = process->Read<LOCALGAMEWORLD>( gameWorldAddr );

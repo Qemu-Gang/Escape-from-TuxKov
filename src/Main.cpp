@@ -23,7 +23,7 @@
 #include "hacks/norecoil.h"
 #include "hacks/aimbot.h"
 
-#define PROCNAME "EscapeFromTark"
+#define PROCNAME "EscapeFromTarkov.exe"
 #define MODNAME "UnityPlayer.dll"
 
 #include "Signatures.h"
@@ -71,9 +71,8 @@ static void UpdateData()
         BreathEffector breathEffector = process->Read<BreathEffector>( (uintptr_t)localWeaponAnim.m_pBreath );
         localPlayerIsAiming = breathEffector.IsAiming;
 
-        OpticSight sight = process->Read<OpticSight>( (uintptr_t) localWeaponAnim.m_pOpticSightArray );
-        localPlayerIsOpticCamera = (bool)sight.m_pCamera;
-
+        //OpticSight sight = process->Read<OpticSight>( (uintptr_t) localWeaponAnim.m_pOpticSightArray );
+        //localPlayerIsOpticCamera = (bool)sight.m_pCamera;
     }
     if( cameraAddr )
     {
@@ -109,7 +108,7 @@ static void *MainThread(void *) {
         MTR_BEGIN("Initialization", "FindProcesses");
         ctx.processList.Refresh();
         for (auto &i : ctx.processList) {
-            //Logger::Log("\nFound Process %s(PID:%ld)", i.proc.name, i.proc.pid);
+            Logger::Log("\nFound Process %s(PID:%ld)", i.proc.name, i.proc.pid);
             if (!strcasecmp(PROCNAME, i.proc.name)) {
                 Logger::Log("\nFound Process %s(PID:%ld)", i.proc.name, i.proc.pid);
                 PEB peb = i.GetPeb();
@@ -191,7 +190,7 @@ static void *MainThread(void *) {
             UpdateData();
             ESP::DrawPlayers();
             ESP::DrawItems();
-            //NoRecoil::ApplyNoRecoil();
+            NoRecoil::ApplyNoRecoil();
             //Aimbot::Aim();
 
             //sleep:

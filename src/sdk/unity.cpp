@@ -5,6 +5,12 @@
 
 #include <csignal>
 #include <immintrin.h>
+#include <ios>
+#include <iostream>
+#include <wchar.h>
+#include <uchar.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 void Unity::PrintGOMObjects( bool tagged ) {
     uintptr_t firstObjectPtr;
@@ -48,13 +54,67 @@ void Unity::PrintPlayerList() {
             continue;
 
         Player player = process->Read<Player>( playerAddr );
+        PlayerProfile profile = process->Read<PlayerProfile>( (uintptr_t)player.m_pPlayerProfile );
+        PlayerInfo info = process->Read<PlayerInfo>( (uintptr_t)profile.m_PlayerInfo );
+        UnityEngineString name = process->Read<UnityEngineString>( (uintptr_t)info.m_pPlayerName );
+
+        char playername[64] = { 0 };
+        if( info.Side == 4 )
+        {
+            if( info.CreationDate > 0 )
+            {
+                strcpy(playername, "player-scav");
+            }
+            else
+            {
+                continue;
+            }
+        }
+        else
+        {
+            int j = 0;
+            // the legendary unicode byte skipper
+            for(int byte = 0; (byte < (name.size * 2) + 2); byte++)
+            {
+                if((byte % 2) != 0)
+                    continue;
+
+                char ascii = ((char*)(&name.name[0]))[byte];
+                // set this manually like a man
+                if (ascii <= 0 || ascii > 127)
+                    continue;
+
+                playername[j] = ascii;
+                j++;
+            }
+
+            playername[std::min(63, (name.size * 2) + 2)] = '\0';
+            playername[63] = '\0';
+        }
+
+        Logger::Log("Player Addr(%p)\n", playerAddr);
+
+        float hp = 0;
+        auto healthController = process->Read<HealthController>( (uintptr_t)player.m_pHealthController );
+        auto healthBody = process->Read<HealthBody>( (uintptr_t)healthController.m_pHealthBody );
+        auto bodyController = process->Read<BodyController>( (uintptr_t)healthBody.m_pBodyController );
+
+        // Calculate HP
+        for( int limb = 0; limb < NUM_BODY_PARTS; limb++ )
+        {
+            HealthContainer bodypart = process->Read<HealthContainer>( (uintptr_t)bodyController.m_bodyParts[limb].m_pBodyPart );
+            Health bodypartHealth = process->Read<Health>( (uintptr_t)bodypart.m_pHealth );
+            hp += bodypartHealth.Health;
+        }
+
         Vector3D headPos = Unity::GetBonePosition( playerAddr, Bones::HumanHead );
         if( player.m_pLocalPlayerChecker ){
-            Logger::Log("LocalPlayer(%f,%f,%f)\n", headPos.x, headPos.y, headPos.z);
+            Logger::Log("[LOCALPLAYER-Team(%d)][%d](%s)Player(%f,%f,%f) - HP(%f)\n", info.Side, name.size, playername, headPos.x, headPos.y, headPos.z, hp);
         } else {
-            Logger::Log("Player(%f,%f,%f)\n", headPos.x, headPos.y, headPos.z);
+            Logger::Log("[Team(%d)](%s)Player(%f,%f,%f) - HP(%f)\n", info.Side, playername, headPos.x, headPos.y, headPos.z, hp);
         }
     }
+    Logger::Log("Done.\n");
 }
 
 void Unity::PrintItemStats() {
@@ -269,8 +329,8 @@ bool Unity::World2Screen(const Vector3D &world, Vector2D *screen) {
         //TODO: scope scale
     }
 
-    screen->x = (1920 / 2) * (1.f + x / w);
-    screen->y = (1080 / 2) * (1.f - y / w);
+    screen->x = (2560 / 2) * (1.f + x / w);
+    screen->y = (1440 / 2) * (1.f - y / w);
 
     return true;
 }

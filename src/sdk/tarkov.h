@@ -14,10 +14,10 @@ public:
     class UnityEngineString* m_LocalPlayerID; //0x0038
     char pad_0038[24]; //0x0040
      */
-    char pad58[0x58];
-    class ArrayItems* m_pItemList; //0x0058
-    char pad_18[0x18]; //0x0060
-    class Array* m_pPlayerList; //0x0078
+    char pad58[0x60];
+    class ArrayItems* m_pItemList; //0x0060
+    char pad_18[0x18]; //0x0068
+    class Array* m_pPlayerList; //0x0080
 }; //Size: 0x0078
 
 class Array
@@ -49,27 +49,27 @@ class Player
 public:
     char pad_0000[24]; //0x0000
     class LocalPlayerChecker *m_pLocalPlayerChecker; //0x0018
-    char pad_0020[24]; //0x0020
-    class MovementContext *m_pMovementContext; //0x0038
-    char pad_60[0x60];
-    class PlayerBody *m_pPlayerBody; //0x00A0
-    char pad_c0[0xC0];
-    class ProceduralWeaponAnimation *m_pProceduralWeaponAnimation; //0x0168
-    char pad_270[0x260];
-    class PlayerProfile *m_pPlayerProfile; //0x03D0
-    char pad_028[0x28];
-    class HealthController *m_pHealthController; //0x0400
+    char pad_0020[32]; //0x0020
+    class MovementContext *m_pMovementContext; //0x0040
+    char pad_60[96];
+    class PlayerBody *m_pPlayerBody; //0x00A8
+    char pad_c0[224];
+    class ProceduralWeaponAnimation *m_pProceduralWeaponAnimation; //0x0190
+    char pad_270[680];
+    class PlayerProfile *m_pPlayerProfile; //0x0440
+    char pad_028[40];
+    class HealthController *m_pHealthController; //0x0470
     char _paderino[16];
-    class HandsController *m_pHandsController; // 0x0418
+    class HandsController *m_pHandsController; //
 };
 
 class MovementContext
 {
 public:
-    char pad_0000[480]; //0x0000
-    Vector2D ViewAngles; //0x01E0
-    Vector2D ViewAngles2; //0x01E8
-    Vector3D LocalPosition; //0x01F0
+    char pad_0000[0x200]; //0x0000
+    Vector2D ViewAngles; //0x0200
+    Vector2D ViewAngles2; //0x0208
+    Vector3D LocalPosition;
 }; //Size: 0x01FC
 
 class CAMERA // Aka FPS Camera
@@ -118,9 +118,7 @@ public:
 class CameraEntity
 {
 public:
-    char pad_0000[88]; //0x0000
-    Matrix4x4 ViewMatrix0; //0x0058
-    char pad_0098[64]; //0x0098
+    char pad_0000[0xD8];
     Matrix4x4 ViewMatrix; //0x00D8
     char pad_00E0[64]; //0x00E0
     float FOVY; // 0x0098
@@ -182,54 +180,62 @@ class UnityEngineString
 public:
     char pad_0000[16]; //0x0000
     int32_t size; //0x0010
-    wchar_t name[24]; //0x0014
-    //char16_t name[10]; //0x0014
+    //wchar_t name[24]; //0x0014
+    char16_t name[16]; //0x0014
 }; //Size: 0x0028
 
 class HealthController // _healthController
 {
 public:
-    char pad_0000[24]; //0x0000
-    class HealthBody* m_pHealthBody; //0x0018
+    char pad_0000[0x20]; //0x0000
+    class HealthBody* m_pHealthBody; //0x0020
 }; //Size: 0x0020
 
 class HealthBody
 {
 public:
-    char pad_0000[24]; //0x0000
+    char pad_0000[0x18]; //0x0000
     class BodyController* m_pBodyController; //0x0018
 }; //Size: 0x0020
 
+
+enum BodyParts_t
+{
+    HEAD = 0,
+    THORAX,
+    STOMACH,
+    LEFTARM,
+    RIGHTARM,
+    LEFTLEG,
+    RIGHTLEG,
+    NUM_BODY_PARTS
+};
+
+class BodyPartContainer
+{
+public:
+    class HealthContainer* m_pBodyPart; //0x0030
+    char pad_0038[16]; //0x0038
+};
 class BodyController
 {
 public:
-    char pad_0000[48]; //0x0000
-    class HealthContainer* m_pHealthHead; //0x0030
-    char pad_0038[16]; //0x0038
-    class HealthContainer* m_pHealthThorax; //0x0048
-    char pad_0050[16]; //0x0050
-    class HealthContainer* m_pHealthStomach; //0x0060
-    char pad_0068[16]; //0x0068
-    class HealthContainer* m_pHealthLeftArm; //0x0078
-    char pad_0080[16]; //0x0080
-    class HealthContainer* m_pHealthRightArm; //0x0090
-    char pad_0098[16]; //0x0098
-    class HealthContainer* m_pHealthLeftLeg; //0x00A8
-    char pad_00B0[16]; //0x00B0
-    class HealthContainer* m_pHealthRightLeg; //0x00C0
+    char pad_0000[0x30]; //0x0000
+
+    BodyPartContainer m_bodyParts[NUM_BODY_PARTS];
 }; //Size: 0x00C8
 
 class HealthContainer
 {
 public:
-    char pad_0000[16]; //0x0000
+    char pad_0000[0x10]; //0x0000
     class Health* m_pHealth; //0x0010
 }; //Size: 0x0018
 
 class Health
 {
 public:
-    char pad_0000[16]; //0x0000
+    char pad_0000[0x10]; //0x0000
     float Health; //0x0010
     float HealthMax; //0x0014
 }; //Size: 0x0018
@@ -268,7 +274,7 @@ public:
 class ArrayItems
 {
 public:
-    char pad_0000[16]; //0x0000
+    char pad_0000[0x10]; //0x0000
     class ItemList* m_pItemList; //0x0010
     int32_t Count; //0x0018
     int32_t MaxCount; //0x001C
@@ -385,21 +391,34 @@ public:
     class UnityEngineString* NameType; //0x0028
 }; //Size: 0x0030
 
+class Firing
+{
+public:
+    char pad_0000[332]; //0x0000
+    float floater1; //0x014C
+    char pad_0150[8]; //0x0150
+    float floater2; //0x0158
+    float floater3; //0x015C
+    char pad_0160[4]; //0x0160
+    float bulletSpeedMultiplier; //0x0164
+    char pad_0168[96]; //0x0168
+};
+
 class ProceduralWeaponAnimation
 {
 public:
     char pad_0000[40]; //0x0000
-    class BreathEffector* m_pBreath; //0x0028
+    class N00000146 *m_pBreath; //0x0028
     char pad_0030[24]; //0x0030
-    class ShotEffector* m_pShooting; //0x0048
-    char pad_0050[56]; //0x0050
-    class OpticSight* m_pOpticSightArray; //0x0088
-    char pad_0090[80]; //0x0090
-    int32_t Mask; //0x00E0 Write zero for no-recoil / no - sway
-    char pad_00E4[44]; //0x00E4
-    float CameraSmoothTime; //0x0110
-    char pad_0114[192]; //0x0114
-    float CameraSmoothSteady; //0x01D4
+    class N00000200 *m_pShooting; //0x0048
+    char pad_0050[48]; //0x0050
+    class Firing *m_pFiring; //0x0080
+    char pad_0088[112]; //0x0088
+    uint32_t mask; //0x00F8
+    float sway1; //0x00FC
+    float sway2; //0x0100
+    float sway3; //0x0104
+    char pad_0108[192]; //0x0108
 }; //Size: 0x01D8
 
 class ItemStats

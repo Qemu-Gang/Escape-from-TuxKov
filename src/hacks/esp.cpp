@@ -7,6 +7,8 @@
 #include "../utils/Logger.h"
 
 #include <csignal>
+#include <ios>
+#include <iostream>
 
 const int arm_right[] = { Bones::HumanRUpperarm, Bones::HumanRForearm1, Bones::HumanRPalm };
 const int arm_left[] = { Bones::HumanLUpperarm, Bones::HumanLForearm1, Bones::HumanLPalm };
@@ -22,11 +24,18 @@ void ESP::DrawPlayers( ) {
     for( int i = 0; i < playerList.Count; i++ ){
         Vector2D head2D, neck2D, pelvis2D;
         float distance;
-        char name[256];
+        char buffer[8];
+        std::string text;
         Color color;
         Player player;
         PlayerProfile profile;
         PlayerInfo info;
+        UnityEngineString name;
+        HealthController healthController;
+        HealthBody healthBody;
+        BodyController bodyController;
+        float hp = 0;
+
         uintptr_t playerAddr = process->Read<uintptr_t>((uintptr_t)playerList.m_pList + (0x20 + (i * 8)) );
 
         if( !playerAddr )
@@ -61,9 +70,30 @@ void ESP::DrawPlayers( ) {
         // Scav color check
         profile = process->Read<PlayerProfile>( (uintptr_t)player.m_pPlayerProfile );
         info = process->Read<PlayerInfo>( (uintptr_t)profile.m_PlayerInfo );
+        name = process->Read<UnityEngineString>( (uintptr_t)info.m_pPlayerName );
+        healthController = process->Read<HealthController>( (uintptr_t)player.m_pHealthController );
+        healthBody = process->Read<HealthBody>( (uintptr_t)healthController.m_pHealthBody );
+        bodyController = process->Read<BodyController>( (uintptr_t)healthBody.m_pBodyController );
 
+        // Calculate HP
+        for( int limb = 0; limb < NUM_BODY_PARTS; limb++ )
+        {
+            HealthContainer bodypart = process->Read<HealthContainer>( (uintptr_t)bodyController.m_bodyParts[limb].m_pBodyPart );
+            Health bodypartHealth = process->Read<Health>( (uintptr_t)bodypart.m_pHealth );
+            hp += bodypartHealth.Health;
+        }
+
+        // humans have creationdate
         if( info.CreationDate > 0 ){
-            color = Color( 225, 0, 0, 255 );
+            // player scav
+            if( info.Side == 4 )
+            {
+                color = Color( 28, 67, 193, 255 );
+            }
+            else
+            {
+                color = Color( 225, 0, 0, 255 );
+            }
         } else {
             color = Color( 255, 179, 71, 255 );
         }
@@ -75,8 +105,42 @@ void ESP::DrawPlayers( ) {
         // Draw distance
         if( localPlayerAddr ){
             distance = localPlayerHead.Distance( headPos );
-            sprintf(name, "%0.1fm", distance );
-            Peeper::AddText( head2D.x, head2D.y, color, name );
+            sprintf(buffer, "%0.1fm", distance );
+            text += '(';
+            text += buffer;
+            text += ')';
+            // Draw Name if not scav
+            if( info.Side != 4 )
+            {
+                char playername[64] = { 0 };
+                int j = 0;
+                // the legendary unicode byte skipper
+                for(int byte = 0; (byte < (name.size * 2) + 2); byte++)
+                {
+                    if((byte % 2) != 0)
+                        continue;
+
+                    char ascii = ((char*)(&name.name[0]))[byte];
+                    // set this manually like a man
+                    if (ascii <= 0 || ascii > 127)
+                        continue;
+
+                    playername[j] = ascii;
+                    j++;
+                }
+
+                playername[std::min(63, (name.size * 2) + 2)] = '\0';
+                playername[63] = '\0';
+                text += '-';
+                text += playername;
+            }
+
+            sprintf(buffer, "%0.0f", hp );
+            text += " [";
+            text += buffer;
+            text += ']';
+
+            Peeper::AddText( head2D.x, head2D.y, color, text.c_str() );
 
             // if they are very far, end here and dont draw more limbs
             if( distance > 200.0f ){
@@ -184,7 +248,7 @@ void ESP::DrawItems() {
             strcpy(nameBuffer, "body");
         } else if( IsGoodLoot( nameBuffer ) ){
             itemColoring = &goodItemColor;
-            strcpy(nameBuffer, "goodie");
+            //strcpy(nameBuffer, "goodie");
         } else {
             distance = localPlayerHead.Distance( itemLocationContainer.ItemPosition );
             if( distance > 50.0f )
