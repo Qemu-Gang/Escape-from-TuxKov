@@ -11,6 +11,8 @@
 
 inline WinProcess *process;
 inline uintptr_t unityplayerBase;
+inline uintptr_t monoBase;
+inline uintptr_t monoRootDomain;
 inline uintptr_t gomAddr;
 inline GlobalObjectManager gom;
 inline uintptr_t gameWorldAddr;

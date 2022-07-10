@@ -17,5 +17,5 @@ struct Signature
 
 inline std::vector<Signature> signatures = {
     // Example - Signature(entList, "[48 8D 15 *?? ?? ?? ??] 48 C1 E1 05 C1", MODNAME),
-    Signature(gomAddr, "[48 8B 0D **?? ?? ?? ??] BA 34", MODNAME),
+    Signature(gomAddr, "[48 8B 05 **?? ?? ?? ??] 66 83 F9 05", MODNAME),
 };

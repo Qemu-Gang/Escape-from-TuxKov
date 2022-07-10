@@ -18,6 +18,7 @@
 #include <iostream>
 
 #include "sdk/unity.h"
+#include "sdk/mono.h"
 #include "peeper/client/peeper.h"
 #include "hacks/esp.h"
 #include "hacks/norecoil.h"
@@ -25,6 +26,7 @@
 
 #define PROCNAME "EscapeFromTarkov.exe"
 #define MODNAME "UnityPlayer.dll"
+#define MODNAME_MONO "mono-2.0-bdwgc.dll"
 
 #include "Signatures.h"
 
@@ -108,7 +110,7 @@ static void *MainThread(void *) {
         MTR_BEGIN("Initialization", "FindProcesses");
         ctx.processList.Refresh();
         for (auto &i : ctx.processList) {
-            Logger::Log("\nFound Process %s(PID:%ld)", i.proc.name, i.proc.pid);
+            //Logger::Log("\nFound Process %s(PID:%ld)", i.proc.name, i.proc.pid);
             if (!strcasecmp(PROCNAME, i.proc.name)) {
                 Logger::Log("\nFound Process %s(PID:%ld)", i.proc.name, i.proc.pid);
                 PEB peb = i.GetPeb();
@@ -122,7 +124,22 @@ static void *MainThread(void *) {
                         Logger::Log("Found Module: (%s) - baseAddr(%p)\n", o.info.name, o.info.baseAddress);
                         process = &i;
                         unityplayerBase = o.info.baseAddress;
-                        break;
+                    }
+                    else if ( strstr( o.info.name, MODNAME_MONO ) ){
+                        Logger::Log("Found Module: (%s) - baseAddr(%p)\n", o.info.name, o.info.baseAddress);
+                        monoBase = o.info.baseAddress;
+                        //Logger::Log("\t%.8lx\t%.8lx\t%lx\t%s\n", o.info.baseAddress, o.info.entryPoint, o.info.sizeOfModule, o.info.name);
+                        for (auto& u : o.exports)
+                        {
+                            //Logger::Log("\t\t%lx\t%s\n", u.address, u.name);
+                            if (!strcmp(u.name, "mono_get_root_domain"))
+                            {
+                                // 48 8B 05 21 CD 46 00    mov rax, cs:qword_12321213
+                                // C3                      retn
+                                monoRootDomain = GetAbsoluteAddressVm(*process, u.address, 3, 7);
+                                Logger::Log("Mono Root domain(%p)\n", monoRootDomain);
+                            }
+                        }
                     }
                 }
             }
@@ -164,14 +181,18 @@ static void *MainThread(void *) {
         //Unity::PrintGOMObjects( false );
         //Logger::Log("------------------------\n");
 
-        Unity::PrintPlayerList();
         Unity::PrintItemStats();
+        Unity::PrintPlayerList();
 
         MTR_END("Initialization", "Setup");
 
+        //mono::init_functions( );
+//
+        //static auto eft_hard_settings = mono::find_class( "Assembly-CSharp", "EFTHardSettings" )->get_vtable( mono::get_root_domain( ) )->get_static_field_data( );
+        //printf( "[EFTHardSettings] -> %p\n", eft_hard_settings );
 
         auto t2 = Clock::now();
-        printf("Initialization time: %lld ms\n", (long long) std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count());
+        Logger::Log("Initialization time: %lld ms\n", (long long) std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count());
 
         Logger::Log("Starting Main Loop.(q to quit)\n");
 

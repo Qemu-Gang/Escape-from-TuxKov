@@ -44,10 +44,12 @@ struct mono_object_wrapper
 
 struct GlobalObjectManager
 {
-    mono_object_wrapper *taggedLast;
-    mono_object_wrapper *taggedFirst;
-    mono_object_wrapper *activeLast;
-    mono_object_wrapper *activeFirst;
+    void* shitlistLast;
+    void* shitlistFirst; // 0x8
+    mono_object_wrapper *taggedLast; // 0x10
+    mono_object_wrapper *taggedFirst; // 0x18
+    mono_object_wrapper *activeLast;  // 0x20
+    mono_object_wrapper *activeFirst; // 0x28
 };
 
 

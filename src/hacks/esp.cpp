@@ -220,7 +220,7 @@ void ESP::DrawItems() {
 
     LOCALGAMEWORLD gameworld = process->Read<LOCALGAMEWORLD>( gameWorldAddr );
 
-    ArrayItems itemList = process->Read<ArrayItems>( (uintptr_t)gameworld.m_pItemList );
+    LootArray itemList = process->Read<LootArray>((uintptr_t)gameworld.m_pItemList );
 
     for( int i = 0; i < itemList.Count; i++ ){
         uintptr_t itemAddr = process->Read<uintptr_t>((uintptr_t)itemList.m_pItemList + (0x20 + (i * 8)) );

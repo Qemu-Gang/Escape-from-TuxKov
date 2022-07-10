@@ -21,8 +21,6 @@ Vector3D CalculateAngle(const Vector3D &local, const Vector3D &enemy) {
 }
 
 static MovementContext movement;
-static HandsController hands;
-static char data[0x500];
 void Aimbot::Aim() {
     if( !pressedKeys[KEY_1] )
         return;
@@ -42,9 +40,6 @@ void Aimbot::Aim() {
     Player localPlayer;
     localPlayer = process->Read<Player>( localPlayerAddr );
     movement = process->Read<MovementContext>( (uintptr_t)localPlayer.m_pMovementContext );
-    hands = process->Read<HandsController>( (uintptr_t)localPlayer.m_pHandsController );
-    process->Read(process->Read<uintptr_t>((uintptr_t)hands.fireport), data, 0x500);
-    Logger::Log("fireport data @ %p\n", (void*)data);
     //std::raise(SIGINT);
     // Garbage data.
     if( playerList.Count > 100 || playerList.Count < 0 )

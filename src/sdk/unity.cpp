@@ -58,6 +58,8 @@ void Unity::PrintPlayerList() {
         PlayerInfo info = process->Read<PlayerInfo>( (uintptr_t)profile.m_PlayerInfo );
         UnityEngineString name = process->Read<UnityEngineString>( (uintptr_t)info.m_pPlayerName );
 
+        Logger::Log("Player Addr(%p) - healthcontroller(%p) Side(%d)\n", playerAddr, player.m_pHealthController, info.Side);
+
         char playername[64] = { 0 };
         if( info.Side == 4 )
         {
@@ -92,8 +94,6 @@ void Unity::PrintPlayerList() {
             playername[63] = '\0';
         }
 
-        Logger::Log("Player Addr(%p)\n", playerAddr);
-
         float hp = 0;
         auto healthController = process->Read<HealthController>( (uintptr_t)player.m_pHealthController );
         auto healthBody = process->Read<HealthBody>( (uintptr_t)healthController.m_pHealthBody );
@@ -114,13 +114,13 @@ void Unity::PrintPlayerList() {
             Logger::Log("[Team(%d)](%s)Player(%f,%f,%f) - HP(%f)\n", info.Side, playername, headPos.x, headPos.y, headPos.z, hp);
         }
     }
-    Logger::Log("Done.\n");
+    Logger::Log("Done printing players.\n");
 }
 
 void Unity::PrintItemStats() {
     LOCALGAMEWORLD gameworld = process->Read<LOCALGAMEWORLD>( gameWorldAddr );
 
-    ArrayItems itemList = process->Read<ArrayItems>( (uintptr_t)gameworld.m_pItemList );
+    LootArray itemList = process->Read<LootArray>((uintptr_t)gameworld.m_pItemList );
 
     Logger::Log("This map has %d Items\n", itemList.Count);
 }

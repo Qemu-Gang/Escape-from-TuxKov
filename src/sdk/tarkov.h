@@ -14,10 +14,10 @@ public:
     class UnityEngineString* m_LocalPlayerID; //0x0038
     char pad_0038[24]; //0x0040
      */
-    char pad58[0x60];
-    class ArrayItems* m_pItemList; //0x0060
-    char pad_18[0x18]; //0x0068
-    class Array* m_pPlayerList; //0x0080
+    char pad58[0x68];
+    class LootArray* m_pItemList; //0x0068
+    char pad_18[0x18]; //0x0070
+    class Array* m_pPlayerList; //0x0088
 }; //Size: 0x0078
 
 class Array
@@ -37,12 +37,56 @@ public:
     class Player* m_pSecondPlayer; //0x0028
 }; //Size: 0x0030
 
+class WeaponTemplate
+{
+public:
+    char _pad[0x24C];
+    bool m_allowJam;
+    bool m_allowFeed;
+    bool m_allowMisfire;
+    bool m_allowSlide;
+};
+class WeaponItem
+{
+public:
+    char _pad[0x10];
+    class UnityEngineString* m_Id;      // 0x10
+    class ItemAddress* m_itemAddress;   // 0x18
+    class Components* m_components;     // 0x20
+    class StringCache* m_stringCache;   // 0x28
+    class ItemAddress* m_currentAddress;// 0x30
+    class asdfasdf* m_ChildrenChanged;  // 0x38
+    class WeaponTemplate* m_BackingField; // 0x40 //EFT.InventoryLogic.WeaponTemplate
+    class List*         m_Attributes;   // 0x48
+    class Nullable*     m_BackingField2;// 0x50
+    uint32_t m_bUnlimitedCount;         // 0x58
+    int32_t m_BuyRestrictionMax;        // 0x5C
+    int32_t m_BuyRestrictionCurrent;    // 0x60
+    int32_t m_StackObjectsCount;        // 0x64
+    int32_t m_Version;                  // 0x68
+    int32_t m_SpawnedInSession;         // 0x6C
+    class Grid* m_Grids;                // 0x70
+    class Slot* m_Slots;                // 0x78
+    class RepairableComponent* m_Repairable; // 0x80
+    class FoldableComponent* m_Foldable;// 0x88
+    class FireModeComponent* m_FireMode;// 0x90
+    class Slot* m_Chambers;             // 0x98 [pointer to Array]
+    class Vector3D* m_OpticCalibrationPts;// 0xA0
+    class Vector3D* m_OpticTrajInfos;   // 0xA8
+    class asdfff* m_MalfState;          // 0xB0
+    class Slot* m_magSlotCache;         // 0xB8
+    // aimindex
+    //onmalfunctionvalidate
+    //shellsinchambers
+    //compatibleammo
+    //armed
+    //cylinderhammerclosed
+};
 class HandsController
 {
 public:
-    char pad_d0[0xD0];
-    void *fireport;
-    char extra[0x100];
+    char pad_60[0x60];
+    class WeaponItem* m_pWeaponItem; // 0x60       EFT.InventoryLogic.Item
 };
 class Player
 {
@@ -53,22 +97,23 @@ public:
     class MovementContext *m_pMovementContext; //0x0040
     char pad_60[96];
     class PlayerBody *m_pPlayerBody; //0x00A8
-    char pad_c0[224];
-    class ProceduralWeaponAnimation *m_pProceduralWeaponAnimation; //0x0190
-    char pad_270[680];
-    class PlayerProfile *m_pPlayerProfile; //0x0440
-    char pad_028[40];
-    class HealthController *m_pHealthController; //0x0470
-    char _paderino[16];
-    class HandsController *m_pHandsController; //
+    char pad_c0[232];
+    class ProceduralWeaponAnimation *m_pProceduralWeaponAnimation; //0x0198
+    char pad_270[672];
+    char pad_a0[0xB0];
+    class PlayerProfile *m_pPlayerProfile; //0x04F0
+    char pad_028[0x30];
+    class HealthController *m_pHealthController; //0x0528
+    char _paderino[0x18];
+    class HandsController *m_pHandsController; // 0x0540
 };
 
 class MovementContext
 {
 public:
-    char pad_0000[0x200]; //0x0000
-    Vector2D ViewAngles; //0x0200
-    Vector2D ViewAngles2; //0x0208
+    char pad_0000[0x22C]; //0x0000
+    Vector2D ViewAngles;
+    Vector2D ViewAngles2;
     Vector3D LocalPosition;
 }; //Size: 0x01FC
 
@@ -118,7 +163,7 @@ public:
 class CameraEntity
 {
 public:
-    char pad_0000[0xD8];
+    char pad_0000[0xDC];
     Matrix4x4 ViewMatrix; //0x00D8
     char pad_00E0[64]; //0x00E0
     float FOVY; // 0x0098
@@ -163,16 +208,38 @@ public:
     char pad_0030[16]; //0x0030
     class PlayerHealth* m_pHealth; //0x0040
     class Inventory* m_pInventory; //0x0048
+    void* pad;                     //0x0050
+    void* pad2;                    //0x0058
+    void* skills;                  //0x0060
 }; //Size: 0x0050
 
+class PlayerInfoSettings
+{
+    char pad[0x10];
+    int role;          // 0x10
+    int botDifficulty; // 0x14
+};
 class PlayerInfo
 {
 public:
-    char pad_0000[16]; //0x0000
-    class UnityEngineString* m_pPlayerName; //0x0010
-    char pad_0018[56]; //0x0018
-    int32_t Side; //0x0050
-    int32_t CreationDate; //0x0054
+    char pad_0000[0x10]; //0x0000
+    class UnityEngineString* m_pPlayerName; // 0x10
+    class UnityEngineString* m_pNickname;   // 0x18
+    class UnityEngineString* m_pGroupId;    // 0x20
+    class UnityEngineString* m_pEntryPoint; // 0x28
+    class UnityEngineString* m_pVoice;      // 0x30
+    void *list;
+    void *pad;
+    class PlayerInfoSettings* settings;     // 0x48
+    void *action1;                          // 0x50
+    void *action2;                          // 0x58
+    void *action3;                          // 0x60
+    int32_t Side;                           // 0x68
+    int32_t CreationDate;                   // 0x6c
+    double savageLockTime;
+    int64_t nicknameChangeDate;
+    int isStreamerModeAvailable;
+    int memberCategory;
 }; //Size: 0x0058
 
 class UnityEngineString
@@ -187,8 +254,8 @@ public:
 class HealthController // _healthController
 {
 public:
-    char pad_0000[0x20]; //0x0000
-    class HealthBody* m_pHealthBody; //0x0020
+    char pad_0000[0x50]; //0x0000
+    class HealthBody* m_pHealthBody;
 }; //Size: 0x0020
 
 class HealthBody
@@ -214,13 +281,13 @@ enum BodyParts_t
 class BodyPartContainer
 {
 public:
-    class HealthContainer* m_pBodyPart; //0x0030
-    char pad_0038[16]; //0x0038
+    char _pad[0x10];
+    class HealthContainer* m_pBodyPart;
 };
 class BodyController
 {
 public:
-    char pad_0000[0x30]; //0x0000
+    char pad_0000[0x20]; //0x0000
 
     BodyPartContainer m_bodyParts[NUM_BODY_PARTS];
 }; //Size: 0x00C8
@@ -271,7 +338,7 @@ public:
     Vector3D cameraRotation; //0x00C0
 }; //Size: 0x00D0
 
-class ArrayItems
+class LootArray
 {
 public:
     char pad_0000[0x10]; //0x0000
@@ -301,7 +368,7 @@ public:
     char pad_0000[0x28]; //0x0000
     class ItemStats* m_pItemStats; //0x0028
     class ItemBasicInformation* m_pItemInformation; //0x0030
-}; //Size: 0x0038
+}; //Size: 0x0038S
 
 class ItemBasicInformation
 {
@@ -329,8 +396,8 @@ public:
 class ItemLocationContainer
 {
 public:
-    char pad_0000[0xB0]; //0x0000
-    Vector3D ItemPosition; //0x00B0
+    char pad_0000[0x90]; //0x0000
+    Vector3D ItemPosition;
 }; //Size: 0x00BC
 
 class Inventory
@@ -391,41 +458,40 @@ public:
     class UnityEngineString* NameType; //0x0028
 }; //Size: 0x0030
 
-class Firing
+class FirearmController
 {
 public:
-    char pad_0000[332]; //0x0000
-    float floater1; //0x014C
-    char pad_0150[8]; //0x0150
-    float floater2; //0x0158
-    float floater3; //0x015C
-    char pad_0160[4]; //0x0160
-    float bulletSpeedMultiplier; //0x0164
-    char pad_0168[96]; //0x0168
+    char _padd[0x60];
+    class WeaponItem *m_pItem;
+    char _pad[0xD8];
+    float m_hipInaccuracy; // 0x140
+    float m_weaponLn; // weapon length
 };
 
 class ProceduralWeaponAnimation
 {
 public:
-    char pad_0000[40]; //0x0000
-    class N00000146 *m_pBreath; //0x0028
-    char pad_0030[24]; //0x0030
-    class N00000200 *m_pShooting; //0x0048
-    char pad_0050[48]; //0x0050
-    class Firing *m_pFiring; //0x0080
-    char pad_0088[112]; //0x0088
-    uint32_t mask; //0x00F8
-    float sway1; //0x00FC
-    float sway2; //0x0100
-    float sway3; //0x0104
-    char pad_0108[192]; //0x0108
+    char pad_0000[0x28]; //0x0000
+    class BreathEffector *m_pBreath;         //0x0028
+    class WalkEffector *m_pWalk;             // 0x30
+    class MotionEffector *m_pMotionReact;    // 0x38
+    class ForceEffector *m_pForceReact;      // 0x40
+    class ShotEffector *m_pShooting;         // 0x48
+    class TurnAwayEffector *m_pTurnaway;     // 0x50
+    char pad_0050[0x28];                     //0x0058
+    class FirearmController *m_pFiring;      //0x0080
+    char pad_0088[0x78];                     //0x0088
+    uint32_t mask; //0x0100
+    float sway1;
+    float sway2;
+    float sway3;
 }; //Size: 0x01D8
 
 class ItemStats
 {
 public:
-    char pad_0000[80]; //0x0000
-    class GameItem* m_pGameItem; //0x0050
+    char pad_0000[0xB0]; //0x0000
+    class GameItem* m_pGameItem;
 }; //Size: 0x0058
 
 class StatsNames
@@ -470,8 +536,14 @@ public:
 class ShotEffector
 {
 public:
-    char pad_0000[104]; //0x0000
-    float Intensity; //0x0068
+    char pad_0000[0x6C]; //0x0000
+    float padyolo;
+    float recoilHori;
+    float recoilVert;
+    float Intensity4;
+    float Intensity5;
+    float Intensity6;
+    float Intensity7;
 }; //Size: 0x006C
 
 class CameraRaw
@@ -604,17 +676,3 @@ public:
     char pad_0000[32]; //0x0000
     class ItemTemplate* m_pItemTemplate; //0x0020
 }; //Size: 0x0028
-
-class ItemTemplate
-{
-public:
-    char pad_0000[16]; //0x0000
-    class UnityEngineString* m_pName; //0x0010
-    char pad_0018[16]; //0x0018
-    class UnityEngineString* m_ItemSoundName; //0x0028
-    char pad_0030[24]; //0x0030
-    class UnityEngineString* m_pSlotName; //0x0048
-    class UnityEngineString* m_pHashName; //0x0050
-    char pad_0058[8]; //0x0058
-    class UnityEngineString* m_pHashCategory; //0x0060
-}; //Size: 0x0068
